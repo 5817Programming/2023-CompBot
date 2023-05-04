@@ -21,6 +21,7 @@ import edu.wpi.first.wpilibj2.command.WaitUntilCommand;
 
 import com.wcp.frc.Constants;
 import com.wcp.frc.subsystems.Balancing;
+import com.wcp.frc.subsystems.Intake;
 import com.wcp.frc.subsystems.Scores;
 import com.wcp.frc.subsystems.Swerve;
 import com.wcp.lib.geometry.Rotation2dd;
@@ -35,6 +36,7 @@ public class Auto6 extends SequentialCommandGroup {
   public Auto6(Swerve swerve) {
 
     Balancing balence = new Balancing();
+    Intake intake = new Intake();
     List<Translation2d> eventTimings = 
     Arrays.asList(
     new Translation2d(1.9,4.52),
@@ -43,18 +45,16 @@ public class Auto6 extends SequentialCommandGroup {
     new Translation2d(6.43,3.32)
     );
     
-    List<Double> waitTimings = Arrays.asList(3.0,3.0,3.0,3.0);
+    List<Double> waitTimings = Arrays.asList(3.0,3.0,3.0);
     List<Command> events = Arrays.asList(
-    new InstantCommand(() -> System.out.println("Past Checkpoint 1")),
-    new InstantCommand(() -> System.out.println("Past Checkpoint 2")),
-    new InstantCommand(() -> System.out.println("Past Checkpoint 3")),
-    new InstantCommand(() -> System.out.println("Past Checkpoint 4"))
-    );
+    new InstantCommand(() -> intake.setPercentOutput(1)),
+    new InstantCommand(() -> intake.setPercentOutput(0.5)),
+    new InstantCommand(() -> intake.setPercentOutput(0)));
 
     
 
 
-    PathPlannerTrajectory trajectory1 = (PathPlanner.loadPath("1meter", 1,1));//loads "2peice path"
+    PathPlannerTrajectory trajectory1 = (PathPlanner.loadPath("1meter", 4,4));//loads "2peice path"
     trajectory1.getMarkers();
     Logger.getInstance().recordOutput("traj1", trajectory1);
 

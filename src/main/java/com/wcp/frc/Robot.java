@@ -4,6 +4,7 @@
 
 package com.wcp.frc;
 
+import java.sql.Time;
 import java.util.Arrays;
 
 import org.littletonrobotics.junction.LoggedRobot;
@@ -90,7 +91,7 @@ swerve.zeroModules();
    */
   @Override
   public void robotPeriodic() {
-swerve.updateOdometry(defaultPeriodSecs);
+swerve.updatePose(Timer.getFPGATimestamp());
     elevator.getEncoder();
     arm.getEncoder();
 

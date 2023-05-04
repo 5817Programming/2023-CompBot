@@ -264,6 +264,9 @@ public class Swerve extends Subsystem {
     public void resetPose(){
 		modules.forEach((m) -> m.resetPose());
 	}
+    public void resetPose(Pose2dd newPose){
+		modules.forEach((m) -> m.resetPose(newPose));
+	}
     /** The tried and true algorithm for keeping track of position */
 	public synchronized void updatePose(double timestamp){
 		double x = 0.0;
@@ -319,9 +322,9 @@ public class Swerve extends Subsystem {
         scuffedPathPlanner.setEventTimings(eventTimings);
         scuffedPathPlanner.setEvents(events);
         scuffedPathPlanner.setWaitTimings(waitTiming);
-        resetOdometry(Util.Poseconvert2dto2dd( scuffedPathPlanner.getStart()),Rotation2dd.fromDegrees(scuffedPathPlanner.getrotation())); 
+        resetOdometry(Util.Poseconvert2dto2dd(scuffedPathPlanner.getStart()),Rotation2dd.fromDegrees(scuffedPathPlanner.getrotation())); 
         resetGryo(scuffedPathPlanner.getStartRotation());
-        Logger.getInstance().recordOutput("startRotation", scuffedPathPlanner.getStartRotation());
+        Logger.getInstance().recordOutput("startRotation", scuffedPathPlanner.getStart());
         setTrajectory(trajectory);
         resetTimer();
     
@@ -347,13 +350,13 @@ public class Swerve extends Subsystem {
         Logger.getInstance().recordOutput("rotationErorr", getRobotHeading().getDegrees()-targetHeading.getDegrees());
 
         lastTimestamp = timestamp;
-        if(Math.abs(xError+yError)/2<.01&&ScuffedPathPlanner.getInstance().isFinished()) {
+        if(Math.abs(xError+yError)/2<.05&&ScuffedPathPlanner.getInstance().isFinished()) {
             setState(State.OFF);
             trajectoryFinished = true;
 
             return new Translation2dd();
         }
-        return new Translation2dd(xError, -yError);
+        return new Translation2dd(-xError, -yError);
 
     }
     
@@ -415,7 +418,7 @@ public class Swerve extends Subsystem {
             double rotationCorrection = headingController.getRotationCorrection(getRobotHeading(), timestamp);
             desiredRotationScalar = rotationCorrection;    
             Logger.getInstance().recordOutput("targetHeading", targetHeading.getDegrees());
-            commandModules(inverseKinematics.updateDriveVectors(translationCorrection, rotationCorrection, pose, robotCentric));
+            commandModules(inverseKinematics.updateDriveVectors(translationCorrection, 0, pose, robotCentric));
         }
     }
     }
