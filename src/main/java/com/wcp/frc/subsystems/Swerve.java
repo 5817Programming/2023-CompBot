@@ -109,9 +109,7 @@ public class Swerve extends Subsystem {
 
         scuffedPathPlanner = ScuffedPathPlanner.getInstance();
         gyro = Pigeon.getInstance();
-        gyro.setAngle(0);
 
-        modules.forEach((m) -> m.resetPose(new Pose2dd(new Translation2dd(5,5),new Rotation2dd())));
 
 
     }
@@ -261,9 +259,7 @@ public class Swerve extends Subsystem {
 
 
     }
-    public void resetPose(){
-		modules.forEach((m) -> m.resetPose());
-	}
+
     public void resetPose(Pose2dd newPose){
 		modules.forEach((m) -> m.resetPose(newPose));
 	}
@@ -292,7 +288,7 @@ public class Swerve extends Subsystem {
 					minDeviance = deviance;
 					minDevianceIndex = m.moduleID;
 				}
-				if(deviance <= 0.05){
+				if(deviance <= 10000){
 					modulesToUse.add(m);
 				}
 			}
@@ -356,7 +352,7 @@ public class Swerve extends Subsystem {
 
             return new Translation2dd();
         }
-        return new Translation2dd(-xError, -yError);
+        return new Translation2dd(xError, -yError);
 
     }
     
@@ -385,7 +381,7 @@ public class Swerve extends Subsystem {
     }
 
     public void update(double timestamp) {// uses sent input to commad modules and correct for rotatinol drift
-                drivingpose = Pose2dd.fromRotaiton(getRobotHeading());
+            drivingpose = Pose2dd.fromRotaiton(getRobotHeading());
 
 
         if(currentState == State.MANUAL) {
@@ -418,7 +414,7 @@ public class Swerve extends Subsystem {
             double rotationCorrection = headingController.getRotationCorrection(getRobotHeading(), timestamp);
             desiredRotationScalar = rotationCorrection;    
             Logger.getInstance().recordOutput("targetHeading", targetHeading.getDegrees());
-            commandModules(inverseKinematics.updateDriveVectors(translationCorrection, 0, pose, robotCentric));
+            commandModules(inverseKinematics.updateDriveVectors(translationCorrection, rotationCorrection, pose, robotCentric));
         }
     }
     }

@@ -72,7 +72,7 @@ public class Constants {
 
     public static final double kSwerveEncUnitsPerWheelRev = kSwerveDriveEncoderResolution * 2048;
 	public static final double kSwerveEncUnitsPerInch = kSwerveEncUnitsPerWheelRev / (Math.PI * kSwerveWheelDiameter);
-    public static final double kWheelCircumference = Units.inchesToMeters(kSwerveWheelDiameter*Math.PI)*.9;
+    public static final double kWheelCircumference = Units.inchesToMeters(kSwerveWheelDiameter*Math.PI);
 
 
     ///The absolute starting postion for each module

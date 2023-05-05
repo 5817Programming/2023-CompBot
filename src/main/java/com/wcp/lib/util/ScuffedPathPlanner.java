@@ -92,7 +92,7 @@ public class ScuffedPathPlanner extends SubsystemBase {
   
 
   public Pose2dd getDesiredPose2dd(
-  boolean useAllianceColor, double speedw, Pose2d currenPose2d) {
+  boolean useAllianceColor, double speed, Pose2d currenPose2d) {
 
     this.currentPose = currenPose2d;
     double currentTime = this.timer.get()*.5;

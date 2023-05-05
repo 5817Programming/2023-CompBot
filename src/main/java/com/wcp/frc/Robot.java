@@ -64,8 +64,8 @@ public class Robot extends LoggedRobot {
     // Timestamps" in the "Understanding Data Flow" page
     Logger.getInstance().start(); // Start logging! No more data receivers, replay sources, or metadata values may
                                   // be added.
-swerve = Swerve.getInstance();
-swerve.zeroModules();
+    swerve = Swerve.getInstance();
+    swerve.zeroModules();
 
 
     controls = Controls.getInstance();
@@ -127,12 +127,16 @@ swerve.updatePose(Timer.getFPGATimestamp());
   @Override
   public void autonomousInit() {
     balancing.toggle = false;
-
+    swerve = Swerve.getInstance();
+    swerve.fieldzeroSwerve();
+    swerve.sendInput(0, 0,0);
+    swerve.stop();
     // // schedule the autonomous command (example)
     // if (autoChooser.getSelected() != null) {
     // autoChooser.getSelected().schedule();
     // }
     new Auto6(swerve).schedule();
+
     startime = Timer.getFPGATimestamp();
       
   }

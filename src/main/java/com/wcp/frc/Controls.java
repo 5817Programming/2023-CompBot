@@ -77,8 +77,8 @@ public class Controls {
 
         double driverLeftTrigger = Driver.getLeftTriggerAxis();// slow mode
         double driverightTrigger = Driver.getRightTriggerAxis();// arm down
-        double driverLeftXInput = (((Driver.getLeftX())) * Acelerator);
-        double driverLeftYInput = -(Driver.getLeftY() * Acelerator);// drive
+        double driverLeftXInput = -(((Driver.getLeftX())) * Acelerator);
+        double driverLeftYInput = (Driver.getLeftY() * Acelerator);// drive
         double driverRightXInput = -((((Driver.getRightX() * ignore) + rotate) * 2) * Acelerator);// drive
         boolean driverLeftBumper = Driver.getLeftBumper();// do (hold)
         boolean driverRightBumper = Driver.getRightBumper();// succ (toggle)

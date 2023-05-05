@@ -223,9 +223,7 @@ public class SwerveDriveModule extends Subsystem {
 		Translation2dd modulePosition = robotPose.transformBy(Pose2dd.fromTranslation(mstartingPosition)).getTranslation();
 		position = modulePosition;
 	}
-    public synchronized void resetPose(){
-		position = mstartingPosition;
-	}
+
     public Pose2dd getEstimatedRobotPose(){
 		return estimatedRobotPose;
 	}
@@ -250,7 +248,7 @@ public class SwerveDriveModule extends Subsystem {
 		double currentEncDistance = Conversions.falconToMeters(driveMotor.getSelectedSensorPosition(), Constants.kWheelCircumference, Options.driveRatio);
 		double deltaEncDistance = (currentEncDistance - previousEncDistance) * Constants.kWheelScrubFactors[moduleID];
 		Rotation2dd currentWheelAngle = getFieldCentricAngle(robotHeading);
-		Translation2dd deltaPosition = new Translation2dd(currentWheelAngle.cos()*deltaEncDistance, 
+		Translation2dd deltaPosition = new Translation2dd(-currentWheelAngle.cos()*deltaEncDistance, 
 				currentWheelAngle.sin()*deltaEncDistance);
 
 		double xScrubFactor = Constants.kXScrubFactor;
@@ -288,12 +286,12 @@ public class SwerveDriveModule extends Subsystem {
 
 		deltaPosition = new Translation2dd(deltaPosition.x() * xScrubFactor,
 			deltaPosition.y() * yScrubFactor);
-        Logger.getInstance().recordOutput("delta x " + moduleID, deltaPosition.x());
         Logger.getInstance().recordOutput("delta t" + moduleID, deltaPosition.y());
 		Translation2dd updatedPosition = position.translateBy(deltaPosition);
 		Pose2dd staticWheelPose = new Pose2dd(updatedPosition, robotHeading);
 		Pose2dd robotPose = staticWheelPose.transformBy(Pose2dd.fromTranslation(mstartingPosition).inverse());
 		position = updatedPosition;
+        Logger.getInstance().recordOutput("Pos " + moduleID,Util.Poseconvert2ddto2d(robotPose));
 		estimatedRobotPose =  robotPose;
 		previousEncDistance = currentEncDistance;
 	}
