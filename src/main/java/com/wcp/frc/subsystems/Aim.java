@@ -30,9 +30,10 @@ public class Aim extends SubsystemBase {
   boolean pathStarted;
   double distance;
   int bestScore;
-  int offset= 0;
+  int offset;
   double xError;
   double yError;
+  boolean ran = false;
   SynchronousPIDF xPID;
   SynchronousPIDF yPID;
   SynchronousPIDF rPID;
@@ -53,6 +54,7 @@ public class Aim extends SubsystemBase {
   public static Aim getInstance(){
     if(instance == null)
       instance = new Aim();
+      
     return instance;
   }
 
@@ -92,39 +94,54 @@ public class Aim extends SubsystemBase {
   
   public void moveTo(int scoringNode){
     double Roboty = swerve.getPose().getTranslation().y();
+    double Robotx = swerve.getPose().getTranslation().x();
+
     double rotation = 0;
     if(DriverStation.getAlliance() == Alliance.Blue){
       rotation = 180;
     }
     double currentTime  = Timer.getFPGATimestamp();
-    double dt = currentTime-lastTimeStamp;
+    double dt = currentTime-lastTimeStamp; 
 
-    xError = xPID.calculate(Robotx-1.84, dt);
-    yError = yPID.calculate(Roboty-Constants.scoresY.get(scoringNode), dt);
+    xPID.setSetpoint(2);
+    yPID.setSetpoint(Constants.scoresY.get(scoringNode));
+    xError = xPID.calculate(Robotx, dt);
+    yError = yPID.calculate(Roboty, dt);
     Logger.getInstance().recordOutput("yerror", yError);
-    swerve.Aim(new Translation2dd(xError, -yError), Rotation2dd.fromDegrees(rotation));
+    Logger.getInstance().recordOutput("xerror", xError);
+
+    swerve.Aim(new Translation2dd(-xError, yError), Rotation2dd.fromDegrees(rotation));
     lastTimeStamp = currentTime;
   }
   public void aimAtScore(boolean cube,boolean snapDown,boolean snapUp){
     double Roboty = swerve.getPose().getTranslation().y();
     bestDistance = 11111;
+  if(!ran){
    for(int i = 0; i < Constants.scoresY.size(); i++){//finds closest scoring node
     distance = Math.abs(Constants.scoresY.get(i)-Roboty);
-    if(bestDistance>distance){//if closer than previous closest
-      bestDistance = distance;
-      bestScore = i+offset;//sets target to closest plus the user inputed offset
+        if(bestDistance>distance){//if closer than previous closest
+        bestDistance = distance;
+        bestScore = i;//sets target to closest plus the user inputed offset
+      }
+    
+    
+    if(i == Constants.scoresY.size()-1){
+      ran = true;
     }
-    Logger.getInstance().recordOutput("bestDistance", bestDistance);
     }
+  }
 
-  if(snapUp && (bestScore+1 < Constants.scoresY.size()-1)){//if wants to move up and isnt at 10 than move up
+  if(snapUp && (bestScore+offset + 1 < Constants.scoresY.size())){//if wants to move up and isnt at 10 than move up
     offset++;//sets desired scoring station to snap to the next one up
-  }else if(snapDown&& (bestScore- 1> 0)){//if wants to move down and isnt at zero than move down
+  }else if(snapDown&& (bestScore+offset> 0)){//if wants to move down and isnt at zero than move down
     offset--;//sets desired scoring station to snap to the next one down
   }
+  Logger.getInstance().recordOutput("bestDistance", offset);
+
+
   if(DriverStation.getAlliance() == Alliance.Blue){
     if(Robotx < 2.5){
-      moveTo(bestScore);
+      moveTo(bestScore+offset);
       Logger.getInstance().recordOutput("BEst", bestScore);
 
     }else{
@@ -136,7 +153,7 @@ public class Aim extends SubsystemBase {
   }
   else {
     if(Robotx < 14.02){
-      moveTo(bestScore);
+      moveTo(bestScore+offset);
       Logger.getInstance().recordOutput("BEst", bestScore);
 
     }else{
@@ -162,6 +179,10 @@ public class Aim extends SubsystemBase {
     swerve.Aim(new Translation2dd(xERROR,yERROR),0);
     
 
+  }
+  public void resetOffset(){
+    offset = 0;
+    ran = false;
   }
 
   public void goToObject(boolean cube){

@@ -22,7 +22,7 @@ import edu.wpi.first.wpilibj.XboxController;
 
 public class Controls {
     Constants constants = new Constants();
-    Aim aim = new Aim();
+    Aim aim;
     Scores scores = new Scores();
     SideElevator sideelevator = new SideElevator();
     Elevator elevator = new Elevator();
@@ -70,6 +70,7 @@ public class Controls {
 
     public void update() {
         vision = Vision.getInstance();
+        aim = Aim.getInstance();
         //CommandScheduler.getInstance().run();
        // Command toHuman = new toHuman(odometry);
        
@@ -83,7 +84,7 @@ public class Controls {
         boolean driverLeftBumper = Driver.getLeftBumper();// do (hold)
         boolean driverRightBumper = Driver.getRightBumper();// succ (toggle)
         boolean driverRightBumperTAP = Driver.getRightBumperPressed();// succ (toggle)
-        boolean driverLeftBumperTAP = Driver.getRightBumperPressed();// succ (toggle)
+        boolean driverLeftBumperTAP = Driver.getLeftBumperPressed();// succ (toggle)
 
 
         boolean driverLeftStickDown = Driver.getLeftStickButtonPressed();
@@ -247,6 +248,7 @@ public class Controls {
 if (driverLeftTrigger>.5) {
     aim.aimAtScore(cube, driverLeftBumperTAP, driverRightBumperTAP);
 }else {
+    aim.resetOffset();
     swerve.sendInput(driverLeftYInput, driverLeftXInput, driverRightXInput);
 }
 
