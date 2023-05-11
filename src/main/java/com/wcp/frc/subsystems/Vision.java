@@ -7,7 +7,15 @@ package com.wcp.frc.subsystems;
 import org.littletonrobotics.junction.Logger;
 
 import com.wcp.frc.Constants;
+import com.wcp.lib.Conversions;
+import com.wcp.lib.geometry.Pose2dd;
+import com.wcp.lib.geometry.Rotation2dd;
+import com.wcp.lib.geometry.Translation2dd;
+import com.wcp.lib.util.Util;
 
+import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableEntry;
@@ -17,6 +25,8 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 public class Vision extends SubsystemBase {
   
   Swerve swerve = Swerve.getInstance();
+  double[] empty = {0.0,0.0,0.0,0.0,0.0,0.0};
+
   public double height;
   public static Vision instance = null;
   public int setPoint;
@@ -26,7 +36,7 @@ public class Vision extends SubsystemBase {
   NetworkTableEntry ta = table.getEntry("ta");
   NetworkTableEntry tv = table.getEntry("tv");
 
-  NetworkTableEntry pos = table.getEntry("MegaTag BotPose");
+  NetworkTableEntry botpose = table.getEntry("botpose");
 
   double x;
   double y;
@@ -75,6 +85,17 @@ public class Vision extends SubsystemBase {
     yaw = tx.getDouble(0.0);
     return yaw;
   }
+  public Pose2dd getPose(){
+    double[] poseList = botpose.getDoubleArray(empty);
+    Logger.getInstance().recordOutput("LimePose", new Pose2d(new Translation2d(poseList[0],poseList[1]), new Rotation2d()));
+    return new Pose2dd(new Translation2dd(poseList[0],poseList[1]), new Rotation2dd());
+
+  }
+  public Pose2dd getWeightedPose(){
+    double odometryWheight = (getDistance()- Constants.VisionConstants.lowerThreshold)/( Constants.VisionConstants.upperThreshold- Constants.VisionConstants.lowerThreshold);
+    Logger.getInstance().recordOutput("wheghtedPose",Util.Poseconvert2ddto2d( getPose().scale(odometryWheight).transformBy(swerve.getPose().scale((1-odometryWheight)))));
+    return getPose().scale(odometryWheight).transformBy(swerve.getPose().scale((1-odometryWheight)));
+    }
 
   public boolean hasTarget() {//returns in binary so we convert to boolean 
     double v = tv.getDouble(0.0);

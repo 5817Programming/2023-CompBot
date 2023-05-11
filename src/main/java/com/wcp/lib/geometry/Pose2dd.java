@@ -45,7 +45,9 @@ public class Pose2dd {
         return new Pose2dd(mTranslation.translateBy(other.mTranslation.rotateBy(mRotation)),
                 mRotation.rotateBy(other.mRotation));
     }
-
+    public Pose2dd scale(double scaleFactor){
+        return new Pose2dd(new Translation2dd(mTranslation.mX*scaleFactor,mTranslation.mY*scaleFactor),mRotation);
+    }
 
     public Rotation2dd getRotation() {
         return this.mRotation;
