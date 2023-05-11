@@ -157,18 +157,16 @@ public class Scores extends SubsystemBase {
   public void hooman_CONE() {
     sideElevator.elevator(Constants.SideElevatorConstants.HOOMAN+sideElvator);// go to set offset based off vision
     elevator.elevator(Constants.ElevatorConstants.HOOMAN_CONE);
-    if (elevator.isFinisheddown(20000)){
       arm.setMotionMagic(Constants.ArmConstants.HOOMAN+armOffset);
-      }
+      
    
 
   }
   public void HOOMAN_CUBE() {
     sideElevator.elevator(Constants.SideElevatorConstants.HOOMAN+sideElvator);// go to set offset based off vision
     elevator.elevator(Constants.ElevatorConstants.HOOMAN_CUBE);
-    if (elevator.isFinisheddown(20000)){
       arm.setMotionMagic(Constants.ArmConstants.HOOMAN+armOffset);
-      }
+      
    
 
   }
@@ -215,7 +213,6 @@ public class Scores extends SubsystemBase {
   public void scoreHighCube() {
     sideElevator.elevator(Constants.SideElevatorConstants.HIGH_CUBE+sideElvator);// goto set offset based off vision
     elevator.elevator(Constants.ElevatorConstants.HIGH_CUBE);
-
     arm.setMotionMagic(Constants.ArmConstants.HIGH_CUBE + armOffset);
 
   }
@@ -233,9 +230,7 @@ public class Scores extends SubsystemBase {
 
     sideElevator.elevator(Constants.SideElevatorConstants.ZERO+sideElvator);
     elevator.elevator(Constants.ElevatorConstants.ZERO);
-         if (elevator.isFinishedup(60000)){
     arm.setMotionMagic(Constants.ArmConstants.ZERO+500);
-         }
          armOffset=0;
          sideElvator = 0;
     // Use addRequirements() here to declare subsystem dependencies.

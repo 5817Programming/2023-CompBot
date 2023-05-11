@@ -268,7 +268,7 @@ public class SwerveDriveModule extends Subsystem {
         }
         if(Util.epsilonEquals(Math.signum(deltaPosition.y()), 1.0)){
             if(standardCarpetDirection){
-                yScrubFactor = 1.1;
+                yScrubFactor = 1;
             }else{
                 
             }
@@ -276,7 +276,7 @@ public class SwerveDriveModule extends Subsystem {
             if(standardCarpetDirection){
                 
             }else{
-                yScrubFactor = 1.1;
+                yScrubFactor = 1;
             }
         }
 	
