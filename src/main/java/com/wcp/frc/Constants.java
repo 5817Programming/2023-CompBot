@@ -72,7 +72,7 @@ public class Constants {
 
     public static final double kSwerveEncUnitsPerWheelRev = kSwerveDriveEncoderResolution * 2048;
 	public static final double kSwerveEncUnitsPerInch = kSwerveEncUnitsPerWheelRev / (Math.PI * kSwerveWheelDiameter);
-    public static final double kWheelCircumference = Units.inchesToMeters(kSwerveWheelDiameter*Math.PI);
+    public static final double kWheelCircumference = Units.inchesToMeters(kSwerveWheelDiameter*Math.PI)*.9;
 
 
     ///The absolute starting postion for each module
@@ -248,6 +248,17 @@ public class Constants {
 
     public static double zero=19241;
     public static double pickup =83492;
+    public static final List<Double> scoresY =  Arrays.asList(
+        0.46,
+        1.04,
+        1.57,
+        2.16,
+        2.72,
+        3.25,
+        3.84,
+        4.39,
+        4.94
+    );
 }
 
 

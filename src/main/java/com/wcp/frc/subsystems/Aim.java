@@ -6,80 +6,179 @@ package com.wcp.frc.subsystems;
 
 import org.littletonrobotics.junction.Logger;
 
+import com.pathplanner.lib.PathConstraints;
+import com.pathplanner.lib.PathPlannerTrajectory;
+
 import com.wcp.frc.Constants;
 import com.wcp.frc.subsystems.gyros.Gyro;
 import com.wcp.frc.subsystems.gyros.Pigeon;
+import com.wcp.lib.geometry.Rotation2dd;
+import com.wcp.lib.geometry.Translation2dd;
+import com.wcp.lib.util.SynchronousPIDF;
+
 import edu.wpi.first.math.controller.PIDController;
+import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.Timer;
+import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
+
 public class Aim extends SubsystemBase {
-  /** Creates a new Aim. */
-  public Aim() {
-    pigeon = Pigeon.getInstance();
-    vision = Vision.getInstance();
+  Swerve swerve;
+  boolean pathStarted;
+  double distance;
+  int bestScore;
+  int offset= 0;
+  double xError;
+  double yError;
+  SynchronousPIDF xPID;
+  SynchronousPIDF yPID;
+  SynchronousPIDF rPID;
+
+  PIDController thetaController;
+  PIDController advanceController;
+  double lastTimeStamp = 0;
+  double Roboty;
+  double Robotx;
+  Vision vision = Vision.getInstance();
+  Gyro pigeon = Pigeon.getInstance();
+  double xERROR;
+  double yERROR;
+
+  
+  public static Aim instance = null;
+
+  public static Aim getInstance(){
+    if(instance == null)
+      instance = new Aim();
+    return instance;
   }
 
+  double bestDistance=1111111;
 
-  PIDController rotationPID = new PIDController(0.029, 0, 0);// makes controllers
-  PIDController yAxisPID = new PIDController(0.01, 0, 0);
+  /** Creates a new Aim. */
 
-  Vision vision;// defines types
-  Gyro pigeon;
-  double targetYaw;
-  double gyroYaw;
-  double range;
-  double setPoint;
-  Swerve swerve;
+  public Aim() {
+    swerve = Swerve.getInstance();
+     xPID = new SynchronousPIDF(.5, 0.0, 0);
+     yPID = new SynchronousPIDF(.5, 0.0, 0);
+     rPID = new SynchronousPIDF(.5, 0.0, 0);
+     
+
+     thetaController = new PIDController(0.5, 0, 0);
+     advanceController = new PIDController(0.5, 0, 0);
+
+    }
+
+  
+
 
   @Override
   public void periodic() {
 
-    setPoint = Constants.VisionConstants.OFFSETS.get(vision.setPoint);
-    targetYaw = vision.getYaw();
-    gyroYaw = pigeon.getAngle();
-    range = vision.getDistance();
-Logger.getInstance().recordOutput("gyro", gyroYaw);
+  //CommandScheduler.getInstance().run();
+  swerve = Swerve.getInstance();
+
+    
+    
     // This method will be called once per scheduler run
   }
 
-  public void aim(double x) {
+  
+  
+        
+  
+  public void moveTo(int scoringNode){
+    double Roboty = swerve.getPose().getTranslation().y();
+    double rotation = 0;
+    if(DriverStation.getAlliance() == Alliance.Blue){
+      rotation = 180;
+    }
+    double currentTime  = Timer.getFPGATimestamp();
+    double dt = currentTime-lastTimeStamp;
 
-    swerve = Swerve.getInstance();
+    xError = xPID.calculate(Robotx-1.84, dt);
+    yError = yPID.calculate(Roboty-Constants.scoresY.get(scoringNode), dt);
+    Logger.getInstance().recordOutput("yerror", yError);
+    swerve.Aim(new Translation2dd(xError, -yError), Rotation2dd.fromDegrees(rotation));
+    lastTimeStamp = currentTime;
+  }
+  public void aimAtScore(boolean cube,boolean snapDown,boolean snapUp){
+    double Roboty = swerve.getPose().getTranslation().y();
+    bestDistance = 11111;
+   for(int i = 0; i < Constants.scoresY.size(); i++){//finds closest scoring node
+    distance = Math.abs(Constants.scoresY.get(i)-Roboty);
+    if(bestDistance>distance){//if closer than previous closest
+      bestDistance = distance;
+      bestScore = i+offset;//sets target to closest plus the user inputed offset
+    }
+    Logger.getInstance().recordOutput("bestDistance", bestDistance);
+    }
 
-    double xPosition = swerve.getPose().getTranslation().x();
-    double rotationCorrection = 0;
-    boolean aimOptimize = false;
-    double xCorrection = 0;
-    double yCorrection = 0;
+  if(snapUp && (bestScore+1 < Constants.scoresY.size()-1)){//if wants to move up and isnt at 10 than move up
+    offset++;//sets desired scoring station to snap to the next one up
+  }else if(snapDown&& (bestScore- 1> 0)){//if wants to move down and isnt at zero than move down
+    offset--;//sets desired scoring station to snap to the next one down
+  }
+  if(DriverStation.getAlliance() == Alliance.Blue){
+    if(Robotx < 2.5){
+      moveTo(bestScore);
+      Logger.getInstance().recordOutput("BEst", bestScore);
+
+    }else{
+      moveTo(bestScore);
+      Logger.getInstance().recordOutput("BEst", bestScore);
+
+    }
+      
+  }
+  else {
+    if(Robotx < 14.02){
+      moveTo(bestScore);
+      Logger.getInstance().recordOutput("BEst", bestScore);
+
+    }else{
+      moveTo(bestScore);
+      Logger.getInstance().recordOutput("BEst", bestScore);
+  }
+  }
+  
+  }
+  public void goToObject(){
+    //makes sure we have can see a target
+    vision.setPipeline(Constants.VisionConstants.CONE_PIPELNE);
+    if(!vision.hasTarget()){//if we cant see a cone we will look for a cube
+      vision.setPipeline(Constants.VisionConstants.CUBE_PIPELINE);
+      if(!vision.hasTarget()){//if we cant see a cube we will exit the function becuase we dont have anywhere to go
+        return;
+      }
+    }
+    //gets error
+    xERROR = thetaController.calculate(vision.getX(),0);
+    yERROR= advanceController.calculate(vision.getY(),-5);
+    //corrects for error
+    swerve.Aim(new Translation2dd(xERROR,yERROR),0);
     
-   if (range > 3.21) {
-      xCorrection = (-(.39 * (range/12)) / 2)-.1;// p controller
-    } 
 
-    // if (translationVector.norm() <= .1) {
-    // translationVector = new Translation2dd();
-    // }
+  }
 
-    if (gyroYaw < 0) {
-      aimOptimize = false;
-    } else {
-      aimOptimize = true;
+  public void goToObject(boolean cube){
+    Rotation2d heading = Rotation2d.fromDegrees(pigeon.getAngle());
+    if(cube){
+      vision.setPipeline(Constants.VisionConstants.CUBE_PIPELINE);
     }
-    rotationCorrection = rotationPID.calculate(gyroYaw,180);
-    if (vision.hasTarget()) {// goes towards target if passed charge station and has a tag
-      yCorrection = yAxisPID.calculate(targetYaw, 0);
+    else{
+      vision.setPipeline(Constants.VisionConstants.CONE_PIPELNE);
+    }
+    double xSetPoint = (.1*heading.getCos());
+    double ySetPoint = (.1*heading.getSin());
+    double xError = xPID.calculate(vision.getDistanceToGroundObject()*heading.getCos(),xSetPoint);
+    double yError = yPID.calculate(vision.getDistanceToGroundObject()*heading.getSin(),ySetPoint);
+    double thetaControl = rPID.calculate(vision.getY(), 0);
 
-    }
-    if (Math.abs(rotationCorrection) > .5) {
-      rotationCorrection *= .5;
-    }
-// && range<7
-    // } else {
-    // if (r != 0){
-    // rotationcorrection = r + rotationPID.calculate(targetyaw, setPoint);
-    // }
-    // }
-    swerve.sendInput(x, yCorrection, rotationCorrection);// sends new inputs
+    swerve.Aim(new Translation2dd(xError,yERROR), thetaControl);
 
   }
 }

@@ -110,6 +110,16 @@ public class Vision extends SubsystemBase {
     double distanceFromLimelightToGoalInches = (getHeight() - Constants.VisionConstants.LIMELIGHT_LENS_HEIGHT_INCHES)/Math.tan(Math.toRadians(Constants.VisionConstants.LIMELIGHT_MOUNT_ANGLE_DEGREES + getY()));
   return distanceFromLimelightToGoalInches>0&&distanceFromLimelightToGoalInches<1000?Units.inchesToMeters(distanceFromLimelightToGoalInches):0;
   }
+  public void   setPipeline(Integer pipeline) {
+    if(pipeline<0){
+        pipeline = 0;
+        throw new IllegalArgumentException("Pipeline can not be less than zero");
+    }else if(pipeline>9){
+        pipeline = 9;
+        throw new IllegalArgumentException("Pipeline can not be greater than nine");
+    }
+    table.getEntry("pipeline").setValue(pipeline);
+  }
   public void updatePipe(Boolean p){
     if (p){
       setIndex(Constants.VisionConstants.APRIL_PIPLINE, 0);
@@ -118,6 +128,10 @@ public class Vision extends SubsystemBase {
 
     }
 
+  }
+  public double getDistanceToGroundObject(){//gets distance to target
+    double distanceFromLimelightToGoalInches = (0 - Constants.VisionConstants.LIMELIGHT_LENS_HEIGHT_INCHES)/Math.tan(Math.toRadians(Constants.VisionConstants.LIMELIGHT_MOUNT_ANGLE_DEGREES + getY()));
+  return distanceFromLimelightToGoalInches>0&&distanceFromLimelightToGoalInches<1000?Units.inchesToMeters(distanceFromLimelightToGoalInches):0;
   }
 
   @Override

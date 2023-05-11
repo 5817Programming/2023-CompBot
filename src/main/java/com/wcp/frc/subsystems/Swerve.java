@@ -53,6 +53,7 @@ public class Swerve extends Subsystem {
 
     SwerveDriveModule frontRightModule, frontLeftModule, rearLeftModule, rearRightModule;
     List<SwerveDriveModule> modules;
+    Translation2dd aimingVector  = new Translation2dd();
 
     Translation2dd translationVector;
     public double rotationScalar;
@@ -120,7 +121,7 @@ public class Swerve extends Subsystem {
     }
 
     private enum State {
-        MANUAL, VECTOR,OFF;
+        MANUAL, VECTOR,OFF,AIM;
     }
     private State currentState = State.MANUAL;
     public State getState() {
@@ -380,22 +381,43 @@ public class Swerve extends Subsystem {
         return Rotation2dd.fromDegrees(gyro.getAngle());
     }
 
-    public void update(double timestamp) {// uses sent input to commad modules and correct for rotatinol drift
-            drivingpose = Pose2dd.fromRotaiton(getRobotHeading());
-
-
-        if(currentState == State.MANUAL) {
-            double rotationCorrection = headingController.updateRotationCorrection(getRobotHeading(), timestamp);
-
-            if (translationVector.norm() == 0 || rotationScalar != 0) {
+    public void update(double timestamp) {
+        drivingpose = Pose2dd.fromRotaiton(getRobotHeading());
+        if(currentState == State.MANUAL ){
+            double rotationCorrection =  headingController.updateRotationCorrection(drivingpose.getRotation(), timestamp);
+        if(translationVector.norm() == 0 || rotationScalar != 0) {
+            rotationCorrection = 0;
+        }
+        SmartDashboard.putNumber("Swerve Heading Correctiomm    33  33   /n", rotationCorrection);
+        commandModules(inverseKinematics.updateDriveVectors(translationVector, rotationScalar + rotationCorrection, drivingpose, robotCentric));
+        }
+        if(currentState == State.AIM){
+            headingController.setTargetHeading(targetHeading);
+            double rotationCorrection = headingController.getRotationCorrection(getRobotHeading(), timestamp);
+            if(translationVector.norm() == 0 || rotationScalar != 0) {
                 rotationCorrection = 0;
             }
             SmartDashboard.putNumber("Swerve Heading Correctiomm    33  33   /n", rotationCorrection);
-            commandModules(inverseKinematics.updateDriveVectors(translationVector, rotationScalar + rotationCorrection,
-                    drivingpose, robotCentric));// where the magic happens
+            commandModules(inverseKinematics.updateDriveVectors(aimingVector, rotationCorrection+rotationScalar, drivingpose, robotCentric));
         }
 
+        
+
+        
+        
     }
+    public void Aim(Translation2dd aimingVector, double scalar){
+        currentState = State.AIM;
+        this.aimingVector = aimingVector;
+        this.rotationScalar = scalar;
+        update(Timer.getFPGATimestamp());
+    }
+    public void Aim(Translation2dd aimingVector,Rotation2dd rotation){
+        currentState = State.AIM;
+        this.aimingVector = aimingVector;
+        targetHeading = rotation;
+    }
+
     public void updateOdometry(double timestamp) {// uses sent input to commad modules and correct for rotatinol drift
 
     lastUpdateTimestamp = timestamp;
@@ -466,7 +488,9 @@ public class Swerve extends Subsystem {
     public void zeroSwerve() {// zeros gyro
         headingController.setTargetHeading(Rotation2dd.fromDegrees(0));
         gyro.setAngle(0);
+        resetPose(new Pose2dd(new Translation2dd(1.9,4.52),Rotation2dd.fromDegrees(0)));
     }
+
 
     public void resetEncoders() {// zeros encoders
         for (int i = 0; i < modules.size(); i++) {

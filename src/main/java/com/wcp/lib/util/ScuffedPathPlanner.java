@@ -65,7 +65,9 @@ public class ScuffedPathPlanner extends SubsystemBase {
       }
    
   public void startTimer(){
+    EventIndex = 0;
     this.timer.start();
+
   }
   public void setTrajectory (PathPlannerTrajectory trajectory){
     this.transformedTrajectory = trajectory;

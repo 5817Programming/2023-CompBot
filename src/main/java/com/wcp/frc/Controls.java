@@ -82,6 +82,10 @@ public class Controls {
         double driverRightXInput = -((((Driver.getRightX() * ignore) + rotate) * 2) * Acelerator);// drive
         boolean driverLeftBumper = Driver.getLeftBumper();// do (hold)
         boolean driverRightBumper = Driver.getRightBumper();// succ (toggle)
+        boolean driverRightBumperTAP = Driver.getRightBumperPressed();// succ (toggle)
+        boolean driverLeftBumperTAP = Driver.getRightBumperPressed();// succ (toggle)
+
+
         boolean driverLeftStickDown = Driver.getLeftStickButtonPressed();
         boolean driverAButton = Driver.getAButton();
         boolean driverXButton = Driver.getXButton();
@@ -223,10 +227,7 @@ public class Controls {
          }
          
 
-        if (driverLeftBumper) {
-            aim.aim(driverLeftYInput);
-        } else {
-        }
+
         vision.updatePipe(cube);
        // vision.getHeight(driverLeftTrigger, driverightTrigger);
         scores.scoring();
@@ -243,7 +244,11 @@ public class Controls {
     }
 
 }
-swerve.sendInput(driverLeftYInput, driverLeftXInput, driverRightXInput);
+if (driverLeftTrigger>.5) {
+    aim.aimAtScore(cube, driverLeftBumperTAP, driverRightBumperTAP);
+}else {
+    swerve.sendInput(driverLeftYInput, driverLeftXInput, driverRightXInput);
+}
 
 }
 }

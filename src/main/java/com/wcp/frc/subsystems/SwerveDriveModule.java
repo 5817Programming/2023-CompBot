@@ -268,7 +268,7 @@ public class SwerveDriveModule extends Subsystem {
         }
         if(Util.epsilonEquals(Math.signum(deltaPosition.y()), 1.0)){
             if(standardCarpetDirection){
-                yScrubFactor = 1.0;
+                yScrubFactor = 1.1;
             }else{
                 
             }
@@ -276,14 +276,11 @@ public class SwerveDriveModule extends Subsystem {
             if(standardCarpetDirection){
                 
             }else{
-                yScrubFactor = 1.0;
+                yScrubFactor = 1.1;
             }
         }
 	
 			
-		
-        
-
 		deltaPosition = new Translation2dd(deltaPosition.x() * xScrubFactor,
 			deltaPosition.y() * yScrubFactor);
         Logger.getInstance().recordOutput("delta t" + moduleID, deltaPosition.y());
