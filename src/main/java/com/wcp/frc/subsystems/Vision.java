@@ -73,13 +73,7 @@ public class Vision extends SubsystemBase {
     double area = ta.getDouble(0.0);//gets limelight area
     return area;
   }
-  
-  /*
-   * public void setfinished(boolean isFinishedd){
-   * 
-   * isFinished = isFinishedd;
-   * }
-   */
+
 
   public double getYaw() {
     yaw = tx.getDouble(0.0);
@@ -93,6 +87,9 @@ public class Vision extends SubsystemBase {
   }
   public Pose2dd getWeightedPose(){
     double odometryWheight = (getDistance()- Constants.VisionConstants.lowerThreshold)/( Constants.VisionConstants.upperThreshold- Constants.VisionConstants.lowerThreshold);
+    if(odometryWheight >1){
+      odometryWheight = 1;
+    }
     Logger.getInstance().recordOutput("wheghtedPose",Util.Poseconvert2ddto2d( getPose().scale(odometryWheight).transformBy(swerve.getPose().scale((1-odometryWheight)))));
     return getPose().scale(odometryWheight).transformBy(swerve.getPose().scale((1-odometryWheight)));
     }
