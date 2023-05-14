@@ -9,7 +9,7 @@ import edu.wpi.first.wpilibj.motorcontrol.Spark;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import com.wcp.frc.Constants;
 
-public class Lights extends SubsystemBase {
+public class Lights extends Subsystem {
   /** Creates a new Lights. */
   private static Lights instance_;
 
@@ -26,12 +26,6 @@ public class Lights extends SubsystemBase {
   Ports ports = new Ports();
   // Vision vision;
   double color = Constants.LightConstants.NORMAL_LIGHT;
-
-  @Override
-  public void periodic() {
-
-    // This method will be called once per scheduler run
-  }
 
   Spark lights = new Spark(Ports.light);
 
@@ -55,6 +49,18 @@ public class Lights extends SubsystemBase {
     // if (vision.hasTarget()){
     // setLED(Constants.normallight);//rainbow(-.99)
     // }
+
+  @Override
+  public void outputTelemetry() {
+    // TODO Auto-generated method stub
+    
+  }
+
+  @Override
+  public void stop() {
+    // TODO Auto-generated method stub
+    
+  }
 
   }
 

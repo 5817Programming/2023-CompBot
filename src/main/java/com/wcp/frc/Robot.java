@@ -21,7 +21,9 @@ import com.wcp.frc.Autos.Auto6;
 import com.wcp.frc.subsystems.Arm;
 import com.wcp.frc.subsystems.Balancing;
 import com.wcp.frc.subsystems.Scores;
+import com.wcp.frc.subsystems.SideElevator;
 import com.wcp.frc.subsystems.Elevator;
+import com.wcp.frc.subsystems.Intake;
 
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -74,8 +76,8 @@ public class Robot extends LoggedRobot {
     
     subsystemManager = new SubsystemManager();
     subsystemManager.addSystems(Arrays.asList(
-        swerve));
-  }
+        Swerve.getInstance(), Arm.getInstance(), Elevator.getInstance(), Intake.getInstance(), Lights.getInstance(), SideElevator.getInstance(), Vision.getInstance()));
+    }
 
   /**
    * This function is called every robot packet, no matter the mode. Use this for

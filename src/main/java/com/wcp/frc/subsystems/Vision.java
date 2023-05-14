@@ -14,7 +14,8 @@ import edu.wpi.first.networktables.NetworkTableEntry;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
-public class Vision extends SubsystemBase {
+public class Vision extends Subsystem {
+  
   
   Swerve swerve = Swerve.getInstance();
   public double height;
@@ -134,11 +135,18 @@ public class Vision extends SubsystemBase {
   return distanceFromLimelightToGoalInches>0&&distanceFromLimelightToGoalInches<1000?Units.inchesToMeters(distanceFromLimelightToGoalInches):0;
   }
 
-  @Override
-  public void periodic() {
-    range = getDistance();
-    Logger.getInstance().recordOutput("range", range);
 
+
+  @Override
+  public void outputTelemetry() {
+    // TODO Auto-generated method stub
+    
+  }
+
+  @Override
+  public void stop() {
+    // TODO Auto-generated method stub
+    
   }
 
 }

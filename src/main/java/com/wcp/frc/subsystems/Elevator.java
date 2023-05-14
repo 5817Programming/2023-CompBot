@@ -5,20 +5,28 @@
 package com.wcp.frc.subsystems;
 
 import org.littletonrobotics.junction.Logger;
-
 import com.ctre.phoenix.motorcontrol.ControlMode;
 import com.ctre.phoenix.motorcontrol.NeutralMode;
 import com.ctre.phoenix.motorcontrol.StatusFrameEnhanced;
 import com.ctre.phoenix.motorcontrol.TalonFXFeedbackDevice;
 import com.ctre.phoenix.motorcontrol.TalonFXInvertType;
 import com.ctre.phoenix.motorcontrol.can.TalonFX;
-
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import com.wcp.frc.Constants;
 import com.wcp.frc.Ports;
 
 
-public class Elevator extends SubsystemBase {
+public class Elevator extends Subsystem {
+
+	public static Elevator instance = null;
+
+	public static Elevator getInstance(){
+		if(instance == null)
+			instance = new Elevator();
+		return instance;
+	}
+
+	PeriodicIO mPeriodicIO = new PeriodicIO();
 	/* Setpoints */
 	double mTargetMin = 800;//500
 	double mTargetMax = 78000;//78000
@@ -106,31 +114,53 @@ public class Elevator extends SubsystemBase {
 }
   
 
-  @Override
-  public void periodic() {
-    // This method will be called once per scheduler run
-  }
+
 
   public void elevator( double targetPos){
-    mLeftElevator.set(ControlMode.MotionMagic, targetPos);
+	mPeriodicIO.driveControlMode = ControlMode.MotionMagic;
+	mPeriodicIO.driveDemand = targetPos;
 
   }
- public boolean isFinishedup (double setpoint){
-	return mLeftElevator.getSelectedSensorPosition()<setpoint;
 
- }
- public boolean isFinisheddown (double setpoint){
-	return mLeftElevator.getSelectedSensorPosition()>setpoint;
-
- }
   public void my_PercentOutput( double speed){
 	
-	mLeftElevator.set(ControlMode.PercentOutput, speed);
-  
+	mPeriodicIO.driveControlMode = ControlMode.PercentOutput;
+	mPeriodicIO.driveDemand = speed;  
   }
   public double getEncoder(){
 	Logger.getInstance().recordOutput("elevator", mLeftElevator.getSelectedSensorPosition());
 
 	return mLeftElevator.getSelectedSensorPosition();
   }
+
+
+@Override
+public void outputTelemetry() {
+	// TODO Auto-generated method stub
+	
+}
+
+
+@Override
+public void stop() {
+	// TODO Auto-generated method stub
+	
+}
+@Override
+public void writePeriodicOutputs() {
+	mPeriodicIO.drivePosition = mLeftElevator.getSelectedSensorPosition();
+	mPeriodicIO.velocity = mLeftElevator.getSelectedSensorVelocity();
+}
+@Override
+public void readPeriodicInputs() {
+	mLeftElevator.set(mPeriodicIO.driveControlMode, mPeriodicIO.driveDemand);
+}
+public static class PeriodicIO  {
+	double drivePosition = 0;
+	double velocity = 0;
+
+	ControlMode driveControlMode = ControlMode.MotionMagic;
+	double rotationDemand = 0.0;
+	double driveDemand = 0.0;
+}
 }

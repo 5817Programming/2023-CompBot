@@ -5,28 +5,31 @@
 package com.wcp.frc.subsystems;
 
 
-import java.security.DrbgParameters.Reseed;
-
 import org.littletonrobotics.junction.Logger;
-
 import com.ctre.phoenix.motorcontrol.ControlMode;
 import com.ctre.phoenix.motorcontrol.NeutralMode;
 import com.ctre.phoenix.motorcontrol.TalonFXControlMode;
 import com.ctre.phoenix.motorcontrol.can.TalonFX;
-import com.wcp.frc.Controls;
 import com.wcp.frc.Ports;
-
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
-public class Intake extends SubsystemBase {
+public class Intake extends Subsystem {
   /** Creates a new Intake. */
   public Intake() {}
+
+  public static Intake instance = null;
+
+  public static Intake getInstance(){
+        if(instance == null)
+          instance = new Intake();
+      return instance;
+  }
+
   TalonFX intake = new TalonFX(Ports.intake);
   
   boolean stop = false;
   double ramp;
   boolean hold= false;
-  Scores scores = new Scores();
   boolean hasPiece= false;
   boolean isReversed;
   boolean intaked;
@@ -93,18 +96,24 @@ public void setPercentOutput(double p){
 
   }
   @Override
-  public void periodic() {
-    if (hasPiece&intaked){
+  public void update(){
+        if (hasPiece&intaked){
       if(intake.getSelectedSensorVelocity()<2000){
         intake.set(ControlMode.PercentOutput, isReversed ? .1:-.1);
      
       }
-    }
-
+      }
+  }
     // if (hold){
     //   scores.hold();
 
     // }
     // // This method will be called once per scheduler run
+  
+  @Override
+  public void outputTelemetry() {
+    // TODO Auto-generated method stub
+    
   }
 }
+
