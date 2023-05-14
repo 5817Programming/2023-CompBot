@@ -8,12 +8,12 @@ import com.wcp.frc.subsystems.Arm;
 import com.wcp.frc.subsystems.Elevator;
 import com.wcp.frc.subsystems.Intake;
 import com.wcp.frc.subsystems.SideElevator;
+import com.wcp.frc.subsystems.SuperStructure;
 import com.wcp.frc.subsystems.Swerve;
 import com.wcp.frc.subsystems.Vision;
 import com.wcp.lib.HeadingController;
 import com.wcp.lib.geometry.Rotation2dd;
 // import com.wcp.frc.subsystems.toHuman;
-import com.wcp.frc.subsystems.Aim;
 import com.wcp.frc.subsystems.Lights;
 import com.wcp.frc.subsystems.Scores;
 
@@ -21,8 +21,7 @@ import edu.wpi.first.wpilibj.XboxController;
 
 
 public class Controls {
-    Constants constants = new Constants();
-    Aim aim;
+    SuperStructure s;
     Scores scores = new Scores();
     SideElevator sideelevator = new SideElevator();
     Elevator elevator = new Elevator();
@@ -70,14 +69,14 @@ public class Controls {
 
     public void update() {
         vision = Vision.getInstance();
-        aim = Aim.getInstance();
+        s = SuperStructure.getInstance();
         //CommandScheduler.getInstance().run();
        // Command toHuman = new toHuman(odometry);
        
 
 
         double driverLeftTrigger = Driver.getLeftTriggerAxis();// slow mode
-        double driverightTrigger = Driver.getRightTriggerAxis();// arm down
+        double driveRightTrigger = Driver.getRightTriggerAxis();// arm down
         double driverLeftXInput = -(((Driver.getLeftX())) * Acelerator);
         double driverLeftYInput = (Driver.getLeftY() * Acelerator);// drive
         double driverRightXInput = -((((Driver.getRightX() * ignore) + rotate) * 2) * Acelerator);// drive
@@ -120,137 +119,11 @@ public class Controls {
         boolean coDriverBackButton = CoDriver.getBackButton();
 
 
-       
-        if (codriverLeftBumperTAP) {
-            if (pick) {// cube
-                pickup = true;
-                pick = false;
-            } else {// cone
-                pickup = true;
-                pick = true;
-            }
-        }
-
-        if (driverLeftStickDown) {
-            scores.zero();
-        }
-
-        if (Driver.getBackButtonPressed()) {
-            swerve.zeroSwerve();
-        }
-
-        if (Driver.getStartButtonPressed()) {
-            swerve.parkMode();
-        }
-
-        Acelerator = (1 - (driverLeftTrigger / 2));
-
-        if (coDriverLeftTrigger > .2) {
-            if (pick) {
-                scores.elevatorOffset = 20000;
-            } else {
-
-                scores.elevatorOffset = 15000;
-            }
-
-        } else {
-            scores.elevatorOffset = 0;
-
-        }
-
-        if (coDriverRightY > .2) {
-            scores.armOffset -= 100;
-        }
-
-        if (coDriverRightY < -.2) {
-            scores.armOffset += 100;
-        }
-        if (coDriverBackButton){
-            intake.setIntake();
-        }
-
-
-
-        if (driverAButton) {
-
-        }
+       if(driveRightTrigger> .5){
+            s.aimState(driverRightBumperTAP, driverLeftBumperTAP);
+       }else{
+            swerve.sendInput(driverLeftXInput, driverRightXInput, driverRightXInput);
+       }
         
-        if (coDriverLeftY > .2&&scores.sideElvator>Constants.SideElevatorConstants.MAX_DOWN-210) {
-            scores.sideElvator -= 200;
-        }
-
-        if (coDriverLeftY < -.2&&scores.sideElvator<Constants.SideElevatorConstants.MAX_UP-210) {
-            scores.sideElvator += 200;
-        }
-
-
-        if (coDriverAButton || coDriverBButton || coDriverXButton || coDriverYButton || coDriverBackButton || coDriverLeftStickDown
-                || codriverLeftBumperTAP) {
-
-            scores.score(coDriverAButton, coDriverBButton, coDriverXButton, coDriverYButton, coDriverBackButton, coDriverLeftStickDown,
-                    codriverLeftBumperTAP, cube);
-        }
-
-        if(driverightTrigger>0.5){
-            if(!cube){
-                intake.intake(1,false,false);
-                //intake.setPercentOutput(1.0);
-            }
-            else if (cube){
-            intake.intake(1,true,false);
-            }
-            else {
-                intake.stop();
-            }
-
-
-     
-        if(coDriverRightTrigger>0.5){
-            if(!cube){
-                intake.intake(1,false,false);
-                //intake.setPercentOutput(1.0);
-            }
-            else if (cube){
-            intake.intake(1,true,false);
-            }
-                else{
-            intake.stop();
-        }
-
-        if(driverAButton){
-          //  new toHuman(odometry);
-           //toHuman.schedule();
-        }
-        if(codriverRightBumper){
-            cube = false;
-         }else if (codriverLeftBumper){
-            cube = true;
-         }
-         
-
-
-        vision.updatePipe(cube);
-       // vision.getHeight(driverLeftTrigger, driverightTrigger);
-        scores.scoring();
-        lights.setLights(codriverRightBumperTAP, codriverLeftBumperTAP);
-
-        if(driverRightBumper){
-            if(!cube){
-                intake.outake(cube, -35, 1);
-            }
-            else if(cube){
-                intake.outake(cube, -1, 1);
-            }
-        }
-    }
-
-}
-if (driverLeftTrigger>.5) {
-    aim.aimAtScore(cube, driverLeftBumperTAP, driverRightBumperTAP);
-}else {
-    aim.resetOffset();
-    swerve.sendInput(driverLeftYInput, driverLeftXInput, driverRightXInput);
-}
-
 }
 }

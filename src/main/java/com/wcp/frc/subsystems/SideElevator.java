@@ -14,9 +14,11 @@ import com.ctre.phoenix.motorcontrol.can.TalonFX;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import com.wcp.frc.Constants;
 import com.wcp.frc.Ports;
+import com.wcp.frc.subsystems.Requests.Request;
 
 
 public class SideElevator extends Subsystem {
+	
 
 	public static SideElevator instance = null;
 
@@ -43,6 +45,28 @@ public class SideElevator extends Subsystem {
 
 	/** save the last Point Of View / D-pad value */
 	int _pov = -1;
+
+	
+	public enum State{
+		HIGHCONE(Constants.SideElevatorConstants.HIGH_CONE),
+		HIGHCUBE(Constants.SideElevatorConstants.HIGH_CUBE),
+		MIDCONE(Constants.SideElevatorConstants.MID_CONE),
+		MIDCUBE(Constants.SideElevatorConstants.MID_CUBE),
+		LOWCONE(Constants.SideElevatorConstants.LOW_CONE),
+		LOWCUBE(Constants.SideElevatorConstants.LOW_CUBE),
+		ZERO(Constants.SideElevatorConstants.ZERO),
+		CHUTE(Constants.SideElevatorConstants.HOLD),
+		HOOMANCONE(Constants.SideElevatorConstants.HOOMAN),
+		HOOMANCUBE(Constants.SideElevatorConstants.HOOMAN);
+
+		double output = 0;
+
+		private State(double output){
+            this.output = output;
+        }
+	}
+	private State currentState = State.ZERO;
+
 	public SideElevator() {
 			/* Factory default hardware to prevent unexpected behavior */
 			side.configFactoryDefault();
@@ -80,6 +104,35 @@ public class SideElevator extends Subsystem {
 }
 
   
+public void setState(State state){
+	currentState = state;
+}
+
+public State getState(){
+	return currentState;
+}
+
+public void conformToState(State newState){
+	elevator(newState.output);
+}
+
+public Request stateRequest(State newState){
+	return new Request() {
+		@Override
+			public void act() {
+				conformToState(newState);
+			}
+	};
+}
+
+public Request percenRequest(double percent){
+	return new Request() {
+		@Override
+			public void act() {
+				my_PercentOutput(percent);
+			}
+	};
+}
 
 
   public void elevator( double targetPos){
@@ -126,7 +179,7 @@ public static class PeriodicIO  {
 	double rotationDemand = 0.0;
 	double driveDemand = 0.0;
 }
-  
+
 
 
 }

@@ -9,11 +9,19 @@ import java.util.List;
 
 /** Add your docs here. */
 public abstract class Request {
+
+	public Request(){
+		initialize();
+	}
     public abstract void act();
 	
 	public boolean isFinished(){return true;}
 
 	public List<Prerequisite> prerequisites = new ArrayList<>();
+
+	public void initialize(){
+
+	}
 
 	public void withPrerequisites(List<Prerequisite> reqs){
 		for(Prerequisite req : reqs){

@@ -16,6 +16,7 @@ import com.pathplanner.lib.PathPlanner;
 import com.pathplanner.lib.PathPlannerTrajectory;
 import com.wcp.frc.Constants;
 import com.wcp.frc.Ports;
+import com.wcp.frc.subsystems.Requests.Request;
 import com.wcp.frc.subsystems.gyros.Gyro;
 import com.wcp.frc.subsystems.gyros.Pigeon;
 import com.wcp.lib.Conversions;
@@ -28,13 +29,16 @@ import com.wcp.lib.util.ScuffedPathPlanner;
 import com.wcp.lib.util.SynchronousPIDF;
 import com.wcp.lib.util.Util;
 
+import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Timer;
+import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.smartdashboard.Mechanism2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -62,6 +66,7 @@ public class Swerve extends Subsystem {
     public double autorotate;
     public double fieldcolor;
     double scaleFactor;
+    boolean aimFinished;
     double rotationalVel;
     boolean trajectoryStarted = false;
     boolean trajectoryFinished= false;
@@ -84,6 +89,30 @@ public class Swerve extends Subsystem {
 
     SwerveInverseKinematics inverseKinematics = new SwerveInverseKinematics();
     public HeadingController headingController = new HeadingController();
+
+
+ boolean pathStarted;
+  double distance;
+  int bestScore;
+  int offset;
+  double xError;
+  double yError;
+  boolean ran = false;
+
+  PIDController thetaController;
+  PIDController advanceController;
+
+  SynchronousPIDF rPID;
+  double bestDistance;
+
+
+  double lastTimeStamp = 0;
+  double Roboty;
+  double Robotx;
+  Vision vision = Vision.getInstance();
+  Gyro pigeon = Pigeon.getInstance();
+  double xERROR;
+  double yERROR;
 
     public Swerve() {
         // setting values for the modules, id, and wether or not the encoders are
@@ -121,8 +150,8 @@ public class Swerve extends Subsystem {
     }
 
     private enum State {
-        MANUAL, VECTOR,OFF,AIM;
-    }
+        MANUAL, VECTOR,OFF,OBJECT,SCORE;
+    } 
     private State currentState = State.MANUAL;
     public State getState() {
         return this.currentState;
@@ -391,7 +420,7 @@ public class Swerve extends Subsystem {
         SmartDashboard.putNumber("Swerve Heading Correctiomm    33  33   /n", rotationCorrection);
         commandModules(inverseKinematics.updateDriveVectors(translationVector, rotationScalar + rotationCorrection, drivingpose, robotCentric));
         }
-        if(currentState == State.AIM){
+        if(currentState == State.SCORE){
             headingController.setTargetHeading(targetHeading);
             double rotationCorrection = headingController.getRotationCorrection(getRobotHeading(), timestamp);
 
@@ -405,13 +434,13 @@ public class Swerve extends Subsystem {
         
     }
     public void Aim(Translation2dd aimingVector, double scalar){
-        currentState = State.AIM;
+        currentState = State.OBJECT;
         this.aimingVector = aimingVector;
         this.rotationScalar = scalar;
         update(Timer.getFPGATimestamp());
     }
     public void Aim(Translation2dd aimingVector,Rotation2dd rotation){
-        currentState = State.AIM;
+        currentState = State.SCORE;// SETS HEADING TO 0or 180
         this.aimingVector = aimingVector;
         targetHeading = rotation;
         update(Timer.getFPGATimestamp());
@@ -498,6 +527,145 @@ public class Swerve extends Subsystem {
         }
 
     }
+    
+
+
+public Request aimStateRequest(boolean snapUp, boolean snapDown){
+	return new Request() {
+
+        @Override
+            public void initialize() {
+                aimFinished = false;
+            }
+        
+		@Override
+			public void act() {
+                setState(State.SCORE);
+			    aimAtScore(snapUp, snapDown);
+			}
+
+        @Override
+            public boolean isFinished(){
+                return aimFinished;
+            }
+
+	};
+
+       
+}
+
+  
+  
+  public void moveTo(int scoringNode){
+    double Roboty = getPose().getTranslation().y();
+    double Robotx = getPose().getTranslation().x();
+    double rotation = 0;
+    if(DriverStation.getAlliance() == Alliance.Blue){
+      rotation = 180;
+    }
+    double currentTime  = Timer.getFPGATimestamp();
+    double dt = currentTime-lastTimeStamp; 
+
+    xPID.setSetpoint(2);
+    yPID.setSetpoint(Constants.scoresY.get(scoringNode));
+    xError = xPID.calculate(Robotx, dt);
+    yError = yPID.calculate(Roboty, dt);
+    Logger.getInstance().recordOutput("yerror", yError);
+    Logger.getInstance().recordOutput("xerror", xError);
+
+    Aim(new Translation2dd(-xError, yError), Rotation2dd.fromDegrees(rotation));
+    lastTimeStamp = currentTime;
+  }
+  public void aimAtScore(boolean snapDown,boolean snapUp){
+    double Roboty = getPose().getTranslation().y();
+    bestDistance = 11111;
+  if(!ran){
+   for(int i = 0; i < Constants.scoresY.size(); i++){//finds closest scoring node
+    distance = Math.abs(Constants.scoresY.get(i)-Roboty);
+        if(bestDistance>distance){//if closer than previous closest
+        bestDistance = distance;
+        bestScore = i;//sets target to closest plus the user inputed offset
+      }
+    
+    
+    if(i == Constants.scoresY.size()-1){
+      ran = true;
+    }
+    }
+  }
+
+  if(snapUp && (bestScore+offset + 1 < Constants.scoresY.size())){//if wants to move up and isnt at 10 than move up
+    offset++;//sets desired scoring station to snap to the next one up
+  }else if(snapDown&& (bestScore+offset> 0)){//if wants to move down and isnt at zero than move down
+    offset--;//sets desired scoring station to snap to the next one down
+  }
+  Logger.getInstance().recordOutput("bestDistance", offset);
+
+
+  if(DriverStation.getAlliance() == Alliance.Blue){
+    if(Robotx < 2.5){
+      moveTo(bestScore+offset);
+      Logger.getInstance().recordOutput("BEst", bestScore);
+
+    }else{
+      moveTo(bestScore);
+      Logger.getInstance().recordOutput("BEst", bestScore);
+
+    }
+      
+  }
+  else {
+    if(Robotx < 14.02){
+      moveTo(bestScore+offset);
+      Logger.getInstance().recordOutput("BEst", bestScore);
+
+    }else{
+      moveTo(bestScore);
+      Logger.getInstance().recordOutput("BEst", bestScore);
+  }
+  }
+  
+  }
+  public void goToObject(){
+    //makes sure we have can see a target
+    vision.setPipeline(Constants.VisionConstants.CONE_PIPELNE);
+    if(!vision.hasTarget()){//if we cant see a cone we will look for a cube
+      vision.setPipeline(Constants.VisionConstants.CUBE_PIPELINE);
+      if(!vision.hasTarget()){//if we cant see a cube we will exit the function becuase we dont have anywhere to go
+        return;
+      }
+    }
+    //gets error
+    xERROR = thetaController.calculate(vision.getX(),0);
+    yERROR= advanceController.calculate(vision.getY(),-5);
+    //corrects for error
+    Aim(new Translation2dd(xERROR,yERROR),0);
+    
+
+  }
+  public void resetOffset(){
+    offset = 0;
+    ran = false;
+  }
+
+  public void goToObject(boolean cube){
+    Rotation2d heading = Rotation2d.fromDegrees(pigeon.getAngle());
+    if(cube){
+      vision.setPipeline(Constants.VisionConstants.CUBE_PIPELINE);
+    }
+    else{
+      vision.setPipeline(Constants.VisionConstants.CONE_PIPELNE);
+    }
+    double xSetPoint = (.1*heading.getCos());
+    double ySetPoint = (.1*heading.getSin());
+    double xError = xPID.calculate(vision.getDistanceToGroundObject()*heading.getCos(),xSetPoint);
+    double yError = yPID.calculate(vision.getDistanceToGroundObject()*heading.getSin(),ySetPoint);
+    double thetaControl = rPID.calculate(vision.getY(), 0);
+
+    Aim(new Translation2dd(xError,yERROR), thetaControl);
+
+  }
+
 
     @Override
     public void outputTelemetry() {// outputs telemetry

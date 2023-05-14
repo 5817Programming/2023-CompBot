@@ -13,6 +13,7 @@ import com.ctre.phoenix.motorcontrol.can.TalonFX;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import com.wcp.frc.Constants;
 import com.wcp.frc.Ports;
+import com.wcp.frc.subsystems.Requests.Request;
 
 public class Arm extends Subsystem {
 
@@ -23,6 +24,27 @@ public class Arm extends Subsystem {
 			instance = new Arm();
 		return instance;
 	}
+	
+
+	public enum State{
+		HIGHCONE(Constants.ArmConstants.HIGH_CONE),
+		HIGHCUBE(Constants.ArmConstants.HIGH_CUBE),
+		MIDCONE(Constants.ArmConstants.MIDDLE_CONE),
+		MIDCUBE(Constants.ArmConstants.MIDDLE_CUBE),
+		LOWCONE(Constants.ArmConstants.LOW_SCORE_CONE),
+		LOWCUBE(Constants.ArmConstants.LOW_SCORE_CUBE),
+		ZERO(Constants.ArmConstants.ZERO),
+		CHUTE(Constants.ArmConstants.HOLD),
+		HOOMANCONE(Constants.ArmConstants.HOOMAN),
+		HOOMANCUBE(Constants.ArmConstants.HOOMAN);
+
+		double output = 0;
+
+		private State(double output){
+            this.output = output;
+        }
+	}
+	private State currentState = State.ZERO;
 	
 	PeriodicIO mPeriodicIO = new PeriodicIO();
 
@@ -122,6 +144,38 @@ public class Arm extends Subsystem {
 		mPeriodicIO.driveDemand = targetPos;
 
 	}
+
+	public void setState(State state){
+		currentState = state;
+	}
+
+	public State getState(){
+		return currentState;
+	}
+
+	public void conformToState(State newState){
+		setMotionMagic(newState.output);
+	}
+
+	public Request stateRequest(State newState){
+		return new Request() {
+			@Override
+				public void act() {
+					conformToState(newState);
+				}
+		};
+	}
+
+	public Request percenRequest(double percent){
+		return new Request() {
+			@Override
+				public void act() {
+					setPercentOutput(percent);
+				}
+		};
+	}
+
+	
 
 	public void setPercentOutput(double speed) {
 		mPeriodicIO.driveControlMode = ControlMode.PercentOutput;

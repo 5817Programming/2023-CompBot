@@ -14,6 +14,7 @@ import com.ctre.phoenix.motorcontrol.can.TalonFX;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import com.wcp.frc.Constants;
 import com.wcp.frc.Ports;
+import com.wcp.frc.subsystems.Requests.Request;
 
 
 public class Elevator extends Subsystem {
@@ -43,77 +44,90 @@ public class Elevator extends Subsystem {
 
 	/** save the last Point Of View / D-pad value */
 	int _pov = -1;
+
+	public enum State{
+		HIGHCONE(Constants.ElevatorConstants.HIGH_CONE),
+		HIGHCUBE(Constants.ElevatorConstants.HIGH_CUBE),
+		MIDCONE(Constants.ElevatorConstants.MID_CONE),
+		MIDCUBE(Constants.ElevatorConstants.MID_CUBE),
+		LOWCONE(Constants.ElevatorConstants.LOW_CONE),
+		LOWCUBE(Constants.ElevatorConstants.LOW_CUBE),
+		ZERO(Constants.ElevatorConstants.ZERO),
+		CHUTE(Constants.ElevatorConstants.HOLD),
+		HOOMANCONE(Constants.ElevatorConstants.HOOMAN_CONE),
+		HOOMANCUBE(Constants.ElevatorConstants.HOOMAN_CUBE);
+
+		double output = 0;
+
+		private State(double output){
+            this.output = output;
+        }
+	}
+	private State currentState = State.ZERO;
 	public Elevator() {
-			/* Factory default hardware to prevent unexpected behavior */
 			mLeftElevator.configFactoryDefault();
 			mRightElevator.configFactoryDefault();
-	
-			/* Set to Brake Mode */
+
 			mLeftElevator.setNeutralMode(NeutralMode.Brake);
 			mRightElevator.setNeutralMode(NeutralMode.Brake);
-	
-			/* Will follow so no need to config further */
 			mRightElevator.follow(mLeftElevator);
 			mRightElevator.setInverted(TalonFXInvertType.FollowMaster);
-	
-			/* Configure Sensor Source for Pirmary PID */
 			mLeftElevator.configSelectedFeedbackSensor(TalonFXFeedbackDevice.IntegratedSensor, Constants.kPIDLoopIdx,
 					Constants.TIMEOUT_MILLISECONDS);
-	
-			/* set deadband to super small 0.001 (0.1 %).
-				The default deadband is 0.04 (4 %) */
 			mLeftElevator.configNeutralDeadband(0.001, Constants.TIMEOUT_MILLISECONDS);
-	
-			/**
-			 * Configure Talon FX Output and Sensor direction accordingly Invert Motor to
-			 * have green LEDs when driving Talon Forward / Requesting Postiive Output Phase
-			 * sensor to have positive increment when driving Talon Forward (Green LED)
-			 */
 			mLeftElevator.setSensorPhase(false);
 			mLeftElevator.setInverted(false);
-	
-			/*
-			 * Talon FX does not need sensor phase set for its integrated sensor
-			 * This is because it will always be correct if the selected feedback device is integrated sensor (default value)
-			 * and the user calls getSelectedSensor* to get the sensor's position/velocity.
-			 * 
-			 * https://phoenix-documentation.readthedocs.io/en/latest/ch14_MCSensor.html#sensor-phase
-			 */
-			// mLeftElevator.setSensorPhase(true);
-	
-			/* Set relevant frame periods to be at least as fast as periodic rate */
 			mLeftElevator.setStatusFramePeriod(StatusFrameEnhanced.Status_13_Base_PIDF0, 10, Constants.TIMEOUT_MILLISECONDS);
 			mLeftElevator.setStatusFramePeriod(StatusFrameEnhanced.Status_10_MotionMagic, 10, Constants.TIMEOUT_MILLISECONDS);
-	
-			/* Set the peak and nominal outputs */
 			mLeftElevator.configNominalOutputForward(0, Constants.TIMEOUT_MILLISECONDS);
 			mLeftElevator.configNominalOutputReverse(0, Constants.TIMEOUT_MILLISECONDS);
 			mLeftElevator.configPeakOutputForward(1, Constants.TIMEOUT_MILLISECONDS);
 			mLeftElevator.configPeakOutputReverse(-1, Constants.TIMEOUT_MILLISECONDS);
-			
-			/* Set Motion Magic gains in slot0 - see documentation */
 			mLeftElevator.selectProfileSlot(Constants.kSlotIdx, Constants.kPIDLoopIdx);
 			mLeftElevator.config_kF(Constants.kSlotIdx, 0.05757217626, Constants.TIMEOUT_MILLISECONDS);//0.0649
 			mLeftElevator.config_kP(Constants.kSlotIdx, 0.344444444, Constants.TIMEOUT_MILLISECONDS);//0.7161
 			mLeftElevator.config_kI(Constants.kSlotIdx, 0.001, Constants.TIMEOUT_MILLISECONDS);//0.001
 			mLeftElevator.config_kD(Constants.kSlotIdx, 3.4444444, Constants.TIMEOUT_MILLISECONDS);//P value * ten
-	
-			/*mLeftElevator.selectProfileSlot(Constants.kSlotIdx, Constants.kPIDLoopIdx);
-			mLeftElevator.config_kF(Constants.kSlotIdx, 0.05757217626, Constants.kTimeoutMs);//0.0649
-			mLeftElevator.config_kP(Constants.kSlotIdx, 0, Constants.kTimeoutMs);//0.7161
-			mLeftElevator.config_kI(Constants.kSlotIdx, 0, Constants.kTimeoutMs);//0.001
-			mLeftElevator.config_kD(Constants.kSlotIdx, 0, Constants.kTimeoutMs);//P value * ten
-	*/
-			/* Set acceleration and vcruise velocity - see documentation */
 			mLeftElevator.configMotionCruiseVelocity(16881, Constants.TIMEOUT_MILLISECONDS);
 			mLeftElevator.configMotionAcceleration(16880.55, Constants.TIMEOUT_MILLISECONDS);
-	
-			/* Zero the sensor once on robot boot up */
 			mLeftElevator.setSelectedSensorPosition(0, Constants.kPIDLoopIdx, Constants.TIMEOUT_MILLISECONDS);
 			
 }
   
 
+public void setState(State state){
+	currentState = state;
+}
+
+public State getState(){
+	return currentState;
+}
+
+public void conformToState(State newState){
+	elevator(newState.output);
+}
+
+public Request stateRequest(State newState){
+	return new Request() {
+		@Override
+			public void act() {
+				conformToState(newState);
+			}
+		@Override
+			public boolean isFinished(){
+				return Math.abs(mPeriodicIO.driveDemand-mPeriodicIO.drivePosition)<1000;
+			}
+	};
+}
+
+public Request percentRequest(double percent){
+	return new Request() {
+		@Override
+			public void act() {
+				my_PercentOutput(percent);
+			}
+	};
+}
 
 
   public void elevator( double targetPos){
@@ -122,7 +136,7 @@ public class Elevator extends Subsystem {
 
   }
 
-  public void my_PercentOutput( double speed){
+  public void my_PercentOutput(double speed){
 	
 	mPeriodicIO.driveControlMode = ControlMode.PercentOutput;
 	mPeriodicIO.driveDemand = speed;  
