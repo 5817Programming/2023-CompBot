@@ -87,7 +87,7 @@ public Request percentOutputRequest(double percent, boolean cube){
 
 
 }
-public Request percentOutputRequest( boolean cube){
+public Request percentOutputRequest(boolean cube){
   return new Request() {
     @Override
       public void act(){
@@ -149,45 +149,17 @@ public Request percentOutputRequest(double percent, boolean cube,double waitTime
 
 
 }
-public void outake (boolean cube,double cubespeed, double conespeed){
-  if(.2>ramp){
-    ramp = ramp +0.01;
-  }
-  if(ramp>.18)
-  {
-    stop = false;
-    hold = true;
-   }
-  Logger.getInstance().recordOutput("ramp", ramp);
-  if(!stop){
-    hasPiece= false;
-    intaked = false;
-    intake.set(ControlMode.PercentOutput, cube ? cubespeed:conespeed);
-  }
-
-  
-  
-  
-}
-public void setPercentOutput(double p){
-  intake.set(ControlMode.PercentOutput, -p);
-
-}
-  public void stop(){
-    stop = false;
-    hold = false;
-    ramp = 0;
-    intake.set(ControlMode.PercentOutput, 0);
-
+  public void setPercentOutput(double percent){
+      intake.set(ControlMode.PercentOutput, percent);
   }
   @Override
   public void update(){
-        if (hasPiece&intaked){
-      if(intake.getSelectedSensorVelocity()<2000){
-        intake.set(ControlMode.PercentOutput, isReversed ? .1:-.1);
      
-      }
-      }
+  }
+
+  @Override
+  public void stop(){
+
   }
     // if (hold){
     //   scores.hold();

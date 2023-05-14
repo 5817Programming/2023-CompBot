@@ -618,6 +618,20 @@ public class Swerve extends Subsystem {
             
         };
     }
+    public Request goToNodeRequest(int node){
+        return new Request() {
+            @Override
+            public void act(){
+                goToNodeRequest(node);
+            }
+            @Override
+            public boolean isFinished(){
+                if(aimFinished) resetOffset();
+                return aimFinished;
+            }
+        };
+
+    }
     
 
 
