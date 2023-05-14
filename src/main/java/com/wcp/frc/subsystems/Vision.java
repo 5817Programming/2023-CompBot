@@ -97,7 +97,7 @@ public class Vision extends Subsystem {
   }
 
   public double getHeight(){
-    if(swerve.getPose().getTranslation().x()>8.29){
+    if(swerve.getPose().getTranslation().getX()>8.29){
 
       height = Constants.VisionConstants.HEIGHTS.get(2);
       

@@ -12,12 +12,12 @@ import com.wcp.frc.subsystems.SuperStructure;
 import com.wcp.frc.subsystems.Swerve;
 import com.wcp.frc.subsystems.Vision;
 import com.wcp.lib.HeadingController;
-import com.wcp.lib.geometry.Rotation2dd;
+import com.wcp.lib.geometry.Rotation2d;
+import com.wcp.lib.geometry.Translation2d;
 // import com.wcp.frc.subsystems.toHuman;
 import com.wcp.frc.subsystems.Lights;
 import com.wcp.frc.subsystems.Scores;
 
-import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj.XboxController;
 
 

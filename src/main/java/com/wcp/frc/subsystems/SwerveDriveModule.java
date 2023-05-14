@@ -21,13 +21,12 @@ import com.wcp.frc.Ports;
 import com.wcp.frc.subsystems.encoders.Encoder;
 import com.wcp.frc.subsystems.encoders.MagEncoder;
 import com.wcp.lib.Conversions;
-import com.wcp.lib.geometry.Pose2dd;
-import com.wcp.lib.geometry.Rotation2dd;
-import com.wcp.lib.geometry.Translation2dd;
+import com.wcp.lib.geometry.Pose2d;
+import com.wcp.lib.geometry.Rotation2d;
+import com.wcp.lib.geometry.Translation2d;
 import com.wcp.lib.util.Util;
 
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
-import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.system.plant.DCMotor;
@@ -46,14 +45,14 @@ public class SwerveDriveModule extends Subsystem {
     double encoderOffset;
 
     private double previousEncDistance = 0;
-	private Translation2dd position = new Translation2dd();
-	private Translation2dd startingPosition;
-    private Translation2dd mstartingPosition;
+	private Translation2d position = new Translation2d();
+	private Translation2d startingPosition;
+    private Translation2d mstartingPosition;
 
-	private Pose2dd estimatedRobotPose = new Pose2dd();
+	private Pose2d estimatedRobotPose = new Pose2d();
 	boolean standardCarpetDirection = true;
     
-    Translation2dd modulePosition;
+    Translation2d modulePosition;
     private Rotation2d lastAngle;
 
     SimpleMotorFeedforward feedforward = new SimpleMotorFeedforward(Constants.driveKS, Constants.driveKV,
@@ -77,7 +76,7 @@ public class SwerveDriveModule extends Subsystem {
      *                           decreasing)
      */
     public SwerveDriveModule(int rotationMotorPort, int driveMotorPort, int moduleID, double encoderStartingPos,
-            Translation2dd modulePoseInches, boolean flipEncoder ,Translation2dd moduleposemeters){
+            Translation2d modulePoseInches, boolean flipEncoder ,Translation2d moduleposemeters){
         this.rotationMotor = new TalonFX(rotationMotorPort);
         this.driveMotor = new TalonFX(driveMotorPort);
         this.driveSim = new FlywheelSim(DCMotor.getFalcon500(1), 7.63, .3);
@@ -219,19 +218,19 @@ public class SwerveDriveModule extends Subsystem {
         driveMotor.setSelectedSensorPosition(0);
 
     }
-    public synchronized void resetPose(Pose2dd robotPose){
-		Translation2dd modulePosition = robotPose.transformBy(Pose2dd.fromTranslation(mstartingPosition)).getTranslation();
+    public synchronized void resetPose(Pose2d robotPose){
+		Translation2d modulePosition = robotPose.transformBy(Pose2d.fromTranslation(mstartingPosition)).getTranslation();
 		position = modulePosition;
 	}
 
-    public Pose2dd getEstimatedRobotPose(){
+    public Pose2d getEstimatedRobotPose(){
 		return estimatedRobotPose;
 	}
     private double getDriveDistanceInches(){
 		return encUnitsToInches(mPeriodicIO.drivePosition);
 	}
-    public Rotation2dd getFieldCentricAngle(Rotation2dd robotHeading){
-		Rotation2dd normalizedAngle =Rotation2dd.fromDegrees( getModuleAngle());
+    public Rotation2d getFieldCentricAngle(Rotation2d robotHeading){
+		Rotation2d normalizedAngle =Rotation2d.fromDegrees( getModuleAngle());
 		return normalizedAngle.rotateBy(robotHeading);
 	}
 	
@@ -244,16 +243,16 @@ public class SwerveDriveModule extends Subsystem {
                 Rotation2d.fromDegrees(getModuleAngle()));
 
     }
-    public synchronized void updatePose(Rotation2dd robotHeading){
+    public synchronized void updatePose(Rotation2d robotHeading){
 		double currentEncDistance = Conversions.falconToMeters(driveMotor.getSelectedSensorPosition(), Constants.kWheelCircumference, Options.driveRatio);
 		double deltaEncDistance = (currentEncDistance - previousEncDistance) * Constants.kWheelScrubFactors[moduleID];
-		Rotation2dd currentWheelAngle = getFieldCentricAngle(robotHeading);
-		Translation2dd deltaPosition = new Translation2dd(-currentWheelAngle.cos()*deltaEncDistance, 
+		Rotation2d currentWheelAngle = getFieldCentricAngle(robotHeading);
+		Translation2d deltaPosition = new Translation2d(-currentWheelAngle.cos()*deltaEncDistance, 
 				currentWheelAngle.sin()*deltaEncDistance);
 
 		double xScrubFactor = Constants.kXScrubFactor;
 		double yScrubFactor = Constants.kYScrubFactor;
-        if(Util.epsilonEquals(Math.signum(deltaPosition.x()), 1.0)){
+        if(Util.epsilonEquals(Math.signum(deltaPosition.getX()), 1.0)){
             if(standardCarpetDirection){
                 xScrubFactor = 1.0;
             }else{
@@ -266,7 +265,7 @@ public class SwerveDriveModule extends Subsystem {
                 xScrubFactor = 1.0;
             }
         }
-        if(Util.epsilonEquals(Math.signum(deltaPosition.y()), 1.0)){
+        if(Util.epsilonEquals(Math.signum(deltaPosition.getY()), 1.0)){
             if(standardCarpetDirection){
                 yScrubFactor = 1;
             }else{
@@ -281,14 +280,14 @@ public class SwerveDriveModule extends Subsystem {
         }
 	
 			
-		deltaPosition = new Translation2dd(deltaPosition.x() * xScrubFactor,
-			deltaPosition.y() * yScrubFactor);
-        Logger.getInstance().recordOutput("delta t" + moduleID, deltaPosition.y());
-		Translation2dd updatedPosition = position.translateBy(deltaPosition);
-		Pose2dd staticWheelPose = new Pose2dd(updatedPosition, robotHeading);
-		Pose2dd robotPose = staticWheelPose.transformBy(Pose2dd.fromTranslation(mstartingPosition).inverse());
+		deltaPosition = new Translation2d(deltaPosition.getX() * xScrubFactor,
+			deltaPosition.getY() * yScrubFactor);
+        Logger.getInstance().recordOutput("delta t" + moduleID, deltaPosition.getY());
+		Translation2d updatedPosition = position.translateBy(deltaPosition);
+		Pose2d staticWheelPose = new Pose2d(updatedPosition, robotHeading);
+		Pose2d robotPose = staticWheelPose.transformBy(Pose2d.fromTranslation(mstartingPosition).inverse());
 		position = updatedPosition;
-        Logger.getInstance().recordOutput("Pos " + moduleID,Util.Poseconvert2ddto2d(robotPose));
+        Logger.getInstance().recordOutput("Pos " + moduleID,robotPose.toWPI());
 		estimatedRobotPose =  robotPose;
 		previousEncDistance = currentEncDistance;
 	}

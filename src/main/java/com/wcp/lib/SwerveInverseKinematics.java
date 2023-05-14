@@ -8,9 +8,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.wcp.frc.Constants;
-import com.wcp.lib.geometry.Pose2dd;
-import com.wcp.lib.geometry.Rotation2dd;
-import com.wcp.lib.geometry.Translation2dd;
+import com.wcp.lib.geometry.Pose2d;
+import com.wcp.lib.geometry.Rotation2d;
+import com.wcp.lib.geometry.Translation2d;
 
 /** Add your docs here. */
 public class SwerveInverseKinematics {
@@ -20,15 +20,15 @@ public class SwerveInverseKinematics {
     }
     
     private final int kNumberOfModules = Constants.kModulePositions.size();
-    private List<Translation2dd> moduleRotationVectors;
+    private List<Translation2d> moduleRotationVectors;
 
     
     public void updateModuleRotationVectors() {
         int numberOfModules = kNumberOfModules;
         double rotateVectorDirection = 360.0 / numberOfModules;
-        List<Translation2dd> vectorList = new ArrayList<>(numberOfModules);
+        List<Translation2d> vectorList = new ArrayList<>(numberOfModules);
         for(int i = 0; i < numberOfModules; i++) {
-            vectorList.add(Constants.kModulePositions.get(i).rotateBy(Rotation2dd.fromDegrees(rotateVectorDirection)));
+            vectorList.add(Constants.kModulePositions.get(i).rotateBy(Rotation2d.fromDegrees(rotateVectorDirection)));
         }
         moduleRotationVectors = vectorList;
     }
@@ -40,8 +40,8 @@ public class SwerveInverseKinematics {
      * @param robotCentric -Should the determine it's heading based off of the robot. False = Field Centric(i.e, when you push forward, 
      *                      the robot will always move in the same direction, no matter it's heading)
      */
-    public List<Translation2dd> updateDriveVectors(Translation2dd translationVector, double rotationalMagnitude, Pose2dd robotPosition, boolean robotCentric) {
-        List<Translation2dd> driveVectors = new ArrayList<>(kNumberOfModules);
+    public List<Translation2d> updateDriveVectors(Translation2d translationVector, double rotationalMagnitude, Pose2d robotPosition, boolean robotCentric) {
+        List<Translation2d> driveVectors = new ArrayList<>(kNumberOfModules);
         if(!robotCentric)
             translationVector = translationVector.rotateBy(robotPosition.getRotation().inverse()); //Rotates by the translation vector by inverse rotation of the robot 
         for(int i = 0; i < kNumberOfModules; i++) {
@@ -49,13 +49,13 @@ public class SwerveInverseKinematics {
         }
 
         double maxMagnitude = 1.0;
-        for (Translation2dd m : driveVectors) {
+        for (Translation2d m : driveVectors) {
             double moduleVectorMagnitude = m.norm();
             if(moduleVectorMagnitude > maxMagnitude)
                 maxMagnitude = moduleVectorMagnitude;
         }
         for (int i =0; i< kNumberOfModules; i++) {
-            Translation2dd driveVector = driveVectors.get(i);
+            Translation2d driveVector = driveVectors.get(i);
             driveVectors.set(i, driveVector.scale(1.0/maxMagnitude));
         }
         return driveVectors;

@@ -24,17 +24,14 @@ import com.wcp.frc.subsystems.gyros.Pigeon;
 import com.wcp.lib.Conversions;
 import com.wcp.lib.HeadingController;
 import com.wcp.lib.SwerveInverseKinematics;
-import com.wcp.lib.geometry.Pose2dd;
-import com.wcp.lib.geometry.Rotation2dd;
-import com.wcp.lib.geometry.Translation2dd;
-import com.wcp.lib.util.ScuffedPathPlanner;
+import com.wcp.lib.geometry.Pose2d;
+import com.wcp.lib.geometry.Rotation2d;
+import com.wcp.lib.geometry.Translation2d;
+import com.wcp.lib.util.PathFollower;
 import com.wcp.lib.util.SynchronousPIDF;
 import com.wcp.lib.util.Util;
 
 import edu.wpi.first.math.controller.PIDController;
-import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.util.Units;
@@ -59,9 +56,9 @@ public class Swerve extends Subsystem {
 
     SwerveDriveModule frontRightModule, frontLeftModule, rearLeftModule, rearRightModule;
     List<SwerveDriveModule> modules;
-    Translation2dd aimingVector  = new Translation2dd();
+    Translation2d aimingVector  = new Translation2d();
 
-    Translation2dd translationVector;
+    Translation2d translationVector;
     public double rotationScalar;
     public double autox;
     public double autoy;
@@ -75,11 +72,11 @@ public class Swerve extends Subsystem {
     double speed;
     boolean useAllianceColor;
     Pigeon gyro;
-    ScuffedPathPlanner scuffedPathPlanner;
-    Pose2dd pose = new Pose2dd(new Translation2dd(5,5),new Rotation2dd());
-    Pose2dd drivingpose = new Pose2dd();
+    PathFollower pathFollower;
+    Pose2d pose = new Pose2d(new Translation2d(5,5),new Rotation2d());
+    Pose2d drivingpose = new Pose2d();
     PathPlannerTrajectory trajectoryDesired;
-    List<Translation2dd> moduleVectors;
+    List<Translation2d> moduleVectors;
     public final Timer aimTimer = new Timer();
     final double translationDeadband = 0.1;
     final double rotationDeadband = 0.1;
@@ -142,7 +139,7 @@ public class Swerve extends Subsystem {
 
 
 
-        scuffedPathPlanner = ScuffedPathPlanner.getInstance();
+        pathFollower = PathFollower.getInstance();
         gyro = Pigeon.getInstance();
 
 
@@ -173,12 +170,12 @@ public class Swerve extends Subsystem {
         trajectoryStarted = true;
         this.speed = speed;
         this.useAllianceColor = useAllianceColor;
-        scuffedPathPlanner.startTimer();
+        pathFollower.startTimer();
 
     }
     //
     public void sendInput(double x, double y, double rotation) {
-        translationVector = new Translation2dd(x, y);// makes vector to inputs
+        translationVector = new Translation2d(x, y);// makes vector to inputs
         // sets rotation to zero if it doesnt pass deadband
         if (Math.abs(rotation) <= rotationDeadband) {
             rotation = 0;
@@ -196,7 +193,7 @@ public class Swerve extends Subsystem {
         inputMagnitude = Math.pow(inputMagnitude, scaleValue);
         inputMagnitude = Util.deadband(translationDeadband, inputMagnitude);
         if (translationVector.norm() <= translationDeadband) {
-            translationVector = new Translation2dd();
+            translationVector = new Translation2d();
         }
         rotationScalar *= 0.01;
         if (translationVector.norm() <= translationDeadband && Math.abs(rotation) <= rotationDeadband) {// deadbands
@@ -211,11 +208,10 @@ public class Swerve extends Subsystem {
     }
     public boolean isFinishedTrajectory(){
         trajectoryStarted = false;
-        return scuffedPathPlanner.isFinished();
+        return pathFollower.isFinished();
     }
     public void updateTrajectory(){
-        Pose2dd desiredPose = scuffedPathPlanner.getDesiredPose2dd(useAllianceColor,speed, Util.Poseconvert2ddto2d( getPose()));
-        Logger.getInstance().recordOutput("desiredPosition", Util.Poseconvert2ddto2d(desiredPose));
+        Pose2d desiredPose = pathFollower.getDesiredPose2d(useAllianceColor,speed, getPose());
         scaleFactor = speed;
         targetHeading=desiredPose.getRotation().inverse();
         targetFollowTranslation = desiredPose.getTranslation();
@@ -251,12 +247,12 @@ public class Swerve extends Subsystem {
 
     }
   
-    public void commandModules(List<Translation2dd> moduleVectors) {// for every module will optimize rotation and set
+    public void commandModules(List<Translation2d> moduleVectors) {// for every module will optimize rotation and set
                                                                     // angle and drive speed
         this.moduleVectors = moduleVectors;
         for (int i = 0; i < moduleVectors.size(); i++) {
             if (Util.shouldReverse(moduleVectors.get(i).direction(),
-                    Rotation2dd.fromDegrees(modules.get(i).getModuleAngle()))) {
+                    Rotation2d.fromDegrees(modules.get(i).getModuleAngle()))) {
                 modules.get(i).setModuleAngle(moduleVectors.get(i).direction().getDegrees() + 180);
                 modules.get(i).setDriveOpenLoop(-moduleVectors.get(i).norm());
             } else {
@@ -275,17 +271,17 @@ public class Swerve extends Subsystem {
 
 
 
-    private Translation2dd targetFollowTranslation = new Translation2dd();
-    private Rotation2dd targetHeading = new Rotation2dd();
+    private Translation2d targetFollowTranslation = new Translation2d();
+    private Rotation2d targetHeading = new Rotation2d();
     private boolean reverseXPID;
     
     SynchronousPIDF xPID = new SynchronousPIDF(1, 0.0, 0);
     SynchronousPIDF yPID = new SynchronousPIDF(1, 0.0, 0);
     private double lastTimestamp = Timer.getFPGATimestamp();
-    public void followTranslation2d(Translation2dd translation2d, Rotation2dd targetRobotHeading, double speed) {
+    public void followTranslation2d(Translation2d translation2d, Rotation2d targetRobotHeading, double speed) {
         setState(State.TRAJECTORY);
         scaleFactor = speed;
-        if (translation2d.x()<0){
+        if (translation2d.getX()<0){
             reverseXPID = true;
         }
         else {
@@ -299,14 +295,14 @@ public class Swerve extends Subsystem {
 
     }
 
-    public void resetPose(Pose2dd newPose){
+    public void resetPose(Pose2d newPose){
 		modules.forEach((m) -> m.resetPose(newPose));
 	}
     /** The tried and true algorithm for keeping track of position */
 	public synchronized void updatePose(double timestamp){
 		double x = 0.0;
 		double y = 0.0;
-		Rotation2dd heading = getRobotHeading();
+		Rotation2d heading = getRobotHeading();
 		
 		double averageDistance = 0.0;
 		double[] distances = new double[4];
@@ -341,10 +337,10 @@ public class Swerve extends Subsystem {
 		//SmartDashboard.putNumber("Modules Used", modulesToUse.size());
 		
 		for(SwerveDriveModule m : modulesToUse){
-			x += m.getEstimatedRobotPose().getTranslation().x();
-			y += m.getEstimatedRobotPose().getTranslation().y();
+			x += m.getEstimatedRobotPose().getTranslation().getX();
+			y += m.getEstimatedRobotPose().getTranslation().getY();
 		}
-		Pose2dd updatedPose = new Pose2dd(new Translation2dd(x / modulesToUse.size(), y / modulesToUse.size()), heading);
+		Pose2d updatedPose = new Pose2d(new Translation2d(x / modulesToUse.size(), y / modulesToUse.size()), heading);
 		double deltaPos = updatedPose.getTranslation().translateBy(pose.getTranslation().inverse()).norm();
         Logger.getInstance().recordOutput("delta pose", deltaPos);
 		distanceTraveled += deltaPos;
@@ -353,45 +349,44 @@ public class Swerve extends Subsystem {
 		modules.forEach((m) -> m.resetPose(pose));
 	}
     public void setTrajectory (PathPlannerTrajectory trajectory,List<Translation2d> eventTimings, List<Command> events, List<Double> waitTiming) {
-        scuffedPathPlanner.setTrajectory(trajectory);
-        scuffedPathPlanner.setEventTimings(eventTimings);
-        scuffedPathPlanner.setEvents(events);
-        scuffedPathPlanner.setWaitTimings(waitTiming);
-        resetOdometry(Util.Poseconvert2dto2dd(scuffedPathPlanner.getStart()),Rotation2dd.fromDegrees(scuffedPathPlanner.getrotation())); 
-        resetGryo(scuffedPathPlanner.getStartRotation());
-        Logger.getInstance().recordOutput("startRotation", scuffedPathPlanner.getStart());
+        pathFollower.setTrajectory(trajectory);
+        pathFollower.setEventTimings(eventTimings);
+        pathFollower.setEvents(events);
+        pathFollower.setWaitTimings(waitTiming);
+        resetOdometry(pathFollower.getStart(),Rotation2d.fromDegrees(pathFollower.getrotation())); 
+        resetGryo(pathFollower.getStartRotation());
+        Logger.getInstance().recordOutput("startRotation", pathFollower.getStart());
         setTrajectory(trajectory);
         resetTimer();
     
     }
-    public void resetOdometry (Pose2dd newpose, Rotation2dd rotation){
-       Pose2dd newpose2 = new Pose2dd(newpose.getTranslation(),rotation);
+    public void resetOdometry (Pose2d newpose, Rotation2d rotation){
+       Pose2d newpose2 = new Pose2d(newpose.getTranslation(),rotation);
 		modules.forEach((m) -> m.resetPose(newpose2));
 
    }
     public void resetTimer (){
-        ScuffedPathPlanner.getInstance().resetTimer();
+        PathFollower.getInstance().resetTimer();
     }
-    public Translation2dd updateFollowedTranslation2d(double timestamp) {
+    public Translation2d updateFollowedTranslation2d(double timestamp) {
         double dt = timestamp - lastTimestamp;
-        Logger.getInstance().recordOutput("poseinches", Util.Poseconvert2ddto2d(pose));
-        Logger.getInstance().recordOutput("desiredPoseInches", Util.Poseconvert2ddto2d(new Pose2dd(targetFollowTranslation, targetHeading)));
+        Logger.getInstance().recordOutput("desiredPoseInches",new Pose2d(targetFollowTranslation, targetHeading).toWPI());
 
-        Translation2dd currentRobotPositionFromStart = pose.getTranslation();
-        double xError = xPID.calculate(targetFollowTranslation.x() -  currentRobotPositionFromStart.x(), dt);
-        double yError = yPID.calculate(targetFollowTranslation.y() - currentRobotPositionFromStart.y(), dt);
-        Logger.getInstance().recordOutput("xError", targetFollowTranslation.x() -  currentRobotPositionFromStart.x());
-        Logger.getInstance().recordOutput("yError", targetFollowTranslation.y() - currentRobotPositionFromStart.y());
+        Translation2d currentRobotPositionFromStart = pose.getTranslation();
+        double xError = xPID.calculate(targetFollowTranslation.getX() -  currentRobotPositionFromStart.getX(), dt);
+        double yError = yPID.calculate(targetFollowTranslation.getY() - currentRobotPositionFromStart.getY(), dt);
+        Logger.getInstance().recordOutput("xError", targetFollowTranslation.getX() -  currentRobotPositionFromStart.getX());
+        Logger.getInstance().recordOutput("yError", targetFollowTranslation.getY() - currentRobotPositionFromStart.getY());
         Logger.getInstance().recordOutput("rotationErorr", getRobotHeading().getDegrees()-targetHeading.getDegrees());
 
         lastTimestamp = timestamp;
-        if(Math.abs(xError+yError)/2<.05&&ScuffedPathPlanner.getInstance().isFinished()) {
+        if(Math.abs(xError+yError)/2<.05&&PathFollower.getInstance().isFinished()) {
             setState(State.OFF);
             trajectoryFinished = true;
 
-            return new Translation2dd();
+            return new Translation2d();
         }
-        return new Translation2dd(xError, -yError);
+        return new Translation2d(xError, -yError);
 
     }
     
@@ -415,13 +410,13 @@ public class Swerve extends Subsystem {
 
 
 
-    public Rotation2dd getRobotHeading() {
-        return Rotation2dd.fromDegrees(gyro.getAngle());
+    public Rotation2d getRobotHeading() {
+        return Rotation2d.fromDegrees(gyro.getAngle());
     }
     @Override
     public void update() {
         double timeStamp = Timer.getFPGATimestamp();
-        drivingpose = Pose2dd.fromRotaiton(getRobotHeading());
+        drivingpose = Pose2d.fromRotaiton(getRobotHeading());
 
         switch(currentState){
             case MANUAL:
@@ -447,7 +442,7 @@ public class Swerve extends Subsystem {
             break;
 
             case TRAJECTORY:
-                Translation2dd translationCorrection = updateFollowedTranslation2d(timeStamp).scale(1);
+                Translation2d translationCorrection = updateFollowedTranslation2d(timeStamp).scale(1);
                 headingController.setTargetHeading(targetHeading);
                  rotationCorrection = headingController.getRotationCorrection(getRobotHeading(), timeStamp);
                 desiredRotationScalar = rotationCorrection;    
@@ -460,7 +455,7 @@ public class Swerve extends Subsystem {
             break;
 
             case OFF:
-                commandModules(inverseKinematics.updateDriveVectors(new Translation2dd(), 0, drivingpose, robotCentric));
+                commandModules(inverseKinematics.updateDriveVectors(new Translation2d(), 0, drivingpose, robotCentric));
             break;
                 
 
@@ -478,23 +473,23 @@ public class Swerve extends Subsystem {
             }else{
               x = 0;
             }
-            translationVector = new Translation2dd(x,0);
+            translationVector = new Translation2d(x,0);
             if(DriverStation.getAlliance() == Alliance.Blue){
-                targetHeading = new Rotation2dd();
+                targetHeading = new Rotation2d();
             }
             else{
-                targetHeading = new Rotation2dd(180);
+                targetHeading = new Rotation2d(180);
             }
             return Math.abs(x)<.03;
           
     }
-    public void Aim(Translation2dd aimingVector, double scalar){
+    public void Aim(Translation2d aimingVector, double scalar){
         currentState = State.OBJECT;
         this.aimingVector = aimingVector;
         this.rotationScalar = scalar;
         update();
     }
-    public void Aim(Translation2dd aimingVector,Rotation2dd rotation){
+    public void Aim(Translation2d aimingVector,Rotation2d rotation){
         currentState = State.SCORE;// SETS HEADING TO 0or 180
         this.aimingVector = aimingVector;
         targetHeading = rotation;
@@ -507,7 +502,7 @@ public class Swerve extends Subsystem {
     lastUpdateTimestamp = timestamp;
 
     }
-    public Pose2dd getPose(){
+    public Pose2d getPose(){
         return pose;
     }
     public void followTrajectory() {
@@ -515,7 +510,7 @@ public class Swerve extends Subsystem {
         
         double timestamp = Timer.getFPGATimestamp();
         if(currentState == State.TRAJECTORY) {
-            Translation2dd translationCorrection = updateFollowedTranslation2d(timestamp).scale(1);
+            Translation2d translationCorrection = updateFollowedTranslation2d(timestamp).scale(1);
             headingController.setTargetHeading(targetHeading);
             double rotationCorrection = headingController.getRotationCorrection(getRobotHeading(), timestamp);
             desiredRotationScalar = rotationCorrection;    
@@ -541,7 +536,7 @@ public class Swerve extends Subsystem {
 
 
     public void fieldzeroSwerve() {// starts the zero 180 off
-        headingController.setTargetHeading(Rotation2dd.fromDegrees(-180));
+        headingController.setTargetHeading(Rotation2d.fromDegrees(-180));
         gyro.setAngle(-180);
     }
     
@@ -567,14 +562,14 @@ public class Swerve extends Subsystem {
         });
     }
     public void resetGryo(double angle){
-        headingController.setTargetHeading(Rotation2dd.fromDegrees(angle));
+        headingController.setTargetHeading(Rotation2d.fromDegrees(angle));
         gyro.setAngle(angle);
     }
 
     public void zeroSwerve() {// zeros gyro
-        headingController.setTargetHeading(Rotation2dd.fromDegrees(0));
+        headingController.setTargetHeading(Rotation2d.fromDegrees(0));
         gyro.setAngle(0);
-        resetPose(new Pose2dd(new Translation2dd(1.9,4.52),Rotation2dd.fromDegrees(0)));
+        resetPose(new Pose2d(new Translation2d(1.9,4.52),Rotation2d.fromDegrees(0)));
     }
 
 
@@ -662,8 +657,8 @@ public Request aimStateRequest(boolean snapUp, boolean snapDown){
   
   
   public void targetNode(int scoringNode){
-    double Roboty = getPose().getTranslation().y();
-    double Robotx = getPose().getTranslation().x();
+    double Roboty = getPose().getTranslation().getY();
+    double Robotx = getPose().getTranslation().getX();
     double rotation = 0;
     if(DriverStation.getAlliance() == Alliance.Blue){
       rotation = 180;
@@ -678,7 +673,7 @@ public Request aimStateRequest(boolean snapUp, boolean snapDown){
     Logger.getInstance().recordOutput("yerror", yError);
     Logger.getInstance().recordOutput("xerror", xError);
 
-    Aim(new Translation2dd(-xError, yError), Rotation2dd.fromDegrees(rotation));
+    Aim(new Translation2d(-xError, yError), Rotation2d.fromDegrees(rotation));
     if(Math.abs(xError)<.03 && Math.abs(yError)<.3) aimTimer.start();
     if(aimTimer.get()>.2){
         aimFinished = true;
@@ -686,7 +681,7 @@ public Request aimStateRequest(boolean snapUp, boolean snapDown){
     lastTimeStamp = currentTime;
   }
   public void aimAtScore(boolean snapDown,boolean snapUp){
-    double Roboty = getPose().getTranslation().y();
+    double Roboty = getPose().getTranslation().getY();
     bestDistance = 11111;
   if(!ran){
    for(int i = 0; i < Constants.scoresY.size(); i++){//finds closest scoring node
@@ -749,8 +744,8 @@ public Request aimStateRequest(boolean snapUp, boolean snapDown){
     double xERROR = thetaController.calculate(vision.getX(),0);
     double yERROR= advanceController.calculate(vision.getY(),-5);
     //corrects for error
-    Aim(new Translation2dd(xERROR,yERROR),0);
-    if(Math.abs(new Translation2dd(xERROR,yERROR).norm())<.3){
+    Aim(new Translation2d(xERROR,yERROR),0);
+    if(Math.abs(new Translation2d(xERROR,yERROR).norm())<.3){
         return true;
     }else{
         return false;
@@ -796,7 +791,7 @@ public Request aimStateRequest(boolean snapUp, boolean snapDown){
     double yError = yPID.calculate(vision.getDistanceToGroundObject()*heading.getSin(),ySetPoint);
     double thetaControl = rPID.calculate(vision.getY(), 0);
 
-    Aim(new Translation2dd(xError,yERROR), thetaControl);
+    Aim(new Translation2d(xError,yERROR), thetaControl);
 
   }
 
@@ -808,7 +803,7 @@ public Request aimStateRequest(boolean snapUp, boolean snapDown){
         });
         SmartDashboard.putNumber("Robot Heading", getRobotHeading().getDegrees());
         SmartDashboard.putNumber("Radians Heading", -getRobotHeading().getRadians());
-        Logger.getInstance().recordOutput("Odometry",Util.Poseconvert2ddto2d(pose));
+        Logger.getInstance().recordOutput("Odometry",pose.toWPI());
 
 
     }
@@ -816,7 +811,7 @@ public Request aimStateRequest(boolean snapUp, boolean snapDown){
     @Override
     public void stop() {// stops everything
         setState(State.MANUAL);
-        translationVector = new Translation2dd();
+        translationVector = new Translation2d();
         rotationScalar = 0;
 
         update();

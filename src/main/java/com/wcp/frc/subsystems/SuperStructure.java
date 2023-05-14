@@ -12,11 +12,14 @@ import java.util.List;
 
 import javax.xml.namespace.QName;
 
+import com.pathplanner.lib.PathPlanner;
+import com.pathplanner.lib.PathPlannerTrajectory;
 import com.wcp.frc.subsystems.Arm.State;
 import com.wcp.frc.subsystems.Requests.Request;
 import com.wcp.frc.subsystems.Requests.RequestList;
+import com.wcp.lib.geometry.Translation2d;
+import com.wcp.lib.util.PathGenerator;
 
-import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj.Timer;
 
 /** Add your docs here. */
@@ -70,6 +73,12 @@ public class SuperStructure extends Subsystem {
     PreState currentUnprocessedState = PreState.ZERO;
 
     boolean cube = true;
+    
+    public enum GameState{
+        GETPIECE,
+        SCORE,
+        CHARGE;
+    }
 
     public enum PreState {
         HIGH,
@@ -240,6 +249,7 @@ public class SuperStructure extends Subsystem {
 
     public void update() {
         synchronized (SuperStructure.this) {
+            actOnGameState();
             if (activeRequestsComplete) {
                 idleRequest();
             }
@@ -347,6 +357,10 @@ public class SuperStructure extends Subsystem {
             request(request,queue);
     }
 
+    public void getGroundObject(){
+
+    }
+
     public void scoreState(PreState state, boolean cube){
         setPiece(cube);
         RequestList request = new RequestList(Arrays.asList(
@@ -357,6 +371,15 @@ public class SuperStructure extends Subsystem {
             ),false);
             request(request);
         
+    }
+    public void trajectoryState(){
+        PathPlannerTrajectory trajectory = PathGenerator.generatePath(null, null, null);
+        RequestList request = new RequestList(Arrays.asList(
+
+        ),true);
+        RequestList queue = new RequestList(Arrays.asList(
+            
+        ),false);
     }
         public Request waitRequest(double waitTime){
         return new Request() {
@@ -372,6 +395,10 @@ public class SuperStructure extends Subsystem {
                     timer.reset();
                     timer.start();                    
                 }};
+    }
+
+    public void actOnGameState(){
+        
     }
 
     @Override

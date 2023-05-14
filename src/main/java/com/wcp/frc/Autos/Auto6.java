@@ -8,10 +8,6 @@ import org.littletonrobotics.junction.Logger;
 
 import com.pathplanner.lib.PathPlanner;
 import com.pathplanner.lib.PathPlannerTrajectory;
-
-import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.geometry.Translation2d;
-import edu.wpi.first.math.trajectory.Trajectory;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
@@ -24,8 +20,8 @@ import com.wcp.frc.subsystems.Balancing;
 import com.wcp.frc.subsystems.Intake;
 import com.wcp.frc.subsystems.Scores;
 import com.wcp.frc.subsystems.Swerve;
-import com.wcp.lib.geometry.Rotation2dd;
-import com.wcp.lib.geometry.Translation2dd;
+import com.wcp.lib.geometry.Rotation2d;
+import com.wcp.lib.geometry.Translation2d;
 
 
 public class Auto6 extends SequentialCommandGroup {
