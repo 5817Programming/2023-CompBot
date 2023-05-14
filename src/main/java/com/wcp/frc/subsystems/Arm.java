@@ -36,7 +36,8 @@ public class Arm extends Subsystem {
 		ZERO(Constants.ArmConstants.ZERO),
 		CHUTE(Constants.ArmConstants.HOLD),
 		HOOMANCONE(Constants.ArmConstants.HOOMAN),
-		HOOMANCUBE(Constants.ArmConstants.HOOMAN);
+		HOOMANCUBE(Constants.ArmConstants.HOOMAN),
+		PICKUP(Constants.ArmConstants.PICKUP);
 
 		double output = 0;
 

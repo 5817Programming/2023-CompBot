@@ -4,6 +4,7 @@
 
 package com.wcp.frc.subsystems;
 
+import java.sql.Driver;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -116,6 +117,7 @@ public class Swerve extends Subsystem {
   Gyro pigeon = Pigeon.getInstance();
   double xERROR;
   double yERROR;
+  boolean targetTracked;
 
     public Swerve() {
         // setting values for the modules, id, and wether or not the encoders are
@@ -154,7 +156,7 @@ public class Swerve extends Subsystem {
 
     private enum State {
         MANUAL,
-        VECTOR,
+        TRAJECTORY,
         OFF,
         OBJECT,
         SCORE,
@@ -238,7 +240,7 @@ public class Swerve extends Subsystem {
     public void parkMode() {// makes it thin it rotating but cuts off drive power
         rotationScalar = .5;
         rotationScalar *= 0.01;
-        this.update(Timer.getFPGATimestamp());
+        this.update();
         this.commandModuleDrivePowers(0);
     }
 
@@ -281,7 +283,7 @@ public class Swerve extends Subsystem {
     SynchronousPIDF yPID = new SynchronousPIDF(1, 0.0, 0);
     private double lastTimestamp = Timer.getFPGATimestamp();
     public void followTranslation2d(Translation2dd translation2d, Rotation2dd targetRobotHeading, double speed) {
-        setState(State.VECTOR);
+        setState(State.TRAJECTORY);
         scaleFactor = speed;
         if (translation2d.x()<0){
             reverseXPID = true;
@@ -418,27 +420,73 @@ public class Swerve extends Subsystem {
     }
     @Override
     public void update() {
+        double timeStamp = Timer.getFPGATimestamp();
         drivingpose = Pose2dd.fromRotaiton(getRobotHeading());
-        if(currentState == State.MANUAL ){
-            double rotationCorrection =  headingController.updateRotationCorrection(drivingpose.getRotation(), Timer.getFPGATimestamp());
-        if(translationVector.norm() == 0 || rotationScalar != 0) {
-            rotationCorrection = 0;
-        }
-        SmartDashboard.putNumber("Swerve Heading Correctiomm    33  33   /n", rotationCorrection);
-        commandModules(inverseKinematics.updateDriveVectors(translationVector, rotationScalar + rotationCorrection, drivingpose, robotCentric));
-        }
-        if(currentState == State.SCORE){
-            headingController.setTargetHeading(targetHeading);
-            double rotationCorrection = headingController.getRotationCorrection(getRobotHeading(), timestamp);
 
-            SmartDashboard.putNumber("Swerve Heading Correctiomm    33  33   /n", rotationCorrection);
-            commandModules(inverseKinematics.updateDriveVectors(aimingVector, rotationCorrection+rotationScalar, drivingpose, robotCentric));
+        switch(currentState){
+            case MANUAL:
+                double rotationCorrection =  headingController.updateRotationCorrection(drivingpose.getRotation(), timeStamp);
+                if(translationVector.norm() == 0 || rotationScalar != 0) {
+                    rotationCorrection = 0;
+                }
+                SmartDashboard.putNumber("Swerve Heading Correctiomm    33  33   /n", rotationCorrection);
+                commandModules(inverseKinematics.updateDriveVectors(translationVector, rotationScalar + rotationCorrection, drivingpose, robotCentric));
+            break;
+
+            case SCORE:
+                headingController.setTargetHeading(targetHeading);
+                rotationCorrection = headingController.getRotationCorrection(getRobotHeading(), timeStamp);
+                SmartDashboard.putNumber("Swerve Heading Correctiomm    33  33   /n", rotationCorrection);
+                commandModules(inverseKinematics.updateDriveVectors(aimingVector, rotationCorrection, drivingpose, robotCentric));
+            break;
+
+            case BALANCE:
+                headingController.setTargetHeading(targetHeading);;
+                rotationCorrection = headingController.getRotationCorrection(targetHeading, timeStamp);
+                commandModules(inverseKinematics.updateDriveVectors(translationVector, rotationCorrection, drivingpose, robotCentric));
+            break;
+
+            case TRAJECTORY:
+                Translation2dd translationCorrection = updateFollowedTranslation2d(timeStamp).scale(1);
+                headingController.setTargetHeading(targetHeading);
+                 rotationCorrection = headingController.getRotationCorrection(getRobotHeading(), timeStamp);
+                desiredRotationScalar = rotationCorrection;    
+                Logger.getInstance().recordOutput("targetHeading", targetHeading.getDegrees());
+                commandModules(inverseKinematics.updateDriveVectors(translationCorrection, rotationCorrection, pose, robotCentric));
+            break;
+
+            case OBJECT:
+                commandModules(inverseKinematics.updateDriveVectors(aimingVector, rotationScalar, drivingpose, robotCentric));
+            break;
+
+            case OFF:
+                commandModules(inverseKinematics.updateDriveVectors(new Translation2dd(), 0, drivingpose, robotCentric));
+            break;
+                
+
         }
 
-        
+    }
 
-        
-        
+    public boolean balance(){
+        double x = 0;
+        double scalar = .012;
+            if(pigeon.getPitch()>1){
+              x = -scalar * pigeon.getPitch();
+            }else if(pigeon.getPitch() < -1){
+              x = -scalar * pigeon.getPitch();
+            }else{
+              x = 0;
+            }
+            translationVector = new Translation2dd(x,0);
+            if(DriverStation.getAlliance() == Alliance.Blue){
+                targetHeading = new Rotation2dd();
+            }
+            else{
+                targetHeading = new Rotation2dd(180);
+            }
+            return Math.abs(x)<.03;
+          
     }
     public void Aim(Translation2dd aimingVector, double scalar){
         currentState = State.OBJECT;
@@ -463,10 +511,10 @@ public class Swerve extends Subsystem {
         return pose;
     }
     public void followTrajectory() {
-        if (currentState == State.VECTOR){
+        if (currentState == State.TRAJECTORY){
         
         double timestamp = Timer.getFPGATimestamp();
-        if(currentState == State.VECTOR) {
+        if(currentState == State.TRAJECTORY) {
             Translation2dd translationCorrection = updateFollowedTranslation2d(timestamp).scale(1);
             headingController.setTargetHeading(targetHeading);
             double rotationCorrection = headingController.getRotationCorrection(getRobotHeading(), timestamp);
@@ -480,13 +528,15 @@ public class Swerve extends Subsystem {
         if(trajectoryStarted){
             updateTrajectory();
         }
-        setState(State.VECTOR);
+        setState(State.TRAJECTORY);
 
     }
     public double getRotationalVelSIM(){
 
         return desiredRotationScalar;
     }
+
+    
     
 
 
@@ -535,12 +585,37 @@ public class Swerve extends Subsystem {
 
     }
 
-    public Request balancRequest(){
+    public Request balanceRequest(){
         return new Request() {
             @Override
                 public void act(){
                     setState(State.BALANCE);
+                    balance();
                 }
+            @Override
+                public boolean isFinished(){
+                    if(balance()) setState(State.MANUAL);
+                    return balance();
+                }
+        };
+    }
+
+    public Request objectTartgetRequest(){
+        return new Request() {
+
+
+            @Override
+            public void act() {
+                goToObject();
+            }
+            @Override
+            public boolean isFinished(){
+                if(goToObject()){
+                    setState(State.MANUAL);
+                }
+                return goToObject();
+            }
+            
         };
     }
     
@@ -647,13 +722,13 @@ public Request aimStateRequest(boolean snapUp, boolean snapDown){
   }
   
   }
-  public void goToObject(){
+  public boolean goToObject(){
     //makes sure we have can see a target
     vision.setPipeline(Constants.VisionConstants.CONE_PIPELNE);
     if(!vision.hasTarget()){//if we cant see a cone we will look for a cube
       vision.setPipeline(Constants.VisionConstants.CUBE_PIPELINE);
-      if(!vision.hasTarget()){//if we cant see a cube we will exit the function becuase we dont have anywhere to go
-        return;
+      if(!vision.hasTarget()){
+        return false;//if we cant see a cube we will exit the function becuase we dont have anywhere to go
       }
     }
     //gets error
@@ -661,7 +736,11 @@ public Request aimStateRequest(boolean snapUp, boolean snapDown){
     double yERROR= advanceController.calculate(vision.getY(),-5);
     //corrects for error
     Aim(new Translation2dd(xERROR,yERROR),0);
-    
+    if(Math.abs(new Translation2dd(xERROR,yERROR).norm())<.3){
+        return true;
+    }else{
+        return false;
+    }
 
   }
 
@@ -726,7 +805,7 @@ public Request aimStateRequest(boolean snapUp, boolean snapDown){
         translationVector = new Translation2dd();
         rotationScalar = 0;
 
-        update(Timer.getFPGATimestamp());
+        update();
         commandModuleDrivePowers(0);
     }
 

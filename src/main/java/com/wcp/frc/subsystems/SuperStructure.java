@@ -58,7 +58,6 @@ public class SuperStructure extends Subsystem {
     private double swerveRotation;
     Request currentRequest;
 
-    private boolean hasPiece;
     private boolean newRequests;
     private boolean activeRequestsComplete;
     private boolean allRequestsComplete;
@@ -281,6 +280,8 @@ public class SuperStructure extends Subsystem {
                         newRequests = true;
                         activeRequestsComplete = true;
                     }
+                }else{
+                    currentRequest.act();
                 }
             } else {
                 if (!queuedRequests.isEmpty()) {
@@ -310,9 +311,21 @@ public class SuperStructure extends Subsystem {
     }
 
     public void balanceRequest(){
+        request(swerve.balanceRequest());
+    }
+
+    public void objectTargetState(){
         RequestList request = new RequestList(Arrays.asList(
-            swerve.balanceRequest
-        ), false);
+            elevator.stateRequest(Elevator.State.PICKUP),
+            arm.stateRequest(Arm.State.PICKUP),
+            sideElevator.stateRequest(SideElevator.State.PICKUP),
+            intake.percentOutputRequest(1,!cube)
+        ),true);
+        RequestList queue = new RequestList(Arrays.asList(
+            swerve.objectTartgetRequest()
+        ),false);
+
+        request(request,queue);
     }
 
     public void scoreState(PreState state, boolean cube){

@@ -55,7 +55,8 @@ public class Elevator extends Subsystem {
 		ZERO(Constants.ElevatorConstants.ZERO),
 		CHUTE(Constants.ElevatorConstants.HOLD),
 		HOOMANCONE(Constants.ElevatorConstants.HOOMAN_CONE),
-		HOOMANCUBE(Constants.ElevatorConstants.HOOMAN_CUBE);
+		HOOMANCUBE(Constants.ElevatorConstants.HOOMAN_CUBE),
+		PICKUP(Constants.ElevatorConstants.ZERO);
 
 		double output = 0;
 

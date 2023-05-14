@@ -57,7 +57,8 @@ public class SideElevator extends Subsystem {
 		ZERO(Constants.SideElevatorConstants.ZERO),
 		CHUTE(Constants.SideElevatorConstants.HOLD),
 		HOOMANCONE(Constants.SideElevatorConstants.HOOMAN),
-		HOOMANCUBE(Constants.SideElevatorConstants.HOOMAN);
+		HOOMANCUBE(Constants.SideElevatorConstants.HOOMAN),
+		PICKUP(Constants.SideElevatorConstants.ZERO);
 
 		double output = 0;
 
