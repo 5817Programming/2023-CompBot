@@ -119,6 +119,14 @@ public Request stateRequest(State newState){
 			}
 	};
 }
+public Request idlRequest(){
+	return new Request() {
+		@Override
+			public void act() {
+				conformToState(State.ZERO);
+			}
+	};
+}
 
 public Request percentRequest(double percent){
 	return new Request() {

@@ -5,12 +5,16 @@
 package com.wcp.frc.subsystems;
 
 
+
 import org.littletonrobotics.junction.Logger;
 import com.ctre.phoenix.motorcontrol.ControlMode;
 import com.ctre.phoenix.motorcontrol.NeutralMode;
 import com.ctre.phoenix.motorcontrol.TalonFXControlMode;
 import com.ctre.phoenix.motorcontrol.can.TalonFX;
 import com.wcp.frc.Ports;
+import com.wcp.frc.subsystems.Requests.Request;
+
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 public class Intake extends Subsystem {
@@ -33,14 +37,14 @@ public class Intake extends Subsystem {
   boolean hasPiece= false;
   boolean isReversed;
   boolean intaked;
-  
-  public void intake(double percent,boolean reversed,boolean out){
+  Timer waitTimer = new Timer();
+
+  public void intake(double percent,boolean reversed){
     intaked=false;
     
     intake.setNeutralMode(NeutralMode.Brake);
-    if(!out)
     // if the intake isn't at what where we want it it progressively gets faster until it is where it needs to be 
-    {if(percent>ramp){
+    if(percent>ramp){
       ramp += 0.02;
     }
     intake.set(TalonFXControlMode.PercentOutput, percent);
@@ -53,15 +57,96 @@ public class Intake extends Subsystem {
       ramp = 0;
     } 
    intake.set(ControlMode.PercentOutput,(reversed?1:-1));
-  }else{
-    intake.set(ControlMode.PercentOutput,(reversed?-1:1));
-
-  }
+  
   Logger.getInstance().recordOutput("volatge", intake.getStatorCurrent());
   this.isReversed = reversed;
 }
 public void setIntake (){
   intaked= true;
+
+}
+
+public Request percentOutputRequest(double percent, boolean cube){
+    return new Request() {
+      @Override
+        public void act(){
+          waitTimer.reset();
+          waitTimer.start();
+          intake(percent,cube);
+        }
+      @Override
+        public boolean isFinished(){
+            if(waitTimer.hasElapsed(.2)){
+              waitTimer.reset();
+              waitTimer.stop();
+            }
+          return waitTimer.hasElapsed(.2);
+        }
+    };
+
+
+
+}
+public Request percentOutputRequest( boolean cube){
+  return new Request() {
+    @Override
+      public void act(){
+        waitTimer.reset();
+        waitTimer.start();
+        intake(cube ? .3 : 1, cube);
+      }
+      @Override
+      public boolean isFinished(){
+          if(waitTimer.hasElapsed(.2)){
+            waitTimer.reset();
+            waitTimer.stop();
+          }
+        return waitTimer.hasElapsed(.2);
+      }
+  };
+
+
+
+}
+
+public Request percentOutputRequest(double percent, boolean cube,double waitTime){
+  return new Request() {
+    @Override
+      public void act(){
+        waitTimer.reset();
+        waitTimer.start();
+        intake(percent,cube);
+      }
+    @Override
+      public boolean isFinished(){
+          if(waitTimer.hasElapsed(waitTime)){
+            waitTimer.reset();
+            waitTimer.stop();
+          }
+        return waitTimer.hasElapsed(waitTime);
+      }
+  };
+}
+
+  public Request percentOutputRequest(boolean cube, double waitTime){
+    return new Request() {
+      @Override
+        public void act(){
+          waitTimer.reset();
+          waitTimer.start();
+          intake(cube ? .3 : 1, cube);
+        }
+        @Override
+        public boolean isFinished(){
+            if(waitTimer.hasElapsed(waitTime)){
+              waitTimer.reset();
+              waitTimer.stop();
+            }
+          return waitTimer.hasElapsed(waitTime);
+        }
+    };
+
+
 
 }
 public void outake (boolean cube,double cubespeed, double conespeed){

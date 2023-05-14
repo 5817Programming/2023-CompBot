@@ -17,6 +17,7 @@ import com.wcp.lib.geometry.Rotation2dd;
 import com.wcp.frc.subsystems.Lights;
 import com.wcp.frc.subsystems.Scores;
 
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj.XboxController;
 
 
@@ -120,10 +121,14 @@ public class Controls {
 
 
        if(driveRightTrigger> .5){
-            s.aimState(driverRightBumperTAP, driverLeftBumperTAP);
+            if(!swerve.isAiming()){
+                s.aimState(driverRightBumperTAP, driverLeftBumperTAP);
+            }
        }else{
-            swerve.sendInput(driverLeftXInput, driverRightXInput, driverRightXInput);
+        swerve.openLoopRequest(new Translation2d(driverLeftXInput, driverLeftYInput), codDriverDpad);
        }
+
+       swerve.sendInput(driverLeftXInput, driverLeftYInput, driverRightXInput);
         
 }
 }

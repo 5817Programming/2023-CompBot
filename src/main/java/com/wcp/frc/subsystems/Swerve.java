@@ -12,6 +12,7 @@ import java.util.function.BooleanSupplier;
 import org.littletonrobotics.junction.Logger;
 
 import com.ctre.phoenix.motorcontrol.TalonFXInvertType;
+import com.fasterxml.jackson.databind.jsontype.impl.AsExternalTypeDeserializer;
 import com.pathplanner.lib.PathPlanner;
 import com.pathplanner.lib.PathPlannerTrajectory;
 import com.wcp.frc.Constants;
@@ -78,6 +79,7 @@ public class Swerve extends Subsystem {
     Pose2dd drivingpose = new Pose2dd();
     PathPlannerTrajectory trajectoryDesired;
     List<Translation2dd> moduleVectors;
+    public final Timer aimTimer = new Timer();
     final double translationDeadband = 0.1;
     final double rotationDeadband = 0.1;
     private boolean robotCentric = false;
@@ -98,6 +100,7 @@ public class Swerve extends Subsystem {
   double xError;
   double yError;
   boolean ran = false;
+  boolean isAiming = false;
 
   PIDController thetaController;
   PIDController advanceController;
@@ -150,7 +153,12 @@ public class Swerve extends Subsystem {
     }
 
     private enum State {
-        MANUAL, VECTOR,OFF,OBJECT,SCORE;
+        MANUAL,
+        VECTOR,
+        OFF,
+        OBJECT,
+        SCORE,
+        BALANCE;
     } 
     private State currentState = State.MANUAL;
     public State getState() {
@@ -168,7 +176,6 @@ public class Swerve extends Subsystem {
     }
     //
     public void sendInput(double x, double y, double rotation) {
-        setState(State.MANUAL);
         translationVector = new Translation2dd(x, y);// makes vector to inputs
         // sets rotation to zero if it doesnt pass deadband
         if (Math.abs(rotation) <= rotationDeadband) {
@@ -193,11 +200,11 @@ public class Swerve extends Subsystem {
         if (translationVector.norm() <= translationDeadband && Math.abs(rotation) <= rotationDeadband) {// deadbands
             this.commandModuleDrivePowers(0);// no power
         } else {
-            this.update(Timer.getFPGATimestamp());// command modules
+            this.update();// command modules
 
 
         }
-        this.update(Timer.getFPGATimestamp());// command modules
+        this.update();// command modules
 
     }
     public boolean isFinishedTrajectory(){
@@ -409,11 +416,11 @@ public class Swerve extends Subsystem {
     public Rotation2dd getRobotHeading() {
         return Rotation2dd.fromDegrees(gyro.getAngle());
     }
-
-    public void update(double timestamp) {
+    @Override
+    public void update() {
         drivingpose = Pose2dd.fromRotaiton(getRobotHeading());
         if(currentState == State.MANUAL ){
-            double rotationCorrection =  headingController.updateRotationCorrection(drivingpose.getRotation(), timestamp);
+            double rotationCorrection =  headingController.updateRotationCorrection(drivingpose.getRotation(), Timer.getFPGATimestamp());
         if(translationVector.norm() == 0 || rotationScalar != 0) {
             rotationCorrection = 0;
         }
@@ -437,13 +444,13 @@ public class Swerve extends Subsystem {
         currentState = State.OBJECT;
         this.aimingVector = aimingVector;
         this.rotationScalar = scalar;
-        update(Timer.getFPGATimestamp());
+        update();
     }
     public void Aim(Translation2dd aimingVector,Rotation2dd rotation){
         currentState = State.SCORE;// SETS HEADING TO 0or 180
         this.aimingVector = aimingVector;
         targetHeading = rotation;
-        update(Timer.getFPGATimestamp());
+        update();
 
     }
 
@@ -527,6 +534,15 @@ public class Swerve extends Subsystem {
         }
 
     }
+
+    public Request balancRequest(){
+        return new Request() {
+            @Override
+                public void act(){
+                    setState(State.BALANCE);
+                }
+        };
+    }
     
 
 
@@ -546,9 +562,9 @@ public Request aimStateRequest(boolean snapUp, boolean snapDown){
 
         @Override
             public boolean isFinished(){
+                if(aimFinished) resetOffset();
                 return aimFinished;
             }
-
 	};
 
        
@@ -556,7 +572,7 @@ public Request aimStateRequest(boolean snapUp, boolean snapDown){
 
   
   
-  public void moveTo(int scoringNode){
+  public void targetNode(int scoringNode){
     double Roboty = getPose().getTranslation().y();
     double Robotx = getPose().getTranslation().x();
     double rotation = 0;
@@ -568,12 +584,16 @@ public Request aimStateRequest(boolean snapUp, boolean snapDown){
 
     xPID.setSetpoint(2);
     yPID.setSetpoint(Constants.scoresY.get(scoringNode));
-    xError = xPID.calculate(Robotx, dt);
-    yError = yPID.calculate(Roboty, dt);
+    double xError = xPID.calculate(Robotx, dt);
+    double yError = yPID.calculate(Roboty, dt);
     Logger.getInstance().recordOutput("yerror", yError);
     Logger.getInstance().recordOutput("xerror", xError);
 
     Aim(new Translation2dd(-xError, yError), Rotation2dd.fromDegrees(rotation));
+    if(Math.abs(xError)<.03 && Math.abs(yError)<.3) aimTimer.start();
+    if(aimTimer.get()>.2){
+        aimFinished = true;
+    }
     lastTimeStamp = currentTime;
   }
   public void aimAtScore(boolean snapDown,boolean snapUp){
@@ -588,9 +608,10 @@ public Request aimStateRequest(boolean snapUp, boolean snapDown){
       }
     
     
-    if(i == Constants.scoresY.size()-1){
-      ran = true;
-    }
+        if(i == Constants.scoresY.size()-1){
+        ran = true;
+        }
+        
     }
   }
 
@@ -604,11 +625,11 @@ public Request aimStateRequest(boolean snapUp, boolean snapDown){
 
   if(DriverStation.getAlliance() == Alliance.Blue){
     if(Robotx < 2.5){
-      moveTo(bestScore+offset);
+      targetNode(bestScore+offset);
       Logger.getInstance().recordOutput("BEst", bestScore);
 
     }else{
-      moveTo(bestScore);
+      targetNode(bestScore);
       Logger.getInstance().recordOutput("BEst", bestScore);
 
     }
@@ -616,11 +637,11 @@ public Request aimStateRequest(boolean snapUp, boolean snapDown){
   }
   else {
     if(Robotx < 14.02){
-      moveTo(bestScore+offset);
+      targetNode(bestScore+offset);
       Logger.getInstance().recordOutput("BEst", bestScore);
 
     }else{
-      moveTo(bestScore);
+      targetNode(bestScore);
       Logger.getInstance().recordOutput("BEst", bestScore);
   }
   }
@@ -636,16 +657,36 @@ public Request aimStateRequest(boolean snapUp, boolean snapDown){
       }
     }
     //gets error
-    xERROR = thetaController.calculate(vision.getX(),0);
-    yERROR= advanceController.calculate(vision.getY(),-5);
+    double xERROR = thetaController.calculate(vision.getX(),0);
+    double yERROR= advanceController.calculate(vision.getY(),-5);
     //corrects for error
     Aim(new Translation2dd(xERROR,yERROR),0);
     
 
   }
+
+  public boolean isAiming(){
+    return !aimFinished;
+  }
+
+  public Request openLoopRequest(Translation2d x, double r){
+       return new Request(){
+
+            @Override
+            public void act() {
+                currentState = State.MANUAL;
+                sendInput(x.getX(), x.getY(), r);
+                
+            }
+            
+        };
+
+  }
   public void resetOffset(){
     offset = 0;
     ran = false;
+    aimTimer.reset();
+    aimTimer.stop();
   }
 
   public void goToObject(boolean cube){

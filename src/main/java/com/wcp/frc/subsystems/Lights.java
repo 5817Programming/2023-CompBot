@@ -5,6 +5,8 @@
 package com.wcp.frc.subsystems;
 
 import com.wcp.frc.Ports;
+import com.wcp.frc.subsystems.Requests.Request;
+
 import edu.wpi.first.wpilibj.motorcontrol.Spark;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import com.wcp.frc.Constants;
@@ -29,26 +31,34 @@ public class Lights extends Subsystem {
 
   Spark lights = new Spark(Ports.light);
 
-  public void setLights(boolean codriverRightBumper, boolean codriverLeftBumper) {// sets lights based off input
-    // Vision.getInstance();
-    // Use addRequirements() here to declare subsystem dependencies.
-    if (codriverRightBumper) {
-        lights.set(Constants.LightConstants.CONE_LIGHT);
+  public enum State{
+    CUBE(Constants.LightConstants.CUBE_LIGHT),
+    CONE(Constants.LightConstants.CONE_LIGHT),
+    AIMING(Constants.LightConstants.NORMAL_LIGHT),
+    PICKUP(Constants.LightConstants.CONE_LIGHT),
+    SCORING(Constants.LightConstants.CUBE_LIGHT);
+
+    double output = 0;
+    private State(double output){
+      this.output = output;
     }
-      else if (codriverLeftBumper) {
-        lights.set(Constants.LightConstants.CUBE_LIGHT);
-       
-      }
+  }
+
+  public void conformToState(State newState) {// sets lights based off input
+        lights.set(newState.output);
     }
-    // vision.setPipelineIndex(Constants.ConePip);//if gets what you are looking for
-    // set lights to normal
-    // if (vision.hasTarget()){
-    // setLED(Constants.normallight);//rainbow(-.99)
-    // }else{
-    // vision.setPipelineIndex(Constants.CubePip);
-    // if (vision.hasTarget()){
-    // setLED(Constants.normallight);//rainbow(-.99)
-    // }
+
+  
+  public Request lighRequest(State newState){
+      return new Request() {
+
+        @Override
+        public void act() {
+          conformToState(newState);
+        }
+        
+      };
+  }
 
   @Override
   public void outputTelemetry() {
