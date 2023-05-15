@@ -125,7 +125,7 @@ public class Controls {
                 s.aimState(driverRightBumperTAP, driverLeftBumperTAP);
             }
        }else{
-        swerve.openLoopRequest(new Translation2d(driverLeftXInput, driverLeftYInput), codDriverDpad);
+        s.requestSwerveInput(new Translation2d(driverLeftXInput, driverLeftYInput), driverRightXInput);
        }
 
        swerve.sendInput(driverLeftXInput, driverLeftYInput, driverRightXInput);

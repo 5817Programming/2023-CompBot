@@ -263,6 +263,7 @@ public class SuperStructure extends Subsystem {
                         }
                         currentRequest = activeRequests.remove();// takes first thing outr of list and into variable
                         currentRequest.act();
+                        currentRequest.initialize();
                         newRequests = false;
                     }
                 }
@@ -312,7 +313,7 @@ public class SuperStructure extends Subsystem {
 
     public void balanceRequest(){
         request(swerve.balanceRequest());
-    }
+    } 
 
     public void objectTargetState(){
         RequestList request = new RequestList(Arrays.asList(
@@ -339,7 +340,8 @@ public class SuperStructure extends Subsystem {
             request(request);
         
     }
-        public Request waitRequest(double waitTime){
+    
+    public Request waitRequest(double waitTime){
         return new Request() {
             Timer timer = new Timer();
             @Override

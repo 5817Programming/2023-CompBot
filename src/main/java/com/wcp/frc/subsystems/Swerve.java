@@ -236,6 +236,13 @@ public class Swerve extends Subsystem {
     };
 };
 
+public boolean inAimRange(){
+    if (DriverStation.getAlliance() == Alliance.Blue)
+        return getPose().getTranslation().getX() < 2.8;
+    else
+        return getPose().getTranslation().getX() >14;
+}
+
 
     public void parkMode() {// makes it thin it rotating but cuts off drive power
         rotationScalar = .5;
