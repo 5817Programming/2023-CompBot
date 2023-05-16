@@ -171,17 +171,7 @@ public class SuperStructure extends Subsystem {
         queuedRequests.add(new RequestList(Arrays.asList(request), false));
     }
 
-    public void idleRequest() {
-        RequestList request = new RequestList(Arrays.asList(
-            swerve.openLoopRequest(swerveControls, swerveRotation),
-            elevator.idlRequest(),
-            sideElevator.stateRequest(SideElevator.State.ZERO),
-            arm.stateRequest(Arm.State.ZERO),
-            intake.percentOutputRequest(0,cube),
-            lights.lighRequest(cube ? Lights.State.CUBE: Lights.State.CONE)
-        ), true);
-        activeRequests = request;
-    }
+
 
     public void queue(RequestList list) {
         queuedRequests.add(list);
@@ -273,6 +263,7 @@ public class SuperStructure extends Subsystem {
                         }
                         currentRequest = activeRequests.remove();// takes first thing outr of list and into variable
                         currentRequest.act();
+                        currentRequest.initialize();
                         newRequests = false;
                     }
                 }
@@ -315,6 +306,7 @@ public class SuperStructure extends Subsystem {
                 arm.stateRequest(currentState.armState),
                 elevator.stateRequest(currentState.elevatorState),
                 intake.percentOutputRequest(!cube),
+                intake.stopRequest(),
                 swerve.openLoopRequest(swerveControls, swerveRotation)
                 ),
                  false);
@@ -323,6 +315,22 @@ public class SuperStructure extends Subsystem {
 
     public void balanceState(){
         request(swerve.balanceRequest());
+    } 
+
+    public void toChuteState(){
+        RequestList request = new RequestList(Arrays.asList(
+            elevator.idleRequest(),
+            sideElevator.stateRequest(SideElevator.State.ZERO),
+            arm.stateRequest(Arm.State.ZERO))
+            , true);
+        RequetList queue = new RequestList(Arrays.asList(
+            swerve.goToChuteRequest(),
+            arm.stateRequest(Arm.State.CHUTE),
+            intake.setPercentOutput(!cube),
+            intake.waitUntilIntakedPieceRequest(),
+            intake.stopRequest())
+            ,false);
+        request(request, queue);
     }
 
     public void objectTargetState(){
@@ -330,13 +338,15 @@ public class SuperStructure extends Subsystem {
             elevator.stateRequest(Elevator.State.PICKUP),
             arm.stateRequest(Arm.State.PICKUP),
             sideElevator.stateRequest(SideElevator.State.PICKUP),
-            intake.percentOutputRequest(1,!cube)
+            intake.percentOutputRequest(1,cube),
         ),true);
         RequestList queue = new RequestList(Arrays.asList(
-            swerve.objectTartgetRequest(),
+            swerve.objectTartgetRequest()
+            intake.waitUntilIntakedPieceRequest(),
+            intake.stopRequest(),
+            intake.brakeRequest(),
             swerve.openLoopRequest(swerveControls, swerveRotation)
         ),false);
-
         request(request,queue);
     }
     public void targetNodeState(int node){
@@ -361,15 +371,28 @@ public class SuperStructure extends Subsystem {
 
     }
 
+    public void idleState() {
+        RequestList request = new RequestList(Arrays.asList(
+            swerve.openLoopRequest(swerveControls, swerveRotation),
+            elevator.idlRequest(),
+            sideElevator.stateRequest(SideElevator.State.ZERO),
+            arm.stateRequest(Arm.State.ZERO),
+            intake.brakeRequst(),
+            lights.lightRequest(cube ? Lights.State.CUBE: Lights.State.CONE)
+        ), true);
+        activeRequests = request;
+    }
+
     public void scoreState(PreState state, boolean cube){
         setPiece(cube);
         RequestList request = new RequestList(Arrays.asList(
             sideElevator.stateRequest(currentState.sideElevatorState),
             arm.stateRequest(currentState.armState),
             elevator.stateRequest(currentState.elevatorState),
-            intake.percentOutputRequest(!cube)
+            intake.percentOutputRequest(!this.cube)
+            intake.stopRequest()
             ),false);
-            request(request);
+        request(request);
         
     }
     public void trajectoryState(){
@@ -381,7 +404,19 @@ public class SuperStructure extends Subsystem {
             
         ),false);
     }
-        public Request waitRequest(double waitTime){
+  
+    public void scoreState(PreState state){
+        RequestList request = new RequestList(Arrays.asList(
+            sideElevator.stateRequest(currentState.sideElevatorState),
+            arm.stateRequest(currentState.armState),
+            elevator.stateRequest(currentState.elevatorState),
+            intake.percentOutputRequest(!this.cube),
+            intake.stopRequest()
+            ),false);
+        request(request);  
+    }
+  
+    public Request waitRequest(double waitTime){
         return new Request() {
             Timer timer = new Timer();
             @Override

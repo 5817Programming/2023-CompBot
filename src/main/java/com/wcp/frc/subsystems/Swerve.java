@@ -136,14 +136,8 @@ public class Swerve extends Subsystem {
         rearRightModule.invertDriveMotor(TalonFXInvertType.Clockwise);
         positionModules = Arrays.asList(frontRightModule, frontLeftModule, rearLeftModule, rearRightModule);
         distanceTraveled = 0;
-
-
-
         pathFollower = PathFollower.getInstance();
         gyro = Pigeon.getInstance();
-
-
-
     }
 
 
@@ -218,19 +212,14 @@ public class Swerve extends Subsystem {
         trajectoryFinished = false;
 
     }
-    public BooleanSupplier TrajectoryisFinished (){
-        return new BooleanSupplier() {
 
-            @Override
-            public boolean getAsBoolean() {
-                if (isTrajectoryFollowed()){
-                    trajectoryStarted = false;
-                }
-                // TODO Auto-generated method stub
-                return isTrajectoryFollowed();
-            }
-    };
-};
+
+    public boolean inAimRange(){
+        if (DriverStation.getAlliance() == Alliance.Blue)
+            return getPose().getTranslation().getX() < 2.8;
+        else
+            return getPose().getTranslation().getX() >14;
+    }
 
 
     public void parkMode() {// makes it thin it rotating but cuts off drive power
@@ -630,29 +619,39 @@ public class Swerve extends Subsystem {
     
 
 
-public Request aimStateRequest(boolean snapUp, boolean snapDown){
-	return new Request() {
+    public Request aimStateRequest(boolean snapUp, boolean snapDown){
+        return new Request() {
 
-        @Override
-            public void initialize() {
-                aimFinished = false;
-            }
-        
-		@Override
-			public void act() {
-                setState(State.SCORE);
-			    aimAtScore(snapUp, snapDown);
-			}
+            @Override
+                public void initialize() {
+                    aimFinished = false;
+                }
+            
+            @Override
+                public void act() {
+                    setState(State.SCORE);
+                    aimAtScore(snapUp, snapDown);
+                }
 
-        @Override
-            public boolean isFinished(){
-                if(aimFinished) resetOffset();
-                return aimFinished;
-            }
-	};
+            @Override
+                public boolean isFinished(){
+                    if(aimFinished) resetOffset();
+                    return aimFinished;
+                }
+        };        
+    }
 
-       
-}
+    public Request goToChuteRequest(){
+        return new Request(){
+
+            @Override
+                public void act(){
+                    if(DriverStation.getAlliance() == Alliance.Blue){
+                          
+                    }
+                }
+        }
+    }
 
   
   
