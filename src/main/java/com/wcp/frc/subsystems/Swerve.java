@@ -141,12 +141,8 @@ public class Swerve extends Subsystem {
         positionModules = Arrays.asList(frontRightModule, frontLeftModule, rearLeftModule, rearRightModule);
         distanceTraveled = 0;
 
-
-
         pathFollower = PathFollower.getInstance();
         gyro = Pigeon.getInstance();
-
-
 
     }
 
@@ -229,14 +225,12 @@ public class Swerve extends Subsystem {
 
     }
 
-
-    public boolean inAimRange(){
+    public boolean inAimRange() {
         if (DriverStation.getAlliance() == Alliance.Blue)
             return getPose().getTranslation().getX() < 2.8;
         else
-            return getPose().getTranslation().getX() >14;
+            return getPose().getTranslation().getX() > 14;
     }
-
 
     public void parkMode() {// makes it thin it rotating but cuts off drive power
         rotationScalar = .5;
@@ -521,10 +515,6 @@ public class Swerve extends Subsystem {
         return pose;
     }
 
-    
-
-
-
     public double getRotationalVelSIM() {
 
         return desiredRotationScalar;
@@ -627,32 +617,30 @@ public class Swerve extends Subsystem {
         };
 
     }
-    
 
+    public Request aimStateRequest(boolean snapUp, boolean snapDown) {
+        return new Request() {
 
-public Request aimStateRequest(boolean snapUp, boolean snapDown){
-	return new Request() {
-
-        @Override
+            @Override
             public void initialize() {
                 aimFinished = false;
             }
-        
-		@Override
-			public void act() {
-                setState(State.SCORE);
-			    aimAtScore(snapUp, snapDown);
-			}
 
-        @Override
-            public boolean isFinished(){
-                if(aimFinished) resetOffset();
+            @Override
+            public void act() {
+                setState(State.SCORE);
+                aimAtScore(snapUp, snapDown);
+            }
+
+            @Override
+            public boolean isFinished() {
+                if (aimFinished)
+                    resetOffset();
                 return aimFinished;
             }
-	};
+        };
 
-       
-}
+    }
 
     public void targetNode(int scoringNode) {
         double Roboty = getPose().getTranslation().getY();
@@ -760,56 +748,59 @@ public Request aimStateRequest(boolean snapUp, boolean snapDown){
         return new Request() {
 
             @Override
-                public void act() {
-                    currentState = State.MANUAL;
-                    sendInput(x.getX(), x.getY(), r);
+            public void act() {
+                currentState = State.MANUAL;
+                sendInput(x.getX(), x.getY(), r);
 
-                }
+            }
 
         };
 
     }
 
-    public Request startPathRequest(double speed, boolean useAllianceColor){
+    public Request startPathRequest(double speed, boolean useAllianceColor) {
         return new Request() {
             @Override
-                public void act(){
-                    setState(State.TRAJECTORY);
-                    startPath(speed, useAllianceColor);
-                }
+            public void act() {
+                setState(State.TRAJECTORY);
+                startPath(speed, useAllianceColor);
+            }
+
             @Override
-                public boolean isFinished(){
-                    return trajectoryFinished;
-                }
+            public boolean isFinished() {
+                return trajectoryFinished;
+            }
         };
     }
 
-   
+    public Request generateTrajectoryRequest(int node) {
+        return new Request() {
 
-  public Request generateTrajectoryRequest(int node){
-    return new Request() {
+            @Override
+            public void act() {
+                PathPlannerTrajectory trajectory = PathGenerator.generatePath(new PathConstraints(4, 4),
+                        new Node(Constants.scoresY.get(node), DriverStation.getAlliance() == Alliance.Blue ? 2 : 14.71),
+                        Constants.FieldConstants.obstacles);
+                setTrajectory(trajectory);
+            }
 
-        @Override
-        public void act() {
-            PathPlannerTrajectory trajectory = PathGenerator.generatePath(new PathConstraints(4, 4), new Node(Constants.scoresY.get(node),DriverStation.getAlliance() == Alliance.Blue ? 2:14.71), Constants.FieldConstants.obstacles);
-            setTrajectory(trajectory);
-        }
-        
-    };
+        };
 
-  }
-  public Request generateTrajectoryRequest(Node node){
-    return new Request() {
+    }
 
-        @Override
-        public void act() {
-            PathPlannerTrajectory trajectory = PathGenerator.generatePath(new PathConstraints(4, 4), node, Constants.FieldConstants.obstacles);
-            setTrajectory(trajectory);
-        }
-        
-    };
+    public Request generateTrajectoryRequest(Node node) {
+        return new Request() {
 
-  }
+            @Override
+            public void act() {
+                PathPlannerTrajectory trajectory = PathGenerator.generatePath(new PathConstraints(4, 4), node,
+                        Constants.FieldConstants.obstacles);
+                setTrajectory(trajectory);
+            }
+
+        };
+
+    }
 
     public void resetOffset() {
         offset = 0;

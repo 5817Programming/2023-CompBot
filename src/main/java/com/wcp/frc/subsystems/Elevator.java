@@ -120,7 +120,7 @@ public Request stateRequest(State newState){
 			}
 	};
 }
-public Request idlRequest(){
+public Request idleRequest(){
 	return new Request() {
 		@Override
 			public void act() {
