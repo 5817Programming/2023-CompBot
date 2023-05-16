@@ -602,6 +602,7 @@ public class Swerve extends Subsystem {
             
         };
     }
+
     public Request goToNodeRequest(int node){
         return new Request() {
             @Override
@@ -679,6 +680,8 @@ public class Swerve extends Subsystem {
     }
     lastTimeStamp = currentTime;
   }
+
+  
   public void aimAtScore(boolean snapDown,boolean snapUp){
     double Roboty = getPose().getTranslation().getY();
     bestDistance = 11111;
