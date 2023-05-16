@@ -49,7 +49,7 @@ public class Lights extends Subsystem {
     }
 
   
-  public Request lighRequest(State newState){
+  public Request lightRequest(State newState){
       return new Request() {
 
         @Override

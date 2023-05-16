@@ -11,7 +11,6 @@ import java.util.List;
 public abstract class Request {
 
 	public Request(){
-		initialize();
 	}
     public abstract void act();
 	
