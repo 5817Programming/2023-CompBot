@@ -19,7 +19,32 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 public class Intake extends Subsystem {
   /** Creates a new Intake. */
-  public Intake() {}
+  public Intake() {
+    configMotor();
+  }
+
+  public void configMotor(){
+      intake.configFactoryDefault();
+
+        intake.configSelectedFeedbackSensor(FeedbackDevice.IntegratedSensor, 0, Constants.kCANTimeoutMs);
+        intake.setStatusFramePeriod(StatusFrameEnhanced.Status_2_Feedback0, 20, Constants.kCANTimeoutMs);
+        intake.setNeutralMode(NeutralMode.Brake);
+        intake.configVoltageCompSaturation(7.0, Constants.kCANTimeoutMs);
+        intake.enableVoltageCompensation(true);
+        intake.configAllowableClosedloopError(0, 0, Constants.kCANTimeoutMs);
+        intake.configMotionAcceleration((int) (Constants.kSwerveRotationMaxSpeed * 15.5), 10);
+        intake.configMotionCruiseVelocity((int) (Constants.kSwerveRotationMaxSpeed), 10);
+
+        intake.selectProfileSlot(0, 0);
+        // Slot 1 is for normal use
+        intake.config_kP(0, 1, 10); // 1.55
+        intake.config_kI(0, 0.0, 10);
+        intake.config_kD(0, 5.0, 10); // 5.0
+        intake.config_kF(0, 1023.0 / Constants.kSwerveRotationMaxSpeed, 10);
+        intake.set(ControlMode.MotionMagic, intake.getSelectedSensorPosition(0));
+
+ 
+  }
 
   public static Intake instance = null;
 
@@ -31,39 +56,15 @@ public class Intake extends Subsystem {
 
   TalonFX intake = new TalonFX(Ports.intake);
   
-  boolean stop = false;
-  double ramp;
-  boolean hold= false;
-  boolean hasPiece= false;
-  boolean isReversed;
-  boolean intaked;
   Timer waitTimer = new Timer();
 
-  public void intake(double percent,boolean reversed){
-    intaked=false;
-    
-    intake.setNeutralMode(NeutralMode.Brake);
-    // if the intake isn't at what where we want it it progressively gets faster until it is where it needs to be 
-    if(percent>ramp){
-      ramp += 0.02;
-    }
-    intake.set(TalonFXControlMode.PercentOutput, percent);
-    // if intake reversed and current is more than 22 then it stops if not reversed and current is more than 100 it stops
-    if(intake.getSelectedSensorVelocity()<3000&&ramp>.3){
-      stop = true;
-      hasPiece = true;
-    }
-    if(stop){
-      ramp = 0;
-    } 
-   intake.set(ControlMode.PercentOutput,(reversed?1:-1));
-  
-  Logger.getInstance().recordOutput("volatge", intake.getStatorCurrent());
-  this.isReversed = reversed;
-}
-public void setIntake (){
-  intaked= true;
+  PeriodicIO mPeriodicIO = new PeriodicIO();
 
+  public void intake(double percent,boolean reversed){
+    mPeriodicIO.driveControlMode = ControlMode.PercentOutput;
+    mPeriodicIO.driveDemand = reversed ? -percent: percent;
+
+  
 }
 
 public Request percentOutputRequest(double percent, boolean cube){
@@ -83,11 +84,9 @@ public Request percentOutputRequest(double percent, boolean cube){
           return waitTimer.hasElapsed(.2);
         }
     };
-
-
-
 }
-public Request percentOutputRequest( boolean cube){
+
+public Request percentOutputRequest(boolean cube){
   return new Request() {
     @Override
       public void act(){
@@ -104,9 +103,43 @@ public Request percentOutputRequest( boolean cube){
         return waitTimer.hasElapsed(.2);
       }
   };
+}
 
+public Request stopIntakeRequest(){
+  return new Request(){
+    @Override
+      public void act(){
+        intake(0, false);
+      }
+  }
+}
 
+public Request waitUntilIntakedPieceRequest(){
+  return new Request(){
+    @Override 
+      public void act(){
 
+      }
+    @Override
+      public boolean isFinished(){
+        return intake.getStatorCurrent()>60;
+      }
+  }
+}
+
+public Request intakeBrakeRequest(){
+  return new Request(){
+    @Override
+      public void act(){
+          brakeIntake();
+      }
+  }
+}
+
+public void brakeIntake(){
+  intake.selectProfileSlot(0,0);
+  mPeriodicIO.driveControlMode = ControlMode.MotionMagic;
+  mPeriodicIO.driveDemand = mPeriodicIO.drivePosition;
 }
 
 public Request percentOutputRequest(double percent, boolean cube,double waitTime){
@@ -149,51 +182,43 @@ public Request percentOutputRequest(double percent, boolean cube,double waitTime
 
 
 }
-public void outake (boolean cube,double cubespeed, double conespeed){
-  if(.2>ramp){
-    ramp = ramp +0.01;
-  }
-  if(ramp>.18)
-  {
-    stop = false;
-    hold = true;
-   }
-  Logger.getInstance().recordOutput("ramp", ramp);
-  if(!stop){
-    hasPiece= false;
-    intaked = false;
-    intake.set(ControlMode.PercentOutput, cube ? cubespeed:conespeed);
-  }
 
-  
-  
-  
-}
 public void setPercentOutput(double p){
-  intake.set(ControlMode.PercentOutput, -p);
-
+  mPeriodicIO.driveDemand = p;
+  mPeriodicIO.driveControlMode = ControlMode.PercentOutput;
 }
-  public void stop(){
-    stop = false;
-    hold = false;
-    ramp = 0;
-    intake.set(ControlMode.PercentOutput, 0);
 
-  }
+
   @Override
-  public void update(){
-        if (hasPiece&intaked){
-      if(intake.getSelectedSensorVelocity()<2000){
-        intake.set(ControlMode.PercentOutput, isReversed ? .1:-.1);
-     
-      }
-      }
-  }
-    // if (hold){
-    //   scores.hold();
+public void outputTelemetry() {
+	// TODO Auto-generated method stub
+	
+}
 
-    // }
-    // // This method will be called once per scheduler run
+
+@Override
+public void stop() {  
+  setPercentOutput(0);
+}
+@Override
+public void writePeriodicOutputs() {
+	mPeriodicIO.drivePosition = intake.getSelectedSensorPosition();
+	mPeriodicIO.velocity = intake.getSelectedSensorVelocity();
+}
+@Override
+public void readPeriodicInputs() {
+	intake.set(mPeriodicIO.driveControlMode, mPeriodicIO.driveDemand);
+}
+  
+
+  public static class PeriodicIO  {
+	double drivePosition = 0;
+	double velocity = 0;
+
+	ControlMode driveControlMode = ControlMode.MotionMagic;
+	double rotationDemand = 0.0;
+	double driveDemand = 0.0;
+}
   
   @Override
   public void outputTelemetry() {
