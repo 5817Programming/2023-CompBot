@@ -156,9 +156,7 @@ swerve.updatePose(Timer.getFPGATimestamp());
     // // Put default auto code here
     // // break;
     swerve.updateTrajectory();
-    swerve.startTrjectory();
-    // }
-    swerve.followTrajectory();
+
   }
 
   /** This function is called once when teleop is enabled. */
