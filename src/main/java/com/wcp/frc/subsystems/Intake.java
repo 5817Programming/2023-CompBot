@@ -85,7 +85,6 @@ public Request percentOutputRequest(double percent, boolean cube){
         }
     };
 }
-
 public Request percentOutputRequest(boolean cube){
   return new Request() {
     @Override
@@ -182,19 +181,6 @@ public Request percentOutputRequest(double percent, boolean cube,double waitTime
 
 
 }
-
-public void setPercentOutput(double p){
-  mPeriodicIO.driveDemand = p;
-  mPeriodicIO.driveControlMode = ControlMode.PercentOutput;
-}
-
-
-  @Override
-public void outputTelemetry() {
-	// TODO Auto-generated method stub
-	
-}
-
 
 @Override
 public void stop() {  

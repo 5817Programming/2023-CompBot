@@ -4,14 +4,14 @@
 
 package com.wcp.lib;
 
-import com.wcp.lib.geometry.Rotation2dd;
+import com.wcp.lib.geometry.Rotation2d;
 import com.wcp.lib.util.SynchronousPIDF;
 
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
 /** Add your docs here. */
 public class HeadingController {
-    private Rotation2dd targetHeading = Rotation2dd.fromDegrees(0);
+    private Rotation2d targetHeading = Rotation2d.fromDegrees(0);
     private double lastTimestamp;
 
     private double disabledStartTimestamp = 0;
@@ -25,10 +25,10 @@ public class HeadingController {
     public HeadingController() {
         pidController = new SynchronousPIDF(0.0005, 0.0, 0.0, 0.0);
     }
-    public void setTargetHeading(Rotation2dd heading) {
-        targetHeading = Rotation2dd.fromDegrees(heading.getDegrees()+0);
+    public void setTargetHeading(Rotation2d heading) {
+        targetHeading = Rotation2d.fromDegrees(heading.getDegrees()+0);
     }
-    public double updateRotationCorrection(Rotation2dd heading, double timestamp) {
+    public double updateRotationCorrection(Rotation2d heading, double timestamp) {
         if(isDisabled) {
             if((timestamp - disabledStartTimestamp) > 0.25) {
                 isDisabled = false;
@@ -38,8 +38,8 @@ public class HeadingController {
         }
         return getRotationCorrection(heading, timestamp);
     }
-    public double getRotationCorrection(Rotation2dd heading, double timestamp) {
-        double error = new Rotation2dd(targetHeading).rotateBy(heading.inverse()).getDegrees();
+    public double getRotationCorrection(Rotation2d heading, double timestamp) {
+        double error = new Rotation2d(targetHeading).rotateBy(heading.inverse()).getDegrees();
         double dt = timestamp - lastTimestamp;
         SmartDashboard.putNumber("Target Heading", targetHeading.getDegrees());
         lastTimestamp = timestamp;
