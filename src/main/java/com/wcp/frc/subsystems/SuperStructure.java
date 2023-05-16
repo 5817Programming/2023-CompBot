@@ -340,7 +340,7 @@ public class SuperStructure extends Subsystem {
             elevator.stateRequest(Elevator.State.PICKUP),
             arm.stateRequest(Arm.State.PICKUP),
             sideElevator.stateRequest(SideElevator.State.PICKUP),
-            intake.percentOutputRequest(1,cube),
+            intake.percentOutputRequest(1,cube)
         ),true);
         RequestList queue = new RequestList(Arrays.asList(
             swerve.objectTartgetRequest(),
@@ -376,10 +376,10 @@ public class SuperStructure extends Subsystem {
     public void idleState() {
         RequestList request = new RequestList(Arrays.asList(
             swerve.openLoopRequest(swerveControls, swerveRotation),
-            elevator.idlRequest(),
+            elevator.idleRequest(),
             sideElevator.stateRequest(SideElevator.State.ZERO),
             arm.stateRequest(Arm.State.ZERO),
-            intake.brakeRequst(),
+            intake.intakeBrakeRequest(),
             lights.lightRequest(cube ? Lights.State.CUBE: Lights.State.CONE)
         ), true);
         activeRequests = request;
@@ -391,8 +391,8 @@ public class SuperStructure extends Subsystem {
             sideElevator.stateRequest(currentState.sideElevatorState),
             arm.stateRequest(currentState.armState),
             elevator.stateRequest(currentState.elevatorState),
-            intake.percentOutputRequest(!this.cube)
-            intake.stopRequest()
+            intake.percentOutputRequest(!this.cube),
+            intake.stopIntakeRequest()
             ),false);
         request(request);
         
@@ -420,7 +420,7 @@ public class SuperStructure extends Subsystem {
             arm.stateRequest(currentState.armState),
             elevator.stateRequest(currentState.elevatorState),
             intake.percentOutputRequest(!this.cube),
-            intake.stopRequest()
+            intake.stopIntakeRequest()
             ),false);
         request(request);  
     }
