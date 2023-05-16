@@ -65,16 +65,25 @@ public class PathFollower extends SubsystemBase {
     useEvents = true;
   }
 
+  public void clearEvents(){
+    eventTimings.clear();
+    waitTimings.clear();
+    events.clear();
+    resetTimer();
+    waitTimer.reset();
+    waitTimer.stop();
+  }
+
   
 
   public Pose2d getDesiredPose2d(
-    boolean useAllianceColor, double speed, Pose2d currenPose2d) {
+    boolean useAllianceColor, double speed, Pose2d currentPose2d) {
 
-    this.currentPose = currenPose2d;
+    this.currentPose = currentPose2d;
     this.timer.start();
     double currentTime = this.timer.get()*.5;
     this.speed = speed;
-    if (eventTimings.size()>0){
+    if (eventTimings != null){
       runEvents();
     }
 

@@ -18,6 +18,7 @@ import com.wcp.frc.subsystems.Arm.State;
 import com.wcp.frc.subsystems.Requests.Request;
 import com.wcp.frc.subsystems.Requests.RequestList;
 import com.wcp.lib.geometry.Translation2d;
+import com.wcp.lib.geometry.HeavilyInspired.Node;
 import com.wcp.lib.util.PathGenerator;
 
 import edu.wpi.first.wpilibj.Timer;
@@ -47,6 +48,8 @@ public class SuperStructure extends Subsystem {
         queuedRequests = new ArrayList<>();
 
     }
+
+    int i = true;
 
     public static SuperStructure instance = null;
 
@@ -250,7 +253,7 @@ public class SuperStructure extends Subsystem {
     public void update() {
         synchronized (SuperStructure.this) {
             actOnGameState();
-            if (activeRequestsComplete) {
+            if (requestsCompleted()) {
                 idleRequest();
             }
             if (!activeRequestsComplete) {
@@ -357,9 +360,6 @@ public class SuperStructure extends Subsystem {
             request(request,queue);
     }
 
-    public void getGroundObject(){
-
-    }
 
     public void scoreState(PreState state, boolean cube){
         setPiece(cube);
@@ -372,16 +372,24 @@ public class SuperStructure extends Subsystem {
             request(request);
         
     }
-    public void trajectoryState(){
-        PathPlannerTrajectory trajectory = PathGenerator.generatePath(null, null, null);
-        RequestList request = new RequestList(Arrays.asList(
 
-        ),true);
-        RequestList queue = new RequestList(Arrays.asList(
-            
+    public void trajectoryState(int node){
+        RequestList request = new RequestList(Arrays.asList(
+            swerve.generateTrajectoryRequest(node),
+            swerve.startPathRequest(4, true)
         ),false);
+        request(request);
     }
-        public Request waitRequest(double waitTime){
+
+    public void trajectoryState(Node node){
+        RequestList request = new RequestList(Arrays.asList(
+            swerve.generateTrajectoryRequest(node),
+            swerve.startPathRequest(4, true)
+        ),true);
+       request(request);
+    }
+
+    public Request waitRequest(double waitTime){
         return new Request() {
             Timer timer = new Timer();
             @Override
