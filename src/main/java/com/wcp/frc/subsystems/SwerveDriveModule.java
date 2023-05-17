@@ -176,7 +176,6 @@ public class SwerveDriveModule extends Subsystem {
     }
 
     public void setModuleAngle(double desiredAngle) {
-        // SmartDashboard.putNumber(this.name + " Module Commanded Angle", desiredAngle);// output telemetry
         desiredAngle = Util.placeInAppropriate0To360Scope(getModuleAngle(), desiredAngle);// optimization
         double angleEncUnits = degreesToEncUnits(desiredAngle);
         mPeriodicIO.rotationDemand = angleEncUnits;
@@ -374,11 +373,12 @@ public class SwerveDriveModule extends Subsystem {
 
     @Override
     public void outputTelemetry() {
-        SmartDashboard.putNumber(this.name + " Angle", encUnitsToDegrees(mPeriodicIO.rotationPosition));
-        SmartDashboard.putNumber(this.name + " Mag Encoder Raw Value", getModuleAbsolutePosition() / 360.0);
-        SmartDashboard.putNumber(this.name + " Absolute Position", getModuleAbsolutePosition());
-        SmartDashboard.putNumber(this.name + " Drive Motor Demand", mPeriodicIO.driveDemand);
-        SmartDashboard.putString(this.name + " Status", getModuleStatus().toString());
+        Logger.getInstance().recordOutput(this.name+" Angle Demand", mPeriodicIO.rotationDemand);
+        Logger.getInstance().recordOutput(this.name + " Angle", encUnitsToDegrees(mPeriodicIO.rotationPosition));
+        Logger.getInstance().recordOutput(this.name + " Mag Encoder Raw Value", getModuleAbsolutePosition() / 360.0);
+        Logger.getInstance().recordOutput(this.name + " Absolute Position", getModuleAbsolutePosition());
+        Logger.getInstance().recordOutput(this.name + " Drive Motor Demand", mPeriodicIO.driveDemand);
+        Logger.getInstance().recordOutput(this.name + " Status", getModuleStatus().toString());
     }
 
     @Override
