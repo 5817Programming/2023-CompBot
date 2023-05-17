@@ -175,11 +175,11 @@ public class Controls {
 
         }
         
-        if (coDriverLeftY > .2&&scores.sideElvator>Constants.SideElevatorConstants.MAX_DOWN-210) {
+        if (coDriverLeftY > .2&&scores.sideElvator>Constants.SideElevatorConstants.MAX_DOWN-210){
             scores.sideElvator -= 200;
         }
 
-        if (coDriverLeftY < -.2&&scores.sideElvator<Constants.SideElevatorConstants.MAX_UP-210) {
+        if (coDriverLeftY < -.2&&scores.sideElvator<Constants.SideElevatorConstants.MAX_UP-210){
             scores.sideElvator += 200;
         }
 

@@ -101,10 +101,5 @@ public void setPercentOutput(double p){
       }
     }
 
-    // if (hold){
-    //   scores.hold();
-
-    // }
-    // // This method will be called once per scheduler run
   }
 }

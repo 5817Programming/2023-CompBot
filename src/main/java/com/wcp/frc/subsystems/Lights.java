@@ -36,8 +36,6 @@ public class Lights extends SubsystemBase {
   Spark lights = new Spark(Ports.light);
 
   public void setLights(boolean codriverRightBumper, boolean codriverLeftBumper) {// sets lights based off input
-    // Vision.getInstance();
-    // Use addRequirements() here to declare subsystem dependencies.
     if (codriverRightBumper) {
         lights.set(Constants.LightConstants.CONE_LIGHT);
     }
@@ -46,15 +44,5 @@ public class Lights extends SubsystemBase {
        
       }
     }
-    // vision.setPipelineIndex(Constants.ConePip);//if gets what you are looking for
-    // set lights to normal
-    // if (vision.hasTarget()){
-    // setLED(Constants.normallight);//rainbow(-.99)
-    // }else{
-    // vision.setPipelineIndex(Constants.CubePip);
-    // if (vision.hasTarget()){
-    // setLED(Constants.normallight);//rainbow(-.99)
-    // }
-
   }
 
