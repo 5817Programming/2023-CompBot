@@ -150,10 +150,13 @@ public class Controls {
 
        if(driverAButton.isPressed()){
            s.aimState(driverLeftBumper.isPressed(), driverRightBumper.isPressed());
-       }else{
-
-               s.requestSwerveInput(new Translation2d(driverLeftXInput, driverLeftYInput), driverRightXInput);
+           System.out.println("true");
+       }else if(!driverAButton.isActive()){   
+            s.idleState();
        }
+
+       s.requestSwerveInput(new Translation2d(driverLeftXInput, driverLeftYInput), driverRightXInput);
+
 
 
        
@@ -169,38 +172,44 @@ public class Controls {
 
 public class ButtonCheck{
         double threshold;
-        List<Boolean> input;
+        Boolean[] input = new Boolean[2];
             
         public ButtonCheck(double threshold){
             this.threshold = threshold;
-            input = new ArrayList<>(2);
+            for(int i = 0; i < 1; i++){
+                input[i] = false;
+            }
         } 
         public ButtonCheck(){
             this.threshold = 0;
+            for(int i = 0; i < 1; i++){
+                input[i] = false;
+            }
         } 
 
        public void update(double input){
+            this.input[1] = this.input[0];
         if(input>threshold)
-            this.input.add(0, true);
+            this.input[0] = true;
         else
-            this.input.add(0,false);
+            this.input[0] = false;
 
        }
-       public void update(boolean input){
-            this.input.add(1,this.input.get(0));
 
+       public void update(boolean input){
+            this.input[1] = this.input[0];
             if(input)
-                this.input.add(0, true);
+                this.input[0] = true;
             else
-                this.input.add(0,false);
+                this.input[0] = false;
        }
 
        public boolean isPressed(){
-        return input.get(0) && !input.get(1);
+        return input[0] && !input[1];
        }
 
        public boolean isActive(){
-         return input.get(0);
+         return input[0];
        }
        public void setThreshhold(double threshold){
          this.threshold = threshold;

@@ -128,10 +128,8 @@ swerve.updatePose(Timer.getFPGATimestamp());
   /** This function is called once when teleop is enabled. */
   @Override
   public void teleopInit() {
-    SuperStructure s = SuperStructure.getInstance();
     swerve = Swerve.getInstance();
     swerve.fieldzeroSwerve();
-    s.aimState(false, false);
 
 
   }
