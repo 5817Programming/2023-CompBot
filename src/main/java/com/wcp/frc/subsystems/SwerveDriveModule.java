@@ -341,7 +341,12 @@ public class SwerveDriveModule extends Subsystem {
 
     @Override
     public void outputTelemetry() {
-      
+        Logger.getInstance().recordOutput(this.name+" Angle Demand", encUnitsToDegrees(mPeriodicIO.rotationDemand));
+        Logger.getInstance().recordOutput(this.name + " Angle", encUnitsToDegrees(mPeriodicIO.rotationPosition));
+        Logger.getInstance().recordOutput(this.name + " Mag Encoder Raw Value", getModuleAbsolutePosition() / 360.0);
+        Logger.getInstance().recordOutput(this.name + " Absolute Position", getModuleAbsolutePosition());
+        Logger.getInstance().recordOutput(this.name + " Drive Motor Demand", mPeriodicIO.driveDemand);
+        Logger.getInstance().recordOutput(this.name + " Status", getModuleStatus().toString());
     }
 
     @Override

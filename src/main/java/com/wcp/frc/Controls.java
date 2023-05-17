@@ -112,15 +112,26 @@ public class Controls {
 
 
        if(driveRightTrigger> .5){
-            if(!swerve.isAiming()){
-                s.aimState(driverRightBumperTAP, driverLeftBumperTAP);
-            }
+            //if(!swerve.isAiming()){
+            //}
        }else{
-        s.requestSwerveInput(new Translation2d(driverLeftXInput, driverLeftYInput), driverRightXInput);
+
+               s.requestSwerveInput(new Translation2d(driverLeftXInput, driverLeftYInput), driverRightXInput);
+       }
+
+
+       class ButtonCheck{
+            public ButtonCheck(){
+                
+            }
        }
        
+       
 
-       swerve.sendInput(driverLeftXInput, driverLeftYInput, driverRightXInput);
+      // swerve.sendInput(driverLeftXInput, driverLeftYInput, driverRightXInput);
+
+      
+
         
 }
 }

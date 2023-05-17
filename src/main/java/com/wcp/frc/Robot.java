@@ -11,6 +11,7 @@ import org.littletonrobotics.junction.LoggedRobot;
 import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.networktables.NT4Publisher;
 import com.wcp.frc.subsystems.SubsystemManager;
+import com.wcp.frc.subsystems.SuperStructure;
 import com.wcp.frc.subsystems.Swerve;
 import com.wcp.frc.subsystems.Vision;
 import com.wcp.frc.subsystems.gyros.Gyro;
@@ -36,9 +37,9 @@ public class Robot extends LoggedRobot {
   SubsystemManager subsystemManager;
   Swerve swerve;
   double yaw;
-  Elevator elevator = new Elevator();
+  Elevator elevator = Elevator.getInstance();
   Vision vision;
-  Arm arm = new Arm();
+  Arm arm = Arm.getInstance();
   Lights lights;
   Gyro pigeon;
 
@@ -57,7 +58,7 @@ public class Robot extends LoggedRobot {
     vision = Vision.getInstance();
     subsystemManager = new SubsystemManager();
     subsystemManager.addSystems(Arrays.asList(
-        Swerve.getInstance(), Arm.getInstance(), Elevator.getInstance(), Intake.getInstance(), Lights.getInstance(), SideElevator.getInstance(), Vision.getInstance()));
+        Swerve.getInstance(), SuperStructure.getInstance(), Arm.getInstance(), Elevator.getInstance(), Intake.getInstance(), Lights.getInstance(), SideElevator.getInstance(), Vision.getInstance()));
     }
 
   /**
@@ -127,8 +128,10 @@ swerve.updatePose(Timer.getFPGATimestamp());
   /** This function is called once when teleop is enabled. */
   @Override
   public void teleopInit() {
+    SuperStructure s = SuperStructure.getInstance();
     swerve = Swerve.getInstance();
     swerve.fieldzeroSwerve();
+    s.aimState(false, false);
 
 
   }

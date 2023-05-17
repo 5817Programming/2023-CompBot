@@ -52,14 +52,14 @@ public class Swerve extends Subsystem {
     List<SwerveDriveModule> modules;
     Translation2d aimingVector = new Translation2d();
 
-    Translation2d translationVector;
-    public double rotationScalar;
+    Translation2d translationVector = new Translation2d();
+    public double rotationScalar = 0;
     public double autox;
     public double autoy;
     public double autorotate;
     public double fieldcolor;
     double scaleFactor;
-    boolean aimFinished;
+    boolean aimFinished = false;
     double rotationalVel;
     boolean trajectoryStarted = false;
     boolean trajectoryFinished = false;

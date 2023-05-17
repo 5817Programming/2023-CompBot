@@ -8,6 +8,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
+
+import org.littletonrobotics.junction.Logger;
+
 import com.wcp.frc.subsystems.Requests.Request;
 import com.wcp.frc.subsystems.Requests.RequestList;
 import com.wcp.lib.geometry.Translation2d;
@@ -51,12 +54,13 @@ public class SuperStructure extends Subsystem {
     }
 
     private RequestList activeRequests;
-    private Translation2d swerveControls;
-    private double swerveRotation;
+    private Translation2d swerveControls = new Translation2d();
+    private double swerveRotation = 0;
     Request currentRequest;
 
+
     private boolean newRequests;
-    private boolean activeRequestsComplete;
+    private boolean activeRequestsComplete = true;
     private boolean allRequestsComplete;
 
     private boolean requestsCompleted() {
@@ -233,10 +237,9 @@ public class SuperStructure extends Subsystem {
 
     public void update() {
         synchronized (SuperStructure.this) {
-            actOnGameState();
-            if (requestsCompleted()) {
-                idleState();
-            }
+            // if (requestsCompleted()) {
+            //     idleState();
+            // }
             if (!activeRequestsComplete) {
                 if (newRequests) {
                     if (activeRequests.isParallel()) {
@@ -292,7 +295,7 @@ public class SuperStructure extends Subsystem {
         RequestList request = new RequestList(Arrays.asList(
                 arm.stateRequest(Arm.State.ZERO),
                 sideElevator.stateRequest(SideElevator.State.ZERO),
-                elevator.stateRequest(Elevator.State.ZERO)),
+                elevator.idleRequest()),
                 true);
         RequestList queue = new RequestList(Arrays.asList(
                 swerve.aimStateRequest(snapUp, snapDown),
@@ -374,7 +377,7 @@ public class SuperStructure extends Subsystem {
             intake.intakeBrakeRequest(),
             lights.lightRequest(cube ? Lights.State.CUBE: Lights.State.CONE)
         ), true);
-        activeRequests = request;
+        request(request);
     }
 
     public void scoreState(PreState state, boolean cube){
@@ -439,8 +442,7 @@ public class SuperStructure extends Subsystem {
 
     @Override
     public void outputTelemetry() {
-        // TODO Auto-generated method stub
-
+        Logger.getInstance().recordOutput("RequestsCompleted", requestsCompleted());
     }
 
     @Override
