@@ -4,6 +4,9 @@
 
 package com.wcp.frc;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import com.wcp.frc.subsystems.Arm;
 import com.wcp.frc.subsystems.Elevator;
 import com.wcp.frc.subsystems.Intake;
@@ -44,6 +47,40 @@ public class Controls {
     double elevatorstate;
     boolean cube= true;
 
+    ButtonCheck driverLeftTrigger = new ButtonCheck(.5);
+    ButtonCheck driveRightTrigger = new ButtonCheck(.5);
+    ButtonCheck driverLeftBumper = new ButtonCheck();
+    ButtonCheck driverRightBumper = new ButtonCheck();
+    ButtonCheck driverLeftStickDown = new ButtonCheck();
+    ButtonCheck driverAButton = new ButtonCheck();
+    ButtonCheck driverXButton = new ButtonCheck();
+    ButtonCheck driverYButton = new ButtonCheck();
+    ButtonCheck driverBButton = new ButtonCheck();
+    ButtonCheck driverRightStickDown = new ButtonCheck();
+    ButtonCheck driverStartButton = new ButtonCheck();
+    ButtonCheck driverDpadLeft = new ButtonCheck();
+    ButtonCheck driverDpadUp = new ButtonCheck();
+    ButtonCheck driverDpadRight = new ButtonCheck();
+    ButtonCheck driverDpadDown = new ButtonCheck();
+
+
+    ButtonCheck coDriverStart = new ButtonCheck();
+    ButtonCheck coDriverAButton = new ButtonCheck();
+    ButtonCheck coDriverBButton = new ButtonCheck();
+    ButtonCheck coDriverYButton = new ButtonCheck();
+    ButtonCheck coDriverXButton = new ButtonCheck();
+    ButtonCheck codriverLeftBumper = new ButtonCheck();
+    ButtonCheck codriverRightBumper = new ButtonCheck();
+    ButtonCheck coDriverLeftTrigger = new ButtonCheck(.5);
+    ButtonCheck coDriverRightTrigger = new ButtonCheck(.5);
+    ButtonCheck coDriverLeftStickDown = new ButtonCheck();
+    ButtonCheck coDriverRightStickDown = new ButtonCheck();
+    ButtonCheck coDriverBackButton = new ButtonCheck();
+
+
+
+
+
     private static Controls instance = null;
     public static Controls getInstance() {
         if (instance == null)
@@ -55,6 +92,9 @@ public class Controls {
         Driver = new XboxController(Ports.XBOX_1);
         CoDriver = new XboxController(Ports.XBOX_2);
         swerve = Swerve.getInstance();
+
+        
+
         
     }
 
@@ -62,69 +102,61 @@ public class Controls {
     public void update() {
         vision = Vision.getInstance();
         s = SuperStructure.getInstance();
-        //CommandScheduler.getInstance().run();
-       // Command toHuman = new toHuman(odometry);
-       
 
 
-        double driverLeftTrigger = Driver.getLeftTriggerAxis();// slow mode
-        double driveRightTrigger = Driver.getRightTriggerAxis();// arm down
+
+
         double driverLeftXInput = -(((Driver.getLeftX())) * Acelerator);
         double driverLeftYInput = (Driver.getLeftY() * Acelerator);// drive
         double driverRightXInput = -((((Driver.getRightX() * ignore) + rotate) * 2) * Acelerator);// drive
-        boolean driverLeftBumper = Driver.getLeftBumper();// do (hold)
-        boolean driverRightBumper = Driver.getRightBumper();// succ (toggle)
-        boolean driverRightBumperTAP = Driver.getRightBumperPressed();// succ (toggle)
-        boolean driverLeftBumperTAP = Driver.getLeftBumperPressed();// succ (toggle)
 
 
-        boolean driverLeftStickDown = Driver.getLeftStickButtonPressed();
-        boolean driverAButton = Driver.getAButton();
-        boolean driverXButton = Driver.getXButton();
-        boolean driverYButton = Driver.getYButton();
-        boolean driverBButton = Driver.getBButton();
-        double driverDpad = Driver.getPOV();
-        boolean driverRightStickDown = Driver.getRightStickButton();
-        boolean driverStartButtonTAP = Driver.getStartButtonPressed();
 
-
-        boolean coDriverStart = CoDriver.getStartButton();
-        boolean coDriverAButton = CoDriver.getAButton();// bottom
-        boolean coDriverBButton = CoDriver.getBButton();// middle
-        boolean coDriverXButton = CoDriver.getXButton();// top
-        boolean coDriverYButton = CoDriver.getYButton();// top
-        boolean codriverLeftBumperTAP = CoDriver.getLeftBumperPressed();
-        boolean codriverRightBumperTAP = CoDriver.getRightBumperPressed();// Light toggle
-        
-        boolean codriverLeftBumper = CoDriver.getLeftBumper();
-        boolean codriverRightBumper = CoDriver.getRightBumper();// Light toggle
-        double coDriverLeftTrigger = CoDriver.getLeftTriggerAxis();
-        double coDriverRightTrigger = CoDriver.getRightTriggerAxis();// triggers are for scoring
         double coDriverLeftX = CoDriver.getLeftX();
         double coDriverLeftY = CoDriver.getLeftY();
-
         double coDriverRightY = CoDriver.getRightY();
-        boolean coDriverLeftStickDown = CoDriver.getLeftStickButton();
-        boolean coDriverRightStickDown = CoDriver.getRightStickButton();//// press in joystick to hold
         double coDriverRightX = CoDriver.getRightX();
-        double codDriverDpad = CoDriver.getPOV(); // jacks jacks
-        boolean coDriverBackButton = CoDriver.getBackButton();
+
+         driverLeftTrigger.update(Driver.getLeftTriggerAxis());
+         driveRightTrigger.update(Driver.getRightTriggerAxis());
+         driverLeftBumper.update(Driver.getLeftBumper());
+         driverRightBumper.update(Driver.getRightBumper());
+         driverLeftStickDown.update(Driver.getLeftStickButton());
+         driverAButton.update(Driver.getAButton());
+         driverXButton.update(Driver.getXButton());
+         driverYButton.update(Driver.getYButton());
+         driverBButton.update(Driver.getBButton());
+         driverRightStickDown.update(Driver.getRightStickButton());
+         driverStartButton.update(Driver.getStartButton());
+         driverDpadLeft.update(Driver.getPOV() == 270);
+         driverDpadUp.update(Driver.getPOV() == 0);
+         driverDpadRight.update(Driver.getPOV() == 90);
+         driverDpadDown.update(Driver.getPOV() == 180);
+    
+    
+         coDriverStart.update(CoDriver.getStartButton());
+         coDriverAButton.update(CoDriver.getAButton());
+         coDriverBButton.update(CoDriver.getBButton());
+         coDriverYButton.update(CoDriver.getYButton());
+         coDriverXButton.update(CoDriver.getXButton());
+         codriverLeftBumper.update(CoDriver.getLeftBumper());
+         codriverRightBumper.update(CoDriver.getRightBumper());
+         coDriverLeftTrigger.update(CoDriver.getLeftTriggerAxis());
+         coDriverRightTrigger.update(CoDriver.getRightTriggerAxis());
+         coDriverLeftStickDown.update(CoDriver.getLeftStickButton());
+         coDriverRightStickDown.update(CoDriver.getLeftStickButtonPressed());
+         coDriverBackButton.update(CoDriver.getBackButton());
 
 
-       if(driveRightTrigger> .5){
-            //if(!swerve.isAiming()){
-            //}
+       if(driverAButton.isPressed()){
+           s.aimState(driverLeftBumper.isPressed(), driverRightBumper.isPressed());
        }else{
 
                s.requestSwerveInput(new Translation2d(driverLeftXInput, driverLeftYInput), driverRightXInput);
        }
 
 
-       class ButtonCheck{
-            public ButtonCheck(){
-                
-            }
-       }
+       
        
        
 
@@ -134,4 +166,44 @@ public class Controls {
 
         
 }
+
+public class ButtonCheck{
+        double threshold;
+        List<Boolean> input;
+            
+        public ButtonCheck(double threshold){
+            this.threshold = threshold;
+            input = new ArrayList<>(2);
+        } 
+        public ButtonCheck(){
+            this.threshold = 0;
+        } 
+
+       public void update(double input){
+        if(input>threshold)
+            this.input.add(0, true);
+        else
+            this.input.add(0,false);
+
+       }
+       public void update(boolean input){
+            this.input.add(1,this.input.get(0));
+
+            if(input)
+                this.input.add(0, true);
+            else
+                this.input.add(0,false);
+       }
+
+       public boolean isPressed(){
+        return input.get(0) && !input.get(1);
+       }
+
+       public boolean isActive(){
+         return input.get(0);
+       }
+       public void setThreshhold(double threshold){
+         this.threshold = threshold;
+       }
+       }
 }
