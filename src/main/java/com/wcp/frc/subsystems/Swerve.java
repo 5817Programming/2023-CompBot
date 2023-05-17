@@ -78,6 +78,7 @@ public class Swerve extends Subsystem {
     Pose2d pose = new Pose2d(new Translation2d(5, 5), new Rotation2d());
     Pose2d drivingpose = new Pose2d();
     PathPlannerTrajectory trajectoryDesired;
+    double chuteLastTimeStamp;
     List<Translation2d> moduleVectors;
     public final Timer aimTimer = new Timer();
     final double translationDeadband = 0.1;
@@ -617,7 +618,26 @@ public class Swerve extends Subsystem {
         };
 
     }
+    public Request goToChuteRequest() {
 
+        return new Request() {
+            @Override
+            public void act() {
+                gotoChute();
+                }
+            @Override
+            public void initialize() {
+                aimFinished = false;
+            }
+            @Override
+            public boolean isFinished() {
+                if (aimFinished)
+                    resetOffset();
+                return aimFinished;
+            }
+        };
+
+    }
     public Request aimStateRequest(boolean snapUp, boolean snapDown) {
         return new Request() {
 
@@ -641,7 +661,27 @@ public class Swerve extends Subsystem {
         };
 
     }
+    public void gotoChute(){
+        double rotation = -90;
+        if (DriverStation.getAlliance() == Alliance.Blue) {
+            rotation = 90;
+        }
+        double currentTime = Timer.getFPGATimestamp();
+        double dt = currentTime - chuteLastTimeStamp;
+        double Robotx = getPose().getTranslation().getX();
+        xPID.setSetpoint(2);
+        double xError = xPID.calculate(Robotx, dt);
+        Aim(new Translation2d(-xError, 0), Rotation2d.fromDegrees(rotation));
+        if (Math.abs(xError) < .03 && Math.abs(yError) < .3)
+            aimTimer.start();
+        else
+            aimTimer.reset();
+        if (aimTimer.get() > .2) {
+            aimFinished = true;
+        }
+                chuteLastTimeStamp = currentTime;
 
+    }
     public void targetNode(int scoringNode) {
         double Roboty = getPose().getTranslation().getY();
         double Robotx = getPose().getTranslation().getX();
@@ -662,6 +702,8 @@ public class Swerve extends Subsystem {
         Aim(new Translation2d(-xError, yError), Rotation2d.fromDegrees(rotation));
         if (Math.abs(xError) < .03 && Math.abs(yError) < .3)
             aimTimer.start();
+        else
+            aimTimer.reset();
         if (aimTimer.get() > .2) {
             aimFinished = true;
         }
