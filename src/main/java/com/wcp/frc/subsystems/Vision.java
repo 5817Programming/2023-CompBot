@@ -16,7 +16,6 @@ import edu.wpi.first.networktables.NetworkTableInstance;
 public class Vision extends Subsystem {
   
   
-  Swerve swerve = Swerve.getInstance();
   public double height;
   public static Vision instance = null;
   public int setPoint;
@@ -91,19 +90,9 @@ public class Vision extends Subsystem {
 
   }
 
-  public double getHeight(){
-    if(swerve.getPose().getTranslation().getX()>8.29){
-
-      height = Constants.VisionConstants.HEIGHTS.get(2);
-      
-    }else{
-     height = Constants.VisionConstants.HEIGHTS.get(setPoint);
-    }
-    return height;
-  }
 
   public double getDistance(){//gets distance to target
-    double distanceFromLimelightToGoalInches = (getHeight() - Constants.VisionConstants.LIMELIGHT_LENS_HEIGHT_INCHES)/Math.tan(Math.toRadians(Constants.VisionConstants.LIMELIGHT_MOUNT_ANGLE_DEGREES + getY()));
+    double distanceFromLimelightToGoalInches = (0 - Constants.VisionConstants.LIMELIGHT_LENS_HEIGHT_INCHES)/Math.tan(Math.toRadians(Constants.VisionConstants.LIMELIGHT_MOUNT_ANGLE_DEGREES + getY()));
   return distanceFromLimelightToGoalInches>0&&distanceFromLimelightToGoalInches<1000?Units.inchesToMeters(distanceFromLimelightToGoalInches):0;
   }
   public void   setPipeline(Integer pipeline) {
