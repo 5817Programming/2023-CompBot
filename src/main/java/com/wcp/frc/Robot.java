@@ -20,9 +20,10 @@ import com.wcp.frc.subsystems.SideElevator;
 import com.wcp.frc.subsystems.Elevator;
 import com.wcp.frc.subsystems.Intake;
 
+import edu.wpi.first.wpilibj.PowerDistribution;
 import edu.wpi.first.wpilibj.Timer;
 //https://github.com/Mechanical-Advantage/AdvantageKit/releases/latest/download/AdvantageKit.json
-
+import edu.wpi.first.wpilibj.PowerDistribution.ModuleType;
 //https://maven.photonvision.org/repository/internal/org/photonvision/PhotonLib-json/1.0/PhotonLib-json-1.0.json
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 
@@ -44,6 +45,8 @@ public class Robot extends LoggedRobot {
   @Override
   public void robotInit() {
     Logger.getInstance().recordMetadata("ProjectName", "MyProject"); // Set a metadata value
+    new PowerDistribution(1, ModuleType.kRev); // Enables power distribution logging
+
     Logger.getInstance().addDataReceiver(new NT4Publisher()); // Publish data to NetworkTables
     Logger.getInstance().start(); // Start logging! No more data receivers, replay sources, or metadata values may
 

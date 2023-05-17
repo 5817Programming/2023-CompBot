@@ -13,7 +13,7 @@ import com.wcp.frc.Constants;
 public class Lights extends Subsystem {
   /** Creates a new Lights. */
   private static Lights instance_;
-
+  Spark lights;
   public static Lights getInstance() {
     if (instance_ == null) {
       instance_ = new Lights();
@@ -22,13 +22,14 @@ public class Lights extends Subsystem {
   }
 
   public Lights() {
+    lights = new Spark(Ports.light);
   }
 
   Ports ports = new Ports();
   // Vision vision;
   double color = Constants.LightConstants.NORMAL_LIGHT;
 
-  Spark lights = new Spark(Ports.light);
+  
 
   public enum State{
     CUBE(Constants.LightConstants.CUBE_LIGHT),

@@ -20,12 +20,6 @@ import edu.wpi.first.wpilibj.XboxController;
 
 public class Controls {
     SuperStructure s;
-    Scores scores = new Scores();
-    SideElevator sideelevator = new SideElevator();
-    Elevator elevator = new Elevator();
-    Arm arm = new Arm();
-    Intake intake = new Intake();
-    Lights lights = new Lights();
 
     double speed;
     
