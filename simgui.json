@@ -13,6 +13,7 @@
       "/LiveWindow/Ungrouped/DigitalInput[4]": "Digital Input",
       "/LiveWindow/Ungrouped/Scheduler": "Scheduler",
       "/LiveWindow/Ungrouped/Spark[0]": "Motor Controller",
+      "/LiveWindow/Ungrouped/Spark[2]": "Motor Controller",
       "/LiveWindow/Vision": "Subsystem",
       "/SmartDashboard/Auto choices": "String Chooser",
       "/SmartDashboard/Choose Auto: ": "String Chooser"

@@ -115,8 +115,12 @@ public Request stateRequest(State newState){
 			}
 		@Override
 			public boolean isFinished(){
-				return Math.abs(mPeriodicIO.driveDemand-mPeriodicIO.drivePosition)<1000;
+				return true;
 			}
+		// @Override
+		// 	public boolean isFinished(){
+		// 		return Math.abs(mPeriodicIO.driveDemand-mPeriodicIO.drivePosition)<1000;
+		// 	}
 	};
 }
 public Request idleRequest(){
@@ -124,6 +128,10 @@ public Request idleRequest(){
 		@Override
 			public void act() {
 				conformToState(State.ZERO);
+			}
+		@Override
+			public boolean isFinished(){
+				return true;
 			}
 	};
 }

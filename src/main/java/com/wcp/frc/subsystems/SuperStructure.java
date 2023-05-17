@@ -39,7 +39,7 @@ public class SuperStructure extends Subsystem {
         intake = Intake.getInstance();
         sideElevator = SideElevator.getInstance();
         vision = Vision.getInstance();
-
+        idleState();
         queuedRequests = new ArrayList<>();
 
     }
@@ -52,8 +52,8 @@ public class SuperStructure extends Subsystem {
             instance = new SuperStructure();
         return instance;
     }
-
     private RequestList activeRequests;
+    private RequestList idleRequests;
     private Translation2d swerveControls = new Translation2d();
     private double swerveRotation = 0;
     Request currentRequest;
@@ -64,7 +64,7 @@ public class SuperStructure extends Subsystem {
     private boolean allRequestsComplete;
 
     private boolean requestsCompleted() {
-        return allRequestsComplete;
+        return activeRequestsComplete;
     }
 
     State currentState = State.ZERO;
@@ -203,22 +203,25 @@ public class SuperStructure extends Subsystem {
                     currentState = State.HIGHCUBE;
                 else
                     currentState = State.HIGHCONE;
-                break;
+            break;
+
             case MID:
                 if (cube)
                     currentState = State.HIGHCUBE;
                 else
                     currentState = State.HIGHCONE;
-                break;
+            break;
+
             case LOW:
                 if (cube)
                     currentState = State.LOWCUBE;
                 else
                     currentState = State.LOWCONE;
-                break;
+            break;
+
             case ZERO:
                 currentState = State.ZERO;
-                break;
+            break;
         }
     }
 
@@ -237,59 +240,62 @@ public class SuperStructure extends Subsystem {
 
     public void update() {
         synchronized (SuperStructure.this) {
-            // if (requestsCompleted()) {
-            //     idleState();
-            // }
-            if (!activeRequestsComplete) {
-                if (newRequests) {
-                    if (activeRequests.isParallel()) {
+
+            if(!activeRequestsComplete){
+                if(newRequests){
+                    if(activeRequests.isParallel()){
                         boolean allActivated = true;
-                        for (Iterator<Request> iterator = activeRequests.getRequests().iterator(); iterator
-                                .hasNext();) {
+                        for(Iterator<Request> iterator = activeRequests.getRequests().iterator(); iterator.hasNext();){
                             Request request = iterator.next();
                             boolean allowed = request.allowed();
                             allActivated &= allowed;
-                            if (allowed)
-                                request.act();
+                            if(allowed) request.act();
                         }
                         newRequests = !allActivated;
-                    } else {
-                        if (activeRequests.isEmpty()) {
+                    }else{
+                        if(activeRequests.isEmpty()){
                             activeRequestsComplete = true;
                             return;
                         }
-                        currentRequest = activeRequests.remove();// takes first thing outr of list and into variable
+                        currentRequest = activeRequests.remove();
                         currentRequest.act();
                         currentRequest.initialize();
                         newRequests = false;
                     }
                 }
-
-                if (activeRequests.isParallel()) {
+                if(activeRequests.isParallel()){
                     boolean done = true;
-                    for (Request request : activeRequests.getRequests()) {
-                        done &= request.isFinished();// if done and request is finsihed
+                    for(Request request : activeRequests.getRequests()){
+                        done &= request.isFinished();
                     }
                     activeRequestsComplete = done;
-                } else if (currentRequest.isFinished()) {
-                    if (activeRequests.isEmpty()) {
-                        activeRequestsComplete = true;
-                    } else if (activeRequests.getRequests().get(0).allowed()) {
-                        newRequests = true;
-                        activeRequestsComplete = true;
-                    }
+                }else if(currentRequest.isFinished()){
+                        if(activeRequests.isEmpty()){
+                            activeRequestsComplete = true;
+                        }else if(activeRequests.getRequests().get(0).allowed()){
+                            newRequests = true;
+                            activeRequestsComplete = false;
+                        }
                 }else{
                     currentRequest.act();
                 }
-            } else {
-                if (!queuedRequests.isEmpty()) {
+            }else{
+                if(!queuedRequests.isEmpty()){
                     setActiveRequests(queuedRequests.remove(0));
-                } else {
-                    allRequestsComplete = true;
+                }else{
+                    idleState();
+                    for(Iterator<Request> iterator = idleRequests.getRequests().iterator(); iterator.hasNext();){
+                        Request request = iterator.next();
+                        boolean allowed = request.allowed();
+                        if(allowed) request.act();
+                    }
+                    activeRequestsComplete = true;
                 }
             }
+
+            } 
         }
-    }
+    
 
     public void aimState(boolean snapUp, boolean snapDown) {
         RequestList request = new RequestList(Arrays.asList(
@@ -364,10 +370,6 @@ public class SuperStructure extends Subsystem {
             request(request,queue);
     }
 
-    public void getGroundObject(){
-
-    }
-
     public void idleState() {
         RequestList request = new RequestList(Arrays.asList(
             swerve.openLoopRequest(swerveControls, swerveRotation),
@@ -376,20 +378,37 @@ public class SuperStructure extends Subsystem {
             arm.stateRequest(Arm.State.ZERO),
             intake.intakeBrakeRequest(),
             lights.lightRequest(cube ? Lights.State.CUBE: Lights.State.CONE)
-        ), true);
-        request(request);
+        ), false);
+        idleRequests = request;
     }
 
     public void scoreState(PreState state, boolean cube){
         setPiece(cube);
         RequestList request = new RequestList(Arrays.asList(
+            swerve.setStateRequest(Swerve.State.OFF),
             sideElevator.stateRequest(currentState.sideElevatorState),
             arm.stateRequest(currentState.armState),
-            elevator.stateRequest(currentState.elevatorState),
+            elevator.stateRequest(currentState.elevatorState)
+            ),false);
+        RequestList queue = new RequestList(Arrays.asList(
             intake.percentOutputRequest(!this.cube),
             intake.stopIntakeRequest()
             ),false);
-        request(request);
+        request(request, queue);
+    }
+    public void scoreState(State state){
+        currentState = state;
+        RequestList request = new RequestList(Arrays.asList(
+            swerve.setStateRequest(Swerve.State.OFF),
+            sideElevator.stateRequest(currentState.sideElevatorState),
+            arm.stateRequest(currentState.armState),
+            elevator.stateRequest(currentState.elevatorState)
+            ),false);
+        RequestList queue = new RequestList(Arrays.asList(
+            intake.percentOutputRequest(!this.cube),
+            intake.stopIntakeRequest()
+            ),false);
+        request(request, queue);
         
     }
 
@@ -410,28 +429,50 @@ public class SuperStructure extends Subsystem {
     }
   
     public void scoreState(PreState state){
+        processState();
         RequestList request = new RequestList(Arrays.asList(
+            swerve.setStateRequest(Swerve.State.OFF),
             sideElevator.stateRequest(currentState.sideElevatorState),
             arm.stateRequest(currentState.armState),
-            elevator.stateRequest(currentState.elevatorState),
+            elevator.stateRequest(currentState.elevatorState)
+            ),false);
+        RequestList queue = new RequestList(Arrays.asList(
             intake.percentOutputRequest(!this.cube),
             intake.stopIntakeRequest()
             ),false);
-        request(request);  
+        request(request, queue);
     }
+    public void scoreState(){
+        RequestList request = new RequestList(Arrays.asList(
+            swerve.setStateRequest(Swerve.State.OFF),
+            sideElevator.stateRequest(currentState.sideElevatorState),
+            arm.stateRequest(currentState.armState),
+            elevator.stateRequest(currentState.elevatorState)
+            ),false);
+        RequestList queue = new RequestList(Arrays.asList(
+            intake.percentOutputRequest(!this.cube),
+            intake.stopIntakeRequest()
+            ),false);
+        request(request, queue);
+    }
+
+
   
     public Request waitRequest(double waitTime){
         return new Request() {
             Timer timer = new Timer();
             @Override
                 public boolean isFinished(){
-                    return timer.hasElapsed(waitTime);
+                    if(timer.hasElapsed(waitTime)){
+                        timer.reset();
+                        return true;
+                    }
+                    else return timer.hasElapsed(waitTime);
                 }
         
 
             @Override
                 public void act() {
-                    timer.reset();
                     timer.start();                    
                 }};
     }

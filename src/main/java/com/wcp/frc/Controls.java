@@ -149,10 +149,12 @@ public class Controls {
 
 
        if(driverAButton.isPressed()){
-           s.aimState(driverLeftBumper.isPressed(), driverRightBumper.isPressed());
+           s.setHeight(SuperStructure.PreState.HIGH);
+           s.processState();
+           s.scoreState();           
+
            System.out.println("true");
        }else if(!driverAButton.isActive()){   
-            s.idleState();
        }
 
        s.requestSwerveInput(new Translation2d(driverLeftXInput, driverLeftYInput), driverRightXInput);
@@ -163,7 +165,7 @@ public class Controls {
        
        
 
-      // swerve.sendInput(driverLeftXInput, driverLeftYInput, driverRightXInput);
+       swerve.sendInput(driverLeftXInput, driverLeftYInput, driverRightXInput);
 
       
 

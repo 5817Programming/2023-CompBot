@@ -6,6 +6,8 @@ package com.wcp.frc.subsystems;
 
 
 
+import org.littletonrobotics.junction.Logger;
+
 import com.ctre.phoenix.motorcontrol.ControlMode;
 import com.ctre.phoenix.motorcontrol.FeedbackDevice;
 import com.ctre.phoenix.motorcontrol.NeutralMode;
@@ -71,7 +73,6 @@ public Request percentOutputRequest(double percent, boolean cube){
     return new Request() {
       @Override
         public void act(){
-          waitTimer.reset();
           waitTimer.start();
           intake(percent,cube);
         }
@@ -89,7 +90,6 @@ public Request percentOutputRequest(boolean cube){
   return new Request() {
     @Override
       public void act(){
-        waitTimer.reset();
         waitTimer.start();
         intake(cube ? .3 : 1, cube);
       }
@@ -98,11 +98,13 @@ public Request percentOutputRequest(boolean cube){
           if(waitTimer.hasElapsed(.2)){
             waitTimer.reset();
             waitTimer.stop();
+            return true;
           }
-        return waitTimer.hasElapsed(.2);
+          else return false;
       }
   };
 }
+
 
 public Request stopIntakeRequest(){
   return new Request(){
@@ -145,7 +147,6 @@ public Request percentOutputRequest(double percent, boolean cube,double waitTime
   return new Request() {
     @Override
       public void act(){
-        waitTimer.reset();
         waitTimer.start();
         intake(percent,cube);
       }
@@ -164,7 +165,6 @@ public Request percentOutputRequest(double percent, boolean cube,double waitTime
     return new Request() {
       @Override
         public void act(){
-          waitTimer.reset();
           waitTimer.start();
           intake(cube ? .3 : 1, cube);
         }
@@ -213,7 +213,8 @@ public void readPeriodicInputs() {
   
   @Override
   public void outputTelemetry() {
-    
+    Logger.getInstance().recordOutput("intakeDemand", mPeriodicIO.driveDemand);		
+
   }
 }
 

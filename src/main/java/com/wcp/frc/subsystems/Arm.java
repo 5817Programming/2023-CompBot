@@ -163,7 +163,14 @@ public class Arm extends Subsystem {
 				public void act() {
 					conformToState(newState);
 				}
+			@Override
+				public boolean isFinished(){
+					return true;
+				}
+		// @Override
 		};
+
+		
 	}
 
 	public Request percenRequest(double percent){
@@ -172,6 +179,11 @@ public class Arm extends Subsystem {
 				public void act() {
 					setPercentOutput(percent);
 				}
+			@Override
+				public boolean isFinished(){
+					return true;
+				}
+			// @Override
 		};
 	}
 

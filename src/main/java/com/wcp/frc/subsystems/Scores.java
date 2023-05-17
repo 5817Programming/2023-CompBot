@@ -218,21 +218,17 @@ public class Scores extends SubsystemBase {
   }
 
   public void pickup() {
-
     sideElevator.elevator(Constants.SideElevatorConstants.PICKUP+sideElvator);
     elevator.elevator(Constants.ElevatorConstants.PICKUP - elevatorOffset);
     arm.setMotionMagic(Constants.ArmConstants.PICKUP);
 
-    // Use addRequirements() here to declare subsystem dependencies.
   }
 
   public void zero() {
-
     sideElevator.elevator(Constants.SideElevatorConstants.ZERO+sideElvator);
     elevator.elevator(Constants.ElevatorConstants.ZERO);
     arm.setMotionMagic(Constants.ArmConstants.ZERO+500);
          armOffset=0;
          sideElvator = 0;
-    // Use addRequirements() here to declare subsystem dependencies.
   }
 }

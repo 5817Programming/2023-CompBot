@@ -144,7 +144,7 @@ public class Swerve extends Subsystem {
         trajectoryDesired = trajectory;
     }
 
-    private enum State {
+    public enum State {
         MANUAL,
         TRAJECTORY,
         OFF,
@@ -562,6 +562,14 @@ public class Swerve extends Subsystem {
             }
         };
     }
+    public Request setStateRequest(State state){
+        return new Request() {
+            @Override
+                public void act() {
+                    setState(state);
+                }
+        };
+    }
 
     public Request objectTartgetRequest() {
         return new Request() {
@@ -773,7 +781,7 @@ public class Swerve extends Subsystem {
 
             @Override
             public void act() {
-                currentState = State.MANUAL;
+                setState(State.MANUAL);
                 sendInput(x.getX(), x.getY(), r);
 
             }

@@ -122,6 +122,11 @@ public Request stateRequest(State newState){
 			public void act() {
 				conformToState(newState);
 			}
+		@Override
+			public boolean isFinished(){
+				return true;
+			}
+		// @Override
 	};
 }
 
