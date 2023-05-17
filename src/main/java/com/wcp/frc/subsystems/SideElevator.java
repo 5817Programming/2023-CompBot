@@ -11,7 +11,6 @@ import com.ctre.phoenix.motorcontrol.NeutralMode;
 import com.ctre.phoenix.motorcontrol.StatusFrameEnhanced;
 import com.ctre.phoenix.motorcontrol.TalonFXFeedbackDevice;
 import com.ctre.phoenix.motorcontrol.can.TalonFX;
-import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import com.wcp.frc.Constants;
 import com.wcp.frc.Ports;
 import com.wcp.frc.subsystems.Requests.Request;

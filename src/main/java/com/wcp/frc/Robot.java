@@ -4,7 +4,6 @@
 
 package com.wcp.frc;
 
-import java.sql.Time;
 import java.util.Arrays;
 
 import org.littletonrobotics.junction.LoggedRobot;
@@ -15,22 +14,17 @@ import com.wcp.frc.subsystems.SubsystemManager;
 import com.wcp.frc.subsystems.Swerve;
 import com.wcp.frc.subsystems.Vision;
 import com.wcp.frc.subsystems.gyros.Gyro;
-import com.wcp.frc.subsystems.gyros.Pigeon;
 import com.wcp.frc.subsystems.Lights;
 import com.wcp.frc.Autos.Auto6;
 import com.wcp.frc.subsystems.Arm;
 import com.wcp.frc.subsystems.Balancing;
-import com.wcp.frc.subsystems.Scores;
 import com.wcp.frc.subsystems.SideElevator;
 import com.wcp.frc.subsystems.Elevator;
 import com.wcp.frc.subsystems.Intake;
 
-import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.PowerDistribution;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.PowerDistribution.ModuleType;
-import edu.wpi.first.wpilibj2.command.Command;
 //https://github.com/Mechanical-Advantage/AdvantageKit/releases/latest/download/AdvantageKit.json
 
 //https://maven.photonvision.org/repository/internal/org/photonvision/PhotonLib-json/1.0/PhotonLib-json-1.0.json
@@ -41,7 +35,6 @@ public class Robot extends LoggedRobot {
   // private RobotContainer robotContainer = new RobotContainer();
 
   // RobotContainer robotContainer = new RobotContainer();
-  private Command colorChooser;
   Controls controls;
   SubsystemManager subsystemManager;
   Swerve swerve;

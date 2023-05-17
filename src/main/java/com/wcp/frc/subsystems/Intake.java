@@ -6,19 +6,16 @@ package com.wcp.frc.subsystems;
 
 
 
-import org.littletonrobotics.junction.Logger;
 import com.ctre.phoenix.motorcontrol.ControlMode;
 import com.ctre.phoenix.motorcontrol.FeedbackDevice;
 import com.ctre.phoenix.motorcontrol.NeutralMode;
 import com.ctre.phoenix.motorcontrol.StatusFrameEnhanced;
-import com.ctre.phoenix.motorcontrol.TalonFXControlMode;
 import com.ctre.phoenix.motorcontrol.can.TalonFX;
 import com.wcp.frc.Constants;
 import com.wcp.frc.Ports;
 import com.wcp.frc.subsystems.Requests.Request;
 
 import edu.wpi.first.wpilibj.Timer;
-import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 public class Intake extends Subsystem {
   /** Creates a new Intake. */

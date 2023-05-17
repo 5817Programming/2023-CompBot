@@ -8,7 +8,6 @@ import com.wcp.frc.Ports;
 import com.wcp.frc.subsystems.Requests.Request;
 
 import edu.wpi.first.wpilibj.motorcontrol.Spark;
-import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import com.wcp.frc.Constants;
 
 public class Lights extends Subsystem {

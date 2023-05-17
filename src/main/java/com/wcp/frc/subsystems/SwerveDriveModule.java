@@ -5,7 +5,6 @@
 package com.wcp.frc.subsystems;
 
 import org.littletonrobotics.junction.Logger;
-import org.littletonrobotics.junction.inputs.LoggedPowerDistribution;
 
 import com.ctre.phoenix.ErrorCode;
 import com.ctre.phoenix.motorcontrol.ControlMode;
@@ -30,9 +29,7 @@ import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.system.plant.DCMotor;
-import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.simulation.FlywheelSim;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
 /** Add your docs here. */
 public class SwerveDriveModule extends Subsystem {
@@ -46,14 +43,12 @@ public class SwerveDriveModule extends Subsystem {
 
     private double previousEncDistance = 0;
 	private Translation2d position = new Translation2d();
-	private Translation2d startingPosition;
     private Translation2d mstartingPosition;
 
 	private Pose2d estimatedRobotPose = new Pose2d();
 	boolean standardCarpetDirection = true;
     
     Translation2d modulePosition;
-    private Rotation2d lastAngle;
 
     SimpleMotorFeedforward feedforward = new SimpleMotorFeedforward(Constants.driveKS, Constants.driveKV,
             Constants.driveKA);
@@ -84,7 +79,6 @@ public class SwerveDriveModule extends Subsystem {
         this.name = "Module " + moduleID;
         this.encoderOffset = encoderStartingPos;
         this.modulePosition = modulePoseInches;
-        this.startingPosition =modulePoseInches;
         this.mstartingPosition =moduleposemeters;
 
 
@@ -200,20 +194,6 @@ public class SwerveDriveModule extends Subsystem {
         mPeriodicIO.driveControlMode = ControlMode.PercentOutput;
     }
 
-    private void setSpeed(SwerveModuleState desiredState) {//// drives drive motor of velocity
-        driveMotor.selectProfileSlot(1, 0);
-
-        mPeriodicIO.driveDemand = Conversions.MPSToFalcon(desiredState.speedMetersPerSecond,Constants.kWheelCircumference,
-                Options.driveRatio);
-        mPeriodicIO.driveControlMode = ControlMode.Velocity;
-        Logger.getInstance().recordOutput("desiredSpeed", mPeriodicIO.driveDemand);
-        double speed =(((driveMotor.getSelectedSensorVelocity()*(600/2048))/Options.rotationRatio)*Constants.kWheelCircumference)/60;
-        Logger.getInstance().recordOutput("speed", driveMotor.getSelectedSensorVelocity());
-
-
-    }
-  
-
     public void resetEncoders() {
         driveMotor.setSelectedSensorPosition(0);
 
@@ -226,9 +206,7 @@ public class SwerveDriveModule extends Subsystem {
     public Pose2d getEstimatedRobotPose(){
 		return estimatedRobotPose;
 	}
-    private double getDriveDistanceInches(){
-		return encUnitsToInches(mPeriodicIO.drivePosition);
-	}
+
     public Rotation2d getFieldCentricAngle(Rotation2d robotHeading){
 		Rotation2d normalizedAngle =Rotation2d.fromDegrees( getModuleAngle());
 		return normalizedAngle.rotateBy(robotHeading);
@@ -279,7 +257,6 @@ public class SwerveDriveModule extends Subsystem {
             }
         }
 	
-			
 		deltaPosition = new Translation2d(deltaPosition.getX() * xScrubFactor,
 			deltaPosition.getY() * yScrubFactor);
         Logger.getInstance().recordOutput("delta t" + moduleID, deltaPosition.getY());
@@ -292,13 +269,6 @@ public class SwerveDriveModule extends Subsystem {
 		previousEncDistance = currentEncDistance;
 	}
 
-    public void setModuleStates(SwerveModuleState state) {
-
-        setModuleAngle(state.angle.getDegrees());
-        setSpeed(state);
-
-    }
-
     public SwerveModuleState getState() {// gets states of module
         return new SwerveModuleState(
                 Conversions.falconToMPS(driveMotor.getSelectedSensorVelocity(), Math.PI * 4, Options.driveRatio),
@@ -310,11 +280,10 @@ public class SwerveDriveModule extends Subsystem {
         mPeriodicIO.driveDemand = inchesToEncUnits(distanceInches);
     }
 
-  
     public double currentvel(){
         return Conversions.falconToMPS(driveMotor.getSelectedSensorVelocity(), Constants.kWheelCircumference, Options.driveRatio);
-      }
-    // conversions
+    }
+
     private double degreesToEncUnits(double degrees) {
         return ((degrees / 360) * Constants.kSwerveRotationEncoderResolution) * Constants.kSwerveRotationReduction;
     }
@@ -327,7 +296,6 @@ public class SwerveDriveModule extends Subsystem {
         return (inches / Constants.kOuterWheelDriveDiameter) * 2048.0 * Constants.kSwerveWheelReduction;
     }
 
-    // zeros encoders
     public void resetModulePositionToAbsolute() {
         if (rotationMotor.setSelectedSensorPosition(0) == ErrorCode.OK) {
             if (isMagEncoderConnected()) {
@@ -373,11 +341,7 @@ public class SwerveDriveModule extends Subsystem {
 
     @Override
     public void outputTelemetry() {
-        SmartDashboard.putNumber(this.name + " Angle", encUnitsToDegrees(mPeriodicIO.rotationPosition));
-        SmartDashboard.putNumber(this.name + " Mag Encoder Raw Value", getModuleAbsolutePosition() / 360.0);
-        SmartDashboard.putNumber(this.name + " Absolute Position", getModuleAbsolutePosition());
-        SmartDashboard.putNumber(this.name + " Drive Motor Demand", mPeriodicIO.driveDemand);
-        SmartDashboard.putString(this.name + " Status", getModuleStatus().toString());
+      
     }
 
     @Override

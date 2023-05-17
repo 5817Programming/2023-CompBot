@@ -4,22 +4,14 @@
 
 package com.wcp.frc.subsystems;
 
-import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
-
-import javax.xml.namespace.QName;
-
-import com.pathplanner.lib.PathPlanner;
-import com.pathplanner.lib.PathPlannerTrajectory;
-import com.wcp.frc.subsystems.Arm.State;
 import com.wcp.frc.subsystems.Requests.Request;
 import com.wcp.frc.subsystems.Requests.RequestList;
 import com.wcp.lib.geometry.Translation2d;
 import com.wcp.lib.geometry.HeavilyInspired.Node;
-import com.wcp.lib.util.PathGenerator;
 
 import edu.wpi.first.wpilibj.Timer;
 

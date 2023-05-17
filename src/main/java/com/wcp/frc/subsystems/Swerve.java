@@ -4,25 +4,20 @@
 
 package com.wcp.frc.subsystems;
 
-import java.sql.Driver;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.function.BooleanSupplier;
 
 import org.littletonrobotics.junction.Logger;
 
 import com.ctre.phoenix.motorcontrol.TalonFXInvertType;
-import com.fasterxml.jackson.databind.jsontype.impl.AsExternalTypeDeserializer;
 import com.pathplanner.lib.PathConstraints;
-import com.pathplanner.lib.PathPlanner;
 import com.pathplanner.lib.PathPlannerTrajectory;
 import com.wcp.frc.Constants;
 import com.wcp.frc.Ports;
 import com.wcp.frc.subsystems.Requests.Request;
 import com.wcp.frc.subsystems.gyros.Gyro;
 import com.wcp.frc.subsystems.gyros.Pigeon;
-import com.wcp.lib.Conversions;
 import com.wcp.lib.HeadingController;
 import com.wcp.lib.SwerveInverseKinematics;
 import com.wcp.lib.geometry.Pose2d;
@@ -35,13 +30,10 @@ import com.wcp.lib.util.SynchronousPIDF;
 import com.wcp.lib.util.Util;
 
 import edu.wpi.first.math.controller.PIDController;
-import edu.wpi.first.math.kinematics.ChassisSpeeds;
-import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
-import edu.wpi.first.wpilibj.smartdashboard.Mechanism2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 
@@ -181,7 +173,7 @@ public class Swerve extends Subsystem {
 
     //
     public void sendInput(double x, double y, double rotation) {
-        translationVector = new Translation2d(x, y);// makes vector to inputs
+        translationVector = new Translation2d(x, y);// makes vector to input
         // sets rotation to zero if it doesnt pass deadband
         if (Math.abs(rotation) <= rotationDeadband) {
             rotation = 0;
@@ -240,13 +232,6 @@ public class Swerve extends Subsystem {
         this.commandModuleDrivePowers(0);
     }
 
-    public void setModuleStates(SwerveModuleState[] moduleState) {// sets modules based off of a list
-        for (int i = 0; i < modules.size(); i++) {
-            modules.get(i).setModuleStates(moduleState[i]);
-        }
-
-    }
-
     public void commandModules(List<Translation2d> moduleVectors) {// for every module will optimize rotation and set
                                                                    // angle and drive speed
         this.moduleVectors = moduleVectors;
@@ -271,7 +256,6 @@ public class Swerve extends Subsystem {
 
     private Translation2d targetFollowTranslation = new Translation2d();
     private Rotation2d targetHeading = new Rotation2d();
-    private boolean reverseXPID;
 
     SynchronousPIDF xPID = new SynchronousPIDF(1, 0.0, 0);
     SynchronousPIDF yPID = new SynchronousPIDF(1, 0.0, 0);
@@ -280,11 +264,7 @@ public class Swerve extends Subsystem {
     public void followTranslation2d(Translation2d translation2d, Rotation2d targetRobotHeading, double speed) {
         setState(State.TRAJECTORY);
         scaleFactor = speed;
-        if (translation2d.getX() < 0) {
-            reverseXPID = true;
-        } else {
-            reverseXPID = false;
-        }
+
 
         targetHeading = targetRobotHeading;
         targetFollowTranslation = translation2d;
@@ -661,6 +641,7 @@ public class Swerve extends Subsystem {
         };
 
     }
+
     public void gotoChute(){
         double rotation = -90;
         if (DriverStation.getAlliance() == Alliance.Blue) {
@@ -682,6 +663,7 @@ public class Swerve extends Subsystem {
                 chuteLastTimeStamp = currentTime;
 
     }
+
     public void targetNode(int scoringNode) {
         double Roboty = getPose().getTranslation().getY();
         double Robotx = getPose().getTranslation().getX();
@@ -864,7 +846,7 @@ public class Swerve extends Subsystem {
         double yError = yPID.calculate(vision.getDistanceToGroundObject() * heading.getSin(), ySetPoint);
         double thetaControl = rPID.calculate(vision.getY(), 0);
 
-        Aim(new Translation2d(xError, yERROR), thetaControl);
+        Aim(new Translation2d(xError, yError), thetaControl);
 
     }
 
@@ -873,8 +855,6 @@ public class Swerve extends Subsystem {
         modules.forEach((m) -> {
             m.outputTelemetry();
         });
-        SmartDashboard.putNumber("Robot Heading", getRobotHeading().getDegrees());
-        SmartDashboard.putNumber("Radians Heading", -getRobotHeading().getRadians());
         Logger.getInstance().recordOutput("Odometry", pose.toWPI());
 
     }

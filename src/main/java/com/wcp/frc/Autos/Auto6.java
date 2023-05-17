@@ -1,6 +1,5 @@
 
 package com.wcp.frc.Autos;
-import java.lang.reflect.Array;
 import java.util.Arrays;
 import java.util.List;
 
@@ -8,19 +7,16 @@ import org.littletonrobotics.junction.Logger;
 
 import com.pathplanner.lib.PathPlanner;
 import com.pathplanner.lib.PathPlannerTrajectory;
-import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.WaitCommand;
-import edu.wpi.first.wpilibj2.command.WaitUntilCommand;
 
 import com.wcp.frc.Constants;
 import com.wcp.frc.subsystems.Balancing;
 import com.wcp.frc.subsystems.Intake;
 import com.wcp.frc.subsystems.Scores;
 import com.wcp.frc.subsystems.Swerve;
-import com.wcp.lib.geometry.Rotation2d;
 import com.wcp.lib.geometry.Translation2d;
 
 
