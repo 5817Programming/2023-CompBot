@@ -51,7 +51,7 @@ public class Controls {
     ButtonCheck driveRightTrigger = new ButtonCheck(.5);
     ButtonCheck driverLeftBumper = new ButtonCheck();
     ButtonCheck driverRightBumper = new ButtonCheck();
-    ButtonCheck driverLeftStickDown = new ButtonCheck();
+    ButtonCheck driverLeftStick = new ButtonCheck();
     ButtonCheck driverAButton = new ButtonCheck();
     ButtonCheck driverXButton = new ButtonCheck();
     ButtonCheck driverYButton = new ButtonCheck();
@@ -121,7 +121,7 @@ public class Controls {
          driveRightTrigger.update(Driver.getRightTriggerAxis());
          driverLeftBumper.update(Driver.getLeftBumper());
          driverRightBumper.update(Driver.getRightBumper());
-         driverLeftStickDown.update(Driver.getLeftStickButton());
+         driverLeftStick.update(Driver.getLeftStickButton());
          driverAButton.update(Driver.getAButton());
          driverXButton.update(Driver.getXButton());
          driverYButton.update(Driver.getYButton());
@@ -147,15 +147,38 @@ public class Controls {
          coDriverRightStickDown.update(CoDriver.getLeftStickButtonPressed());
          coDriverBackButton.update(CoDriver.getBackButton());
 
-
-       if(driverAButton.isPressed()){
+    
+        if(driverAButton.isPressed()) 
+           s.setHeight(SuperStructure.PreState.LOW);
+        if(driverBButton.isPressed())
+           s.setHeight(SuperStructure.PreState.HOOMAN);
+        if(driverXButton.isPressed())
+           s.setHeight(SuperStructure.PreState.MID);
+        if(driverYButton.isPressed())
            s.setHeight(SuperStructure.PreState.HIGH);
-           s.processState();
-           s.scoreState();           
+        if(driverLeftStick.isPressed())
+           s.setPiece();
+        if(DriverLeftTrigger.isPressed())
+           s.scoreState();
+        else if(!driverLeftBumper.isActive() && !driverRightBumper.isActive() && !driverLeftTrigger.isActive()){
+           s.clearQueues();
+           acelerator = 1;
+        }
+        if(driverRightTrigger.isPressed()){
+            swerve.aimAtScore(driverLeftBumper.isPressed(), driverRightBumper.isPressed());
+        }
+        else if(driverLeftBumper.isPressed())
+           s.intakeState(SuperStructure.PreState.HOOMAN);
+        else if(driverLeftBumper.isPressed())
+           s.intakeState(SuperStructure.PreState.CHUTE);
+        else if(!driverLeftBumper.isActive() && !driverRightBumper.isActive()){
+           s.clearQueues();
+           acelerator = 1;
+        }
+        else
+           acelerator = .5;
+        
 
-           System.out.println("true");
-       }else if(!driverAButton.isActive()){   
-       }
 
        s.requestSwerveInput(new Translation2d(driverLeftXInput, driverLeftYInput), driverRightXInput);
 

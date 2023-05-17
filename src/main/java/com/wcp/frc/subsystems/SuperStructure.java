@@ -68,9 +68,11 @@ public class SuperStructure extends Subsystem {
     }
 
     State currentState = State.ZERO;
+    State savedState = State.ZERO;
     PreState currentUnprocessedState = PreState.ZERO;
 
     boolean cube = true;
+    boolean isIntaking = false;
     
     public enum GameState{
         GETPIECE,
@@ -82,6 +84,8 @@ public class SuperStructure extends Subsystem {
         HIGH,
         MID,
         LOW,
+        HOOMAN,
+        CHUTE,  
         ZERO;
 
     }
@@ -219,6 +223,17 @@ public class SuperStructure extends Subsystem {
                     currentState = State.LOWCONE;
             break;
 
+            case HOOMAN:
+                if (cube)
+                    currentState = State.HOOMAN_CUBE;
+                else
+                    currentState = State.HOOMAN_CONE;
+            break;
+
+            case CHUTE:
+                currentState = State.CHUTE;
+            break;
+
             case ZERO:
                 currentState = State.ZERO;
             break;
@@ -234,8 +249,14 @@ public class SuperStructure extends Subsystem {
         processState();
     }
 
+    public void setPiece(){
+        cube = !cube;
+        processState();
+    }
+
     public void setHeight(PreState newState) {
         currentUnprocessedState = newState;
+        processState();
     }
 
     public void update() {
@@ -442,6 +463,7 @@ public class SuperStructure extends Subsystem {
             ),false);
         request(request, queue);
     }
+
     public void scoreState(){
         RequestList request = new RequestList(Arrays.asList(
             swerve.setStateRequest(Swerve.State.OFF),
@@ -454,6 +476,27 @@ public class SuperStructure extends Subsystem {
             intake.stopIntakeRequest()
             ),false);
         request(request, queue);
+    }
+
+    public void intakeState(PreState state){
+        if(!intake.isIntaking()){
+            savedState = currentState;
+            setState(state)
+            RequestList request = new RequestList(Arrays.asList(
+                intake.continiousIntakeRequest(),
+                elevator.stateRequest(currentState.elevatorState);
+                sideElevator.stateRequest(currentState.elevatorState)
+                arm.stateRequest(currentState.armState)
+            ), true);
+            RequestList queue = new RequestList(Arrays.asList(
+                intake.waitUntilIntakedPieceRequest()
+            ))        
+            request(request, queue);
+        }
+        else{
+            currentState = savedState;
+            s.clearQueues();
+        }
     }
 
 

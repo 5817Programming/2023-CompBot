@@ -57,7 +57,7 @@ public class Intake extends Subsystem {
   }
 
   TalonFX intake = new TalonFX(Ports.intake);
-  
+  boolean isIntaking = false;
   Timer waitTimer = new Timer();
 
   PeriodicIO mPeriodicIO = new PeriodicIO();
@@ -105,6 +105,20 @@ public Request percentOutputRequest(boolean cube){
   };
 }
 
+public Request continuousIntakeRequest(boolean cube){
+  return new Request(){
+        @Override
+      public void act(){
+           intake(cube ? .3 : 1, cube);
+           isIntaking = true;
+      }
+    
+  };
+  }
+}
+
+
+
 
 public Request stopIntakeRequest(){
   return new Request(){
@@ -133,6 +147,7 @@ public Request intakeBrakeRequest(){
     @Override
       public void act(){
           brakeIntake();
+          isIntaking = false;
       }
   };
 }
@@ -180,6 +195,10 @@ public Request percentOutputRequest(double percent, boolean cube,double waitTime
 
 
 
+}
+
+public boolean isIntaking(){
+  return isIntaking;
 }
 
 public void setPercentOutput(double cube){
