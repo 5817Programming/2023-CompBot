@@ -326,7 +326,7 @@ public class SuperStructure extends Subsystem {
             arm.stateRequest(Arm.State.ZERO))
             , true);
         RequestList queue = new RequestList(Arrays.asList(
-            swerve.goToChuteRequest(),
+            swerve.,
             arm.stateRequest(Arm.State.CHUTE),
             intake.percentOutputRequest(!cube),
             intake.waitUntilIntakedPieceRequest(),
@@ -410,7 +410,7 @@ public class SuperStructure extends Subsystem {
         RequestList request = new RequestList(Arrays.asList(
             swerve.generateTrajectoryRequest(node),
             swerve.startPathRequest(4, true)
-        ),true);
+        ),false);
        request(request);
     }
   

@@ -8,10 +8,12 @@ package com.wcp.frc.subsystems;
 
 import org.littletonrobotics.junction.Logger;
 import com.ctre.phoenix.motorcontrol.ControlMode;
+import com.ctre.phoenix.motorcontrol.FeedbackDevice;
 import com.ctre.phoenix.motorcontrol.NeutralMode;
+import com.ctre.phoenix.motorcontrol.StatusFrameEnhanced;
 import com.ctre.phoenix.motorcontrol.TalonFXControlMode;
 import com.ctre.phoenix.motorcontrol.can.TalonFX;
-import com.google.flatbuffers.Constants;
+import com.wcp.frc.Constants;
 import com.wcp.frc.Ports;
 import com.wcp.frc.subsystems.Requests.Request;
 
@@ -111,7 +113,7 @@ public Request stopIntakeRequest(){
       public void act(){
         intake(0, false);
       }
-  }
+  };
 }
 
 public Request waitUntilIntakedPieceRequest(){
@@ -124,7 +126,7 @@ public Request waitUntilIntakedPieceRequest(){
       public boolean isFinished(){
         return intake.getStatorCurrent()>60;
       }
-  }
+  };
 }
 
 public Request intakeBrakeRequest(){
@@ -133,7 +135,7 @@ public Request intakeBrakeRequest(){
       public void act(){
           brakeIntake();
       }
-  }
+  };
 }
 
 public void brakeIntake(){
@@ -181,6 +183,11 @@ public Request percentOutputRequest(double percent, boolean cube,double waitTime
 
 
 
+}
+
+public void setPercentOutput(double cube){
+  mPeriodicIO.driveControlMode = ControlMode.PercentOutput;
+  mPeriodicIO.driveDemand = cube;
 }
 
 @Override

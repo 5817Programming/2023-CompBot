@@ -568,10 +568,10 @@ public class Swerve extends Subsystem {
     public Request balanceRequest() {
         return new Request() {
             @Override
-            public void act() {
-                setState(State.BALANCE);
-                balance();
-            }
+                public void act() {
+                    setState(State.BALANCE);
+                    balance();
+                }
 
             @Override
             public boolean isFinished() {
