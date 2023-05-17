@@ -213,7 +213,6 @@ public void readPeriodicInputs() {
   
   @Override
   public void outputTelemetry() {
-    // TODO Auto-generated method stub
     
   }
 }

@@ -209,14 +209,12 @@ public class Arm extends Subsystem {
     }
 	@Override
 	public void outputTelemetry() {
-		// TODO Auto-generated method stub
-		
+	Logger.getInstance().recordOutput("armDemand", mPeriodicIO.driveDemand);		
 	}
 
 	@Override
 	public void stop() {
-		// TODO Auto-generated method stub
-		
+		setPercentOutput(0);
 	}
 
 }

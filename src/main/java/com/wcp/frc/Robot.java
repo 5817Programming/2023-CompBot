@@ -15,16 +15,12 @@ import com.wcp.frc.subsystems.Swerve;
 import com.wcp.frc.subsystems.Vision;
 import com.wcp.frc.subsystems.gyros.Gyro;
 import com.wcp.frc.subsystems.Lights;
-import com.wcp.frc.Autos.Auto6;
 import com.wcp.frc.subsystems.Arm;
-import com.wcp.frc.subsystems.Balancing;
 import com.wcp.frc.subsystems.SideElevator;
 import com.wcp.frc.subsystems.Elevator;
 import com.wcp.frc.subsystems.Intake;
 
-import edu.wpi.first.wpilibj.PowerDistribution;
 import edu.wpi.first.wpilibj.Timer;
-import edu.wpi.first.wpilibj.PowerDistribution.ModuleType;
 //https://github.com/Mechanical-Advantage/AdvantageKit/releases/latest/download/AdvantageKit.json
 
 //https://maven.photonvision.org/repository/internal/org/photonvision/PhotonLib-json/1.0/PhotonLib-json-1.0.json
@@ -39,7 +35,6 @@ public class Robot extends LoggedRobot {
   SubsystemManager subsystemManager;
   Swerve swerve;
   double yaw;
-  Balancing balancing = new Balancing();
   Elevator elevator = new Elevator();
   Vision vision;
   Arm arm = new Arm();
@@ -49,24 +44,14 @@ public class Robot extends LoggedRobot {
   @Override
   public void robotInit() {
     Logger.getInstance().recordMetadata("ProjectName", "MyProject"); // Set a metadata value
-
-      // Logger.getInstance().addDataReceiver(new WPILOGWriter("/media/sda1/")); // Log to a USB stick
-      Logger.getInstance().addDataReceiver(new NT4Publisher()); // Publish data to NetworkTables
-      new PowerDistribution(1, ModuleType.kRev); // Enables power distribution logging
-    
-
-    // Logger.getInstance().disableDeterministicTimestamps() // See "Deterministic
-    // Timestamps" in the "Understanding Data Flow" page
+    Logger.getInstance().addDataReceiver(new NT4Publisher()); // Publish data to NetworkTables
     Logger.getInstance().start(); // Start logging! No more data receivers, replay sources, or metadata values may
-                                  // be added.
+
     swerve = Swerve.getInstance();
     swerve.zeroModules();
-
-
     controls = Controls.getInstance();
     swerve = Swerve.getInstance();
     vision = Vision.getInstance();
-    
     subsystemManager = new SubsystemManager();
     subsystemManager.addSystems(Arrays.asList(
         Swerve.getInstance(), Arm.getInstance(), Elevator.getInstance(), Intake.getInstance(), Lights.getInstance(), SideElevator.getInstance(), Vision.getInstance()));
@@ -121,16 +106,10 @@ swerve.updatePose(Timer.getFPGATimestamp());
 
   @Override
   public void autonomousInit() {
-    balancing.toggle = false;
     swerve = Swerve.getInstance();
     swerve.fieldzeroSwerve();
     swerve.sendInput(0, 0,0);
     swerve.stop();
-    // // schedule the autonomous command (example)
-    // if (autoChooser.getSelected() != null) {
-    // autoChooser.getSelected().schedule();
-    // }
-    new Auto6(swerve).schedule();
 
     startime = Timer.getFPGATimestamp();
       
@@ -140,28 +119,14 @@ swerve.updatePose(Timer.getFPGATimestamp());
   @Override
   public void autonomousPeriodic() {
 
-    // switch (m_autoSelected) {
-    // case kCustomAuto:
-    // // Put custom auto code here
-    // break;
-    // case kDefaultAuto:
-    // default:
-    // // Put default auto code here
-    // // break;
-    swerve.updateTrajectory();
-
   }
 
   /** This function is called once when teleop is enabled. */
   @Override
   public void teleopInit() {
-    // scores.zero();
-    balancing.toggle = false;
     swerve = Swerve.getInstance();
     swerve.fieldzeroSwerve();
-    swerve.sendInput(0, 0,0);
 
-    // vision.range(1);
 
   }
 
@@ -169,7 +134,6 @@ swerve.updatePose(Timer.getFPGATimestamp());
   @Override
   public void teleopPeriodic() {
     controls.update();
-    //swerve.update(Timer.getFPGATimestamp());
   }
 
   /** This function is called once when the robot is disabled. */
@@ -178,7 +142,7 @@ swerve.updatePose(Timer.getFPGATimestamp());
   public void disabledInit() {
     subsystemManager.stopSubsystems();
     arm.setPercentOutput(0);
-    elevator.my_PercentOutput(0);
+    elevator.percentOutput(0);
  //   scores.setHeight(Constants.ElevatorConstants.ZERO,true);
   }
 

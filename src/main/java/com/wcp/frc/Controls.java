@@ -11,10 +11,7 @@ import com.wcp.frc.subsystems.SideElevator;
 import com.wcp.frc.subsystems.SuperStructure;
 import com.wcp.frc.subsystems.Swerve;
 import com.wcp.frc.subsystems.Vision;
-import com.wcp.lib.HeadingController;
-import com.wcp.lib.geometry.Rotation2d;
 import com.wcp.lib.geometry.Translation2d;
-// import com.wcp.frc.subsystems.toHuman;
 import com.wcp.frc.subsystems.Lights;
 import com.wcp.frc.subsystems.Scores;
 
@@ -127,6 +124,7 @@ public class Controls {
        }else{
         s.requestSwerveInput(new Translation2d(driverLeftXInput, driverLeftYInput), driverRightXInput);
        }
+       
 
        swerve.sendInput(driverLeftXInput, driverLeftYInput, driverRightXInput);
         

@@ -132,7 +132,7 @@ public Request percentRequest(double percent){
 	return new Request() {
 		@Override
 			public void act() {
-				my_PercentOutput(percent);
+				percentOutput(percent);
 			}
 	};
 }
@@ -144,7 +144,7 @@ public Request percentRequest(double percent){
 
   }
 
-  public void my_PercentOutput(double speed){
+  public void percentOutput(double speed){
 	
 	mPeriodicIO.driveControlMode = ControlMode.PercentOutput;
 	mPeriodicIO.driveDemand = speed;  
@@ -158,15 +158,14 @@ public Request percentRequest(double percent){
 
 @Override
 public void outputTelemetry() {
-	// TODO Auto-generated method stub
+	Logger.getInstance().recordOutput("elevatorDemand", mPeriodicIO.driveDemand);		
 	
 }
 
 
 @Override
 public void stop() {
-	// TODO Auto-generated method stub
-	
+	percentOutput(0);	
 }
 @Override
 public void writePeriodicOutputs() {

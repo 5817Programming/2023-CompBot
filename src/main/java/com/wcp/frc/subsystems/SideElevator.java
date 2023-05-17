@@ -129,7 +129,7 @@ public Request percenRequest(double percent){
 	return new Request() {
 		@Override
 			public void act() {
-				my_PercentOutput(percent);
+				percentOutput(percent);
 			}
 	};
 }
@@ -140,7 +140,7 @@ public Request percenRequest(double percent){
 	mPeriodicIO.driveDemand = targetPos;
   }
 
-  public void my_PercentOutput( double speed){
+  public void percentOutput( double speed){
 	mPeriodicIO.driveControlMode = ControlMode.PercentOutput;
 	mPeriodicIO.driveDemand = speed;  }
 
@@ -152,15 +152,14 @@ public Request percenRequest(double percent){
 
 @Override
 public void outputTelemetry() {
-	// TODO Auto-generated method stub
+	Logger.getInstance().recordOutput("sideElevatorDemand", mPeriodicIO.driveDemand);		
 	
 }
 
 
 @Override
 public void stop() {
-	// TODO Auto-generated method stub
-	
+		percentOutput(0);
 }
 @Override
 public void writePeriodicOutputs() {
