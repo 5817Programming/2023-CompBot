@@ -257,8 +257,8 @@ public class Swerve extends Subsystem {
     private Translation2d targetFollowTranslation = new Translation2d();
     private Rotation2d targetHeading = new Rotation2d();
 
-    SynchronousPIDF xPID = new SynchronousPIDF(1, 0.0, 0);
-    SynchronousPIDF yPID = new SynchronousPIDF(1, 0.0, 0);
+    SynchronousPIDF xPID = new SynchronousPIDF(.8, 0.0, 0);
+    SynchronousPIDF yPID = new SynchronousPIDF(.8, 0.0, 0);
     private double lastTimestamp = Timer.getFPGATimestamp();
 
     public void followTranslation2d(Translation2d translation2d, Rotation2d targetRobotHeading, double speed) {
@@ -665,7 +665,7 @@ public class Swerve extends Subsystem {
             aimTimer.start();
         else
             aimTimer.reset();
-        if (aimTimer.get() > .2) {
+        if (aimTimer.get() > .5) {
             aimFinished = true;
         }
                 chuteLastTimeStamp = currentTime;
@@ -694,12 +694,23 @@ public class Swerve extends Subsystem {
             aimTimer.start();
         else
             aimTimer.reset();
-        if (aimTimer.get() > .2) {
+        if (aimTimer.get() > .5) {
             aimFinished = true;
         }
         lastTimeStamp = currentTime;
     }
-
+    public void updateOffset(boolean snapUp, boolean snapDown){
+        if (snapDown && (bestScore + offset +1 < Constants.scoresY.size())) {
+            aimTimer.reset();
+            // if wants to move up and isnt at 10 than
+            // move up
+offset++;// sets desired scoring station to snap to the next one up
+} else if (snapUp && (bestScore + offset-1 >= 0)) {
+    aimTimer.reset();
+    // if wants to move down and isnt at zero than move down
+offset--;// sets desired scoring station to snap to the next one down
+}
+    }
     public void aimAtScore(boolean snapDown, boolean snapUp) {
         double Roboty = getPose().getTranslation().getY();
         bestDistance = 11111;
@@ -717,13 +728,7 @@ public class Swerve extends Subsystem {
 
             }
         }
-        if (snapUp && (bestScore + offset + 1 < Constants.scoresY.size())) {// if wants to move up and isnt at 10 than
-                                                                            // move up
-            offset++;// sets desired scoring station to snap to the next one up
-        } else if (snapDown && (bestScore + offset > 0)) {// if wants to move down and isnt at zero than move down
-            offset--;// sets desired scoring station to snap to the next one down
-        }
-        Logger.getInstance().recordOutput("bestDistance", offset);
+        Logger.getInstance().recordOutput("offset", offset);
 
         if (DriverStation.getAlliance() == Alliance.Blue) {
             if (Robotx < 2.5) {
@@ -789,6 +794,19 @@ public class Swerve extends Subsystem {
         };
 
     }
+    public Request snapRequest() {
+        return new Request() {
+
+            @Override
+            public void act() {
+                setState(State.MANUAL);
+                headingController.setTargetHeading(gyro.getAngle());
+            }
+
+        };
+
+    }
+
 
     public Request startPathRequest(double speed, boolean useAllianceColor) {
         return new Request() {
@@ -804,6 +822,8 @@ public class Swerve extends Subsystem {
             }
         };
     }
+
+    
 
     public Request generateTrajectoryRequest(int node) {
         return new Request() {
@@ -875,6 +895,7 @@ public class Swerve extends Subsystem {
 
         update();
         commandModuleDrivePowers(0);
+        
     }
 
 }

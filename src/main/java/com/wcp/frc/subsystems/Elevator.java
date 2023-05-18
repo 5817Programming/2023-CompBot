@@ -113,16 +113,14 @@ public Request stateRequest(State newState){
 			public void act() {
 				conformToState(newState);
 			}
-		@Override
-			public boolean isFinished(){
-				return true;
-			}
-		// @Override
-		// 	public boolean isFinished(){
-		// 		return Math.abs(mPeriodicIO.driveDemand-mPeriodicIO.drivePosition)<1000;
-		// 	}
 	};
 }
+public synchronized boolean isFinished(){
+	Logger.getInstance().recordOutput("elevator error", Math.abs(mPeriodicIO.driveDemand-mPeriodicIO.drivePosition));
+
+	return Math.abs(mPeriodicIO.driveDemand-mPeriodicIO.drivePosition)<1000;
+}
+
 public Request idleRequest(){
 	return new Request() {
 		@Override

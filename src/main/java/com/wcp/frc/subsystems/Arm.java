@@ -130,7 +130,7 @@ public class Arm extends Subsystem {
 		mLeftElevator.config_kD(Constants.kSlotIdx, 0, Constants.kTimeoutMs);//P value * ten
 */
 		/* Set acceleration and vcruise velocity - see documentation */
-		arm.configMotionCruiseVelocity(10417, Constants.TIMEOUT_MILLISECONDS);
+		arm.configMotionCruiseVelocity(5000, Constants.TIMEOUT_MILLISECONDS);
 		arm.configMotionAcceleration(10417, Constants.TIMEOUT_MILLISECONDS);
 
 		/* Zero the sensor once on robot boot up */
@@ -156,6 +156,10 @@ public class Arm extends Subsystem {
 	public void conformToState(State newState){
 		setMotionMagic(newState.output);
 	}
+	public synchronized boolean isFinished(){
+		Logger.getInstance().recordOutput("arm error", Math.abs(mPeriodicIO.driveDemand-mPeriodicIO.drivePosition));
+		return Math.abs(mPeriodicIO.driveDemand-mPeriodicIO.drivePosition)<3000;
+	}
 
 	public Request stateRequest(State newState){
 		return new Request() {
@@ -163,10 +167,7 @@ public class Arm extends Subsystem {
 				public void act() {
 					conformToState(newState);
 				}
-			@Override
-				public boolean isFinished(){
-					return true;
-				}
+
 		// @Override
 		};
 

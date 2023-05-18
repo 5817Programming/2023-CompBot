@@ -95,8 +95,8 @@ public class Constants {
 
         //IN TIK
         public static final double MAX_UP = 78000;
-        public static final double HOOMAN_CONE = 59700;
-        public static final double HOOMAN_CUBE = 57000;
+        public static final double HOOMAN_CONE = 54700;
+        public static final double HOOMAN_CUBE = 52000;
         public static final double MAX_DOWN = 800;
 
         public static final double LOW_CONE = MAX_UP * .1 ;
@@ -116,6 +116,7 @@ public class Constants {
     
     public static final class SideElevatorConstants{
 
+
         // IN TICKS 
         
         public static final double MAX_UP = 44000;
@@ -126,7 +127,7 @@ public class Constants {
         
         public static final double MID_CONE =  1000;
         
-        public static final double HIGH_CONE = 40000;
+        public static final double HIGH_CONE = 35000;
 
         public static final double LOW_CUBE = MAX_DOWN;
         
@@ -159,7 +160,7 @@ public class Constants {
         
         public static final double MIDDLE_CONE = -26000;
 
-        public static final double HIGH_CONE = -30000;
+        public static final double HIGH_CONE = -25000;
 
         public static final double HOOMAN = -29000  ;
 
@@ -175,7 +176,7 @@ public class Constants {
         
         public static final double HOLD = -5000;//MAX_UP_TICKS-2000
 
-        public static final double ZERO = MAX_UP_TICKS;
+        public static final double ZERO = 0;
         
     }
 

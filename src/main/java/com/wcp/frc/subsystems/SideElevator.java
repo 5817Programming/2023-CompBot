@@ -96,7 +96,7 @@ public class SideElevator extends Subsystem {
 			side.config_kI(Constants.kSlotIdx, 0, Constants.TIMEOUT_MILLISECONDS);//0.001
 			side.config_kD(Constants.kSlotIdx, 0.5, Constants.TIMEOUT_MILLISECONDS);//P value * ten
 
-			side.configMotionCruiseVelocity(3619, Constants.TIMEOUT_MILLISECONDS);
+			side.configMotionCruiseVelocity(12000, Constants.TIMEOUT_MILLISECONDS);
 			side.configMotionAcceleration(12476, Constants.TIMEOUT_MILLISECONDS);
 	
 			side.setSelectedSensorPosition(0, Constants.kPIDLoopIdx, Constants.TIMEOUT_MILLISECONDS);
@@ -106,6 +106,12 @@ public class SideElevator extends Subsystem {
   
 public void setState(State state){
 	currentState = state;
+}
+
+public synchronized boolean isFinished(){
+	Logger.getInstance().recordOutput("side elevator error", Math.abs(mPeriodicIO.driveDemand-mPeriodicIO.drivePosition));
+
+	return Math.abs(mPeriodicIO.driveDemand-mPeriodicIO.drivePosition)<3000;
 }
 
 public State getState(){

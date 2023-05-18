@@ -48,7 +48,7 @@ public class Controls {
     boolean cube= true;
 
     ButtonCheck driverLeftTrigger = new ButtonCheck(.5);
-    ButtonCheck driveRightTrigger = new ButtonCheck(.5);
+    ButtonCheck driverRightTrigger = new ButtonCheck(.5);
     ButtonCheck driverLeftBumper = new ButtonCheck();
     ButtonCheck driverRightBumper = new ButtonCheck();
     ButtonCheck driverLeftStick = new ButtonCheck();
@@ -118,7 +118,7 @@ public class Controls {
         double coDriverRightX = CoDriver.getRightX();
 
          driverLeftTrigger.update(Driver.getLeftTriggerAxis());
-         driveRightTrigger.update(Driver.getRightTriggerAxis());
+         driverRightTrigger.update(Driver.getRightTriggerAxis());
          driverLeftBumper.update(Driver.getLeftBumper());
          driverRightBumper.update(Driver.getRightBumper());
          driverLeftStick.update(Driver.getLeftStickButton());
@@ -158,29 +158,32 @@ public class Controls {
            s.setHeight(SuperStructure.PreState.HIGH);
         if(driverLeftStick.isPressed())
            s.setPiece();
-        if(DriverLeftTrigger.isPressed())
+        if(driverLeftTrigger.isPressed())
            s.scoreState();
-        else if(!driverLeftBumper.isActive() && !driverRightBumper.isActive() && !driverLeftTrigger.isActive()){
+        else if(!driverLeftBumper.isActive() && !driverRightBumper.isActive() && !driverLeftTrigger.isActive() && !driverRightTrigger.isActive()){
            s.clearQueues();
-           acelerator = 1;
+           Acelerator = 1;
         }
         if(driverRightTrigger.isPressed()){
-            swerve.aimAtScore(driverLeftBumper.isPressed(), driverRightBumper.isPressed());
+            s.aimState(driverLeftBumper.isPressed(), driverRightBumper.isPressed());
+        }
+        else if(driverRightTrigger.isActive()){
+            swerve.updateOffset(driverLeftBumper.isPressed(), driverRightBumper.isPressed());            
         }
         else if(driverLeftBumper.isPressed())
            s.intakeState(SuperStructure.PreState.HOOMAN);
         else if(driverLeftBumper.isPressed())
            s.intakeState(SuperStructure.PreState.CHUTE);
-        else if(!driverLeftBumper.isActive() && !driverRightBumper.isActive()){
+        else if(!driverLeftBumper.isActive() && !driverRightBumper.isActive() && !driverLeftTrigger.isActive() && !driverRightTrigger.isActive()){
            s.clearQueues();
-           acelerator = 1;
+           Acelerator = 1;
         }
         else
-           acelerator = .5;
+           Acelerator = .5;
         
 
 
-       s.requestSwerveInput(new Translation2d(driverLeftXInput, driverLeftYInput), driverRightXInput);
+       s.requestSwerveInput(new Translation2d(driverLeftYInput, driverLeftXInput), driverRightXInput);
 
 
 
@@ -188,7 +191,7 @@ public class Controls {
        
        
 
-       swerve.sendInput(driverLeftXInput, driverLeftYInput, driverRightXInput);
+       swerve.sendInput(driverLeftYInput, driverLeftXInput, driverRightXInput);
 
       
 

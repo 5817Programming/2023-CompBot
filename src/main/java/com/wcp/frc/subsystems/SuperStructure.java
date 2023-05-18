@@ -182,9 +182,11 @@ public class SuperStructure extends Subsystem {
     public void replaceQueue(Request request) {
         setQueueRequests(new RequestList(Arrays.asList(request), false));
     }
-    public void clearQueues(){
-        setActiveRequests(new RequestList());
-        setQueueRequests(new RequestList());
+    public synchronized void clearQueues(){
+        System.out.println("ran");
+        queuedRequests.clear();
+        activeRequests = new RequestList();
+        activeRequestsComplete = true;
     }
 
     public void replaceQueue(RequestList list) {
@@ -211,9 +213,9 @@ public class SuperStructure extends Subsystem {
 
             case MID:
                 if (cube)
-                    currentState = State.HIGHCUBE;
+                    currentState = State.MIDCUBE;
                 else
-                    currentState = State.HIGHCONE;
+                    currentState = State.MIDCONE;
             break;
 
             case LOW:
@@ -223,16 +225,7 @@ public class SuperStructure extends Subsystem {
                     currentState = State.LOWCONE;
             break;
 
-            case HOOMAN:
-                if (cube)
-                    currentState = State.HOOMAN_CUBE;
-                else
-                    currentState = State.HOOMAN_CONE;
-            break;
 
-            case CHUTE:
-                currentState = State.CHUTE;
-            break;
 
             case ZERO:
                 currentState = State.ZERO;
@@ -399,8 +392,28 @@ public class SuperStructure extends Subsystem {
             arm.stateRequest(Arm.State.ZERO),
             intake.intakeBrakeRequest(),
             lights.lightRequest(cube ? Lights.State.CUBE: Lights.State.CONE)
-        ), false);
+        ), true);
         idleRequests = request;
+    }
+    public Request waitForElevators(){
+        return new Request() {
+
+            @Override
+            public void act() {
+                // TODO Auto-generated method stub
+                
+            }
+            @Override
+            public boolean isFinished(){
+                boolean done = ((elevator.isFinished() & sideElevator.isFinished()) & arm.isFinished());
+                return done;
+            }
+            
+        };
+    }
+
+    public void setIntakePercentOutputState(double precent){
+        request(intake.setPercentRequest(precent));
     }
 
     public void scoreState(PreState state, boolean cube){
@@ -423,7 +436,8 @@ public class SuperStructure extends Subsystem {
             swerve.setStateRequest(Swerve.State.OFF),
             sideElevator.stateRequest(currentState.sideElevatorState),
             arm.stateRequest(currentState.armState),
-            elevator.stateRequest(currentState.elevatorState)
+            elevator.stateRequest(currentState.elevatorState),
+            waitForElevators()
             ),false);
         RequestList queue = new RequestList(Arrays.asList(
             intake.percentOutputRequest(!this.cube),
@@ -457,21 +471,21 @@ public class SuperStructure extends Subsystem {
             arm.stateRequest(currentState.armState),
             elevator.stateRequest(currentState.elevatorState)
             ),false);
-        RequestList queue = new RequestList(Arrays.asList(
-            intake.percentOutputRequest(!this.cube),
-            intake.stopIntakeRequest()
-            ),false);
+
         request(request, queue);
+    }
+    public void scoreRelease(){
+        
     }
 
     public void scoreState(){
         RequestList request = new RequestList(Arrays.asList(
-            swerve.setStateRequest(Swerve.State.OFF),
             sideElevator.stateRequest(currentState.sideElevatorState),
             arm.stateRequest(currentState.armState),
             elevator.stateRequest(currentState.elevatorState)
             ),false);
         RequestList queue = new RequestList(Arrays.asList(
+            waitForElevators(),
             intake.percentOutputRequest(!this.cube),
             intake.stopIntakeRequest()
             ),false);
@@ -479,24 +493,30 @@ public class SuperStructure extends Subsystem {
     }
 
     public void intakeState(PreState state){
-        if(!intake.isIntaking()){
-            savedState = currentState;
-            setState(state)
+        State intakeState = State.ZERO;
+        switch(state){
+            case HOOMAN:
+            if (cube)
+                intakeState = State.HUMANCUBE;
+            else
+                intakeState = State.HUMANCONE;
+            break;
+
+            case CHUTE:
+                intakeState = State.CHUTE;
+            break;
+        }
+
             RequestList request = new RequestList(Arrays.asList(
-                intake.continiousIntakeRequest(),
-                elevator.stateRequest(currentState.elevatorState);
-                sideElevator.stateRequest(currentState.elevatorState)
-                arm.stateRequest(currentState.armState)
+                intake.continuousIntakeRequest(cube),
+                elevator.stateRequest(intakeState.elevatorState),
+                sideElevator.stateRequest(intakeState.sideElevatorState),
+                arm.stateRequest(intakeState.armState)
             ), true);
             RequestList queue = new RequestList(Arrays.asList(
                 intake.waitUntilIntakedPieceRequest()
-            ))        
+            ),false);        
             request(request, queue);
-        }
-        else{
-            currentState = savedState;
-            s.clearQueues();
-        }
     }
 
 
@@ -517,6 +537,19 @@ public class SuperStructure extends Subsystem {
             @Override
                 public void act() {
                     timer.start();                    
+                }};
+    }
+    public Request neverRequest(){
+        return new Request() {
+            @Override
+                public boolean isFinished(){
+                 
+                    return false;
+                }
+        
+
+            @Override
+                public void act() {
                 }};
     }
 

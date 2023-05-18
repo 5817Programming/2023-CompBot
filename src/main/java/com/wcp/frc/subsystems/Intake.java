@@ -16,6 +16,7 @@ import com.ctre.phoenix.motorcontrol.can.TalonFX;
 import com.wcp.frc.Constants;
 import com.wcp.frc.Ports;
 import com.wcp.frc.subsystems.Requests.Request;
+import com.wcp.frc.subsystems.Requests.RequestList;
 
 import edu.wpi.first.wpilibj.Timer;
 
@@ -39,10 +40,10 @@ public class Intake extends Subsystem {
 
         intake.selectProfileSlot(0, 0);
         // Slot 1 is for normal use
-        intake.config_kP(0, 1, 10); // 1.55
+        intake.config_kP(0, 0.02, 10); // 1.55
         intake.config_kI(0, 0.0, 10);
-        intake.config_kD(0, 5.0, 10); // 5.0
-        intake.config_kF(0, 1023.0 / Constants.kSwerveRotationMaxSpeed, 10);
+        intake.config_kD(0, 1.0, 10); // 5.0
+        intake.config_kF(0, 200.0 / Constants.kSwerveRotationMaxSpeed, 10);
         intake.set(ControlMode.MotionMagic, intake.getSelectedSensorPosition(0));
 
  
@@ -78,11 +79,11 @@ public Request percentOutputRequest(double percent, boolean cube){
         }
       @Override
         public boolean isFinished(){
-            if(waitTimer.hasElapsed(.2)){
+            if(waitTimer.hasElapsed(.4)){
               waitTimer.reset();
               waitTimer.stop();
             }
-          return waitTimer.hasElapsed(.2);
+          return waitTimer.hasElapsed(.4);
         }
     };
 }
@@ -91,11 +92,11 @@ public Request percentOutputRequest(boolean cube){
     @Override
       public void act(){
         waitTimer.start();
-        intake(cube ? .3 : 1, cube);
+        intake(cube ? 1: .5, !cube);
       }
       @Override
       public boolean isFinished(){
-          if(waitTimer.hasElapsed(.2)){
+          if(waitTimer.hasElapsed(.4)){
             waitTimer.reset();
             waitTimer.stop();
             return true;
@@ -109,13 +110,22 @@ public Request continuousIntakeRequest(boolean cube){
   return new Request(){
         @Override
       public void act(){
-           intake(cube ? .3 : 1, cube);
+           intake(cube ? 1: 1, !cube);
            isIntaking = true;
       }
     
   };
   }
-}
+
+  public Request setPercentRequest(double precent){
+    return new Request(){
+      @Override
+      public void act() {
+        setPercentOutput(precent);
+      }};
+
+
+  }
 
 
 
