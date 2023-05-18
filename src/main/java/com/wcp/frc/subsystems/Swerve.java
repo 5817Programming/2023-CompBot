@@ -800,7 +800,7 @@ offset--;// sets desired scoring station to snap to the next one down
             @Override
             public void act() {
                 setState(State.MANUAL);
-                headingController.setTargetHeading(gyro.getAngle());
+                headingController.setTargetHeading(Rotation2d.fromDegrees(gyro.getAngle()));
             }
 
         };

@@ -176,7 +176,7 @@ public class Controls {
            s.intakeState(SuperStructure.PreState.HOOMAN);
         else if(driverLeftBumper.isPressed())
            s.intakeState(SuperStructure.PreState.CHUTE);
-        else if(!driverLeftBumper.isActive() && !driverRightBumper.isActive() && !driverLeftTrigger.isActive() && !driverRightTrigger.isActive(), !s.elevatorIsLocked()){
+        else if(!driverLeftBumper.isActive() && !driverRightBumper.isActive() && !driverLeftTrigger.isActive() && !driverRightTrigger.isActive() && !s.elevatorIsLocked()){
            s.clearQueues();
            Acelerator = 1;
         }
@@ -238,7 +238,7 @@ public class ButtonCheck{
         return input[0] && !input[1];
        }
 
-       ppublic boolean isReleased(){
+       public boolean isReleased(){
         return !input[0] && input[1];
        }
 

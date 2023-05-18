@@ -352,7 +352,7 @@ public class SuperStructure extends Subsystem {
     }
 
     public boolean elevatorIsLocked(){
-        return elevatorIsLocked;
+        return lockElevator;
     }
 
     public void objectTargetState(){
@@ -477,14 +477,14 @@ public class SuperStructure extends Subsystem {
             elevator.stateRequest(currentState.elevatorState)
             ),false);
 
-        request(request, queue);
+        request(request);
     }
-    public void scoreRelease(){
+    public void scoreReleaseState(){
         RequestList request = new RequestList(Arrays.asList(
             intake.percentOutputRequest(!this.cube),
             intake.stopIntakeRequest(),
             lockElevatorRequest(false)
-        )false);
+        ), false);
         request(request);
     }
 
@@ -492,25 +492,25 @@ public class SuperStructure extends Subsystem {
         return new Request(){
             @Override
                 public void act(){
-                    elevatorIsLocked = !elevatorIsLocked;
+                    lockElevator = !lockElevator;
                 }
-        }
+        };
     }
 
     public Request lockElevatorRequest(boolean lock){
         return new Request(){
             @Override
                 public void act(){
-                    elevatorIsLocked = lock;
+                    lockElevator = lock;
                 }
-        }
+        };
     }
     public void scoreState(){
         RequestList request = new RequestList(Arrays.asList(
             sideElevator.stateRequest(currentState.sideElevatorState),
             arm.stateRequest(currentState.armState),
             elevator.stateRequest(currentState.elevatorState),
-            waitForElevators,
+            waitForElevators(),
             lockElevatorRequest(true),
             neverRequest()
             ),false);
