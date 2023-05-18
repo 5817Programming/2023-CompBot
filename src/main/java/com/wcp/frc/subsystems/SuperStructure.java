@@ -70,7 +70,8 @@ public class SuperStructure extends Subsystem {
     State currentState = State.ZERO;
     State savedState = State.ZERO;
     PreState currentUnprocessedState = PreState.ZERO;
-
+    
+    boolean lockElevator = false;
     boolean cube = true;
     boolean isIntaking = false;
     
@@ -350,6 +351,10 @@ public class SuperStructure extends Subsystem {
         request(request, queue);
     }
 
+    public boolean elevatorIsLocked(){
+        return elevatorIsLocked;
+    }
+
     public void objectTargetState(){
         RequestList request = new RequestList(Arrays.asList(
             elevator.stateRequest(Elevator.State.PICKUP),
@@ -475,21 +480,41 @@ public class SuperStructure extends Subsystem {
         request(request, queue);
     }
     public void scoreRelease(){
-        
+        RequestList request = new RequestList(Arrays.asList(
+            intake.percentOutputRequest(!this.cube),
+            intake.stopIntakeRequest(),
+            lockElevatorRequest(false)
+        )false);
+        request(request);
     }
 
+    public Request lockElevatorRequest(){
+        return new Request(){
+            @Override
+                public void act(){
+                    elevatorIsLocked = !elevatorIsLocked;
+                }
+        }
+    }
+
+    public Request lockElevatorRequest(boolean lock){
+        return new Request(){
+            @Override
+                public void act(){
+                    elevatorIsLocked = lock;
+                }
+        }
+    }
     public void scoreState(){
         RequestList request = new RequestList(Arrays.asList(
             sideElevator.stateRequest(currentState.sideElevatorState),
             arm.stateRequest(currentState.armState),
-            elevator.stateRequest(currentState.elevatorState)
+            elevator.stateRequest(currentState.elevatorState),
+            waitForElevators,
+            lockElevatorRequest(true),
+            neverRequest()
             ),false);
-        RequestList queue = new RequestList(Arrays.asList(
-            waitForElevators(),
-            intake.percentOutputRequest(!this.cube),
-            intake.stopIntakeRequest()
-            ),false);
-        request(request, queue);
+        request(request);
     }
 
     public void intakeState(PreState state){

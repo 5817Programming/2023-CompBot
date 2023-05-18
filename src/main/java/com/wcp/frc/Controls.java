@@ -160,7 +160,9 @@ public class Controls {
            s.setPiece();
         if(driverLeftTrigger.isPressed())
            s.scoreState();
-        else if(!driverLeftBumper.isActive() && !driverRightBumper.isActive() && !driverLeftTrigger.isActive() && !driverRightTrigger.isActive()){
+        else if(driverLeftTrigger.isReleased() && s.elevatorIsLocked())
+           s.scoreReleaseState();
+        else if(!driverLeftBumper.isActive() && !driverRightBumper.isActive() && !driverLeftTrigger.isActive() && !driverRightTrigger.isActive() && !s.elevatorIsLocked()){
            s.clearQueues();
            Acelerator = 1;
         }
@@ -174,7 +176,7 @@ public class Controls {
            s.intakeState(SuperStructure.PreState.HOOMAN);
         else if(driverLeftBumper.isPressed())
            s.intakeState(SuperStructure.PreState.CHUTE);
-        else if(!driverLeftBumper.isActive() && !driverRightBumper.isActive() && !driverLeftTrigger.isActive() && !driverRightTrigger.isActive()){
+        else if(!driverLeftBumper.isActive() && !driverRightBumper.isActive() && !driverLeftTrigger.isActive() && !driverRightTrigger.isActive(), !s.elevatorIsLocked()){
            s.clearQueues();
            Acelerator = 1;
         }
@@ -234,6 +236,10 @@ public class ButtonCheck{
 
        public boolean isPressed(){
         return input[0] && !input[1];
+       }
+
+       ppublic boolean isReleased(){
+        return !input[0] && input[1];
        }
 
        public boolean isActive(){
