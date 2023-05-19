@@ -17,6 +17,6 @@ public abstract class AutoBase {
     }
     public void stopAuto(){
         SuperStructure.getInstance().clearQueues();
-        Swerve.getInstance().setState(Swerve.State.OFF);
+        Swerve.getInstance().setState(Swerve.State.MANUAL);
     }
 }

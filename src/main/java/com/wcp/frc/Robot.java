@@ -16,6 +16,7 @@ import com.wcp.frc.subsystems.Swerve;
 import com.wcp.frc.subsystems.Vision;
 import com.wcp.frc.subsystems.gyros.Gyro;
 import com.wcp.frc.subsystems.Lights;
+import com.wcp.frc.Autos.TwoPieceBalanceLeft;
 import com.wcp.frc.subsystems.Arm;
 import com.wcp.frc.subsystems.SideElevator;
 import com.wcp.frc.subsystems.Elevator;
@@ -116,6 +117,8 @@ swerve.updatePose(Timer.getFPGATimestamp());
     swerve.stop();
 
     startime = Timer.getFPGATimestamp();
+
+    new TwoPieceBalanceLeft().runAuto();
       
   }
 

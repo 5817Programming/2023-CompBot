@@ -11,6 +11,7 @@ import java.util.List;
 
 import org.littletonrobotics.junction.Logger;
 
+import com.pathplanner.lib.PathPlannerTrajectory;
 import com.wcp.frc.subsystems.Requests.Request;
 import com.wcp.frc.subsystems.Requests.RequestList;
 import com.wcp.lib.geometry.Translation2d;
@@ -66,7 +67,7 @@ public class SuperStructure extends Subsystem {
     private boolean requestsCompleted() {
         return activeRequestsComplete;
     }
-
+    
     State currentState = State.ZERO;
     State savedState = State.ZERO;
     PreState currentUnprocessedState = PreState.ZERO;
@@ -87,7 +88,8 @@ public class SuperStructure extends Subsystem {
         LOW,
         HOOMAN,
         CHUTE,  
-        ZERO;
+        ZERO,
+        GROUND;
 
     }
 
@@ -101,7 +103,8 @@ public class SuperStructure extends Subsystem {
         HUMANCONE(Elevator.State.HOOMANCONE, SideElevator.State.HOOMANCONE, Arm.State.HOOMANCONE),
         HUMANCUBE(Elevator.State.HOOMANCUBE, SideElevator.State.HOOMANCUBE, Arm.State.HOOMANCUBE),
         CHUTE(Elevator.State.CHUTE, SideElevator.State.CHUTE, Arm.State.CHUTE),
-        ZERO(Elevator.State.ZERO, SideElevator.State.ZERO, Arm.State.ZERO);
+        ZERO(Elevator.State.ZERO, SideElevator.State.ZERO, Arm.State.ZERO),
+        GROUND(Elevator.State.ZERO, SideElevator.State.ZERO, Arm.State.PICKUP);
 
         Elevator.State elevatorState = Elevator.State.ZERO;
         Arm.State armState = Arm.State.ZERO;
@@ -332,7 +335,7 @@ public class SuperStructure extends Subsystem {
     }
 
     public void balanceState(){
-        request(swerve.balanceRequest());
+        queue(swerve.balanceRequest());
     } 
 
     public void toChuteState(){
@@ -422,6 +425,7 @@ public class SuperStructure extends Subsystem {
     }
 
     public void scoreState(PreState state, boolean cube){
+        currentUnprocessedState = state;
         setPiece(cube);
         RequestList request = new RequestList(Arrays.asList(
             swerve.setStateRequest(Swerve.State.OFF),
@@ -433,7 +437,8 @@ public class SuperStructure extends Subsystem {
             intake.percentOutputRequest(!this.cube),
             intake.stopIntakeRequest()
             ),false);
-        request(request, queue);
+        queue(request);
+        queue(queue);
     }
     public void scoreState(State state){
         currentState = state;
@@ -467,6 +472,23 @@ public class SuperStructure extends Subsystem {
         ),false);
        request(request);
     }
+
+    
+    public void trajectoryState(PathPlannerTrajectory trajectory){
+        RequestList request = new RequestList(Arrays.asList(
+            elevator.idleRequest(),
+            sideElevator.stateRequest(SideElevator.State.ZERO),
+            arm.stateRequest(Arm.State.ZERO),
+            intake.intakeBrakeRequest(),
+            lights.lightRequest(cube ? Lights.State.CUBE: Lights.State.CONE)
+        ), true);
+        RequestList queue = new RequestList(Arrays.asList(
+            swerve.setTrajectoryRequest(trajectory),
+            swerve.startPathRequest(4, true)
+        ),false);
+       queue(request);
+       queue(queue);
+    }
   
     public void scoreState(PreState state){
         processState();
@@ -487,6 +509,7 @@ public class SuperStructure extends Subsystem {
         ), false);
         request(request);
     }
+    
 
     public Request lockElevatorRequest(){
         return new Request(){
@@ -530,6 +553,10 @@ public class SuperStructure extends Subsystem {
             case CHUTE:
                 intakeState = State.CHUTE;
             break;
+
+            case GROUND:
+                intakeState = State.GROUND;
+            break;
         }
 
             RequestList request = new RequestList(Arrays.asList(
@@ -542,6 +569,38 @@ public class SuperStructure extends Subsystem {
                 intake.waitUntilIntakedPieceRequest()
             ),false);        
             request(request, queue);
+    }
+    public void intakeState(PreState state, boolean cube){
+        setPiece(cube);
+        State intakeState = State.ZERO;
+        switch(state){
+            case HOOMAN:
+            if (cube)
+                intakeState = State.HUMANCUBE;
+            else
+                intakeState = State.HUMANCONE;
+            break;
+
+            case CHUTE:
+                intakeState = State.CHUTE;
+            break;
+
+            case GROUND:
+                intakeState = State.GROUND;
+            break;
+        }
+
+            RequestList request = new RequestList(Arrays.asList(
+                intake.continuousIntakeRequest(cube),
+                elevator.stateRequest(intakeState.elevatorState),
+                sideElevator.stateRequest(intakeState.sideElevatorState),
+                arm.stateRequest(intakeState.armState)
+            ), true);
+            RequestList queue = new RequestList(Arrays.asList(
+                intake.waitUntilIntakedPieceRequest()
+            ),false);      
+            queue(request);
+            queue(queue);  
     }
 
 

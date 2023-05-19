@@ -141,7 +141,7 @@ public class Swerve extends Subsystem {
 
     public void setTrajectory(PathPlannerTrajectory trajectory) {
         pathFollower.clearEvents();
-        trajectoryDesired = trajectory;
+        pathFollower.setTrajectory(trajectory);
     }
 
     public enum State {
@@ -335,7 +335,6 @@ public class Swerve extends Subsystem {
         resetOdometry(pathFollower.getStart(), Rotation2d.fromDegrees(pathFollower.getrotation()));
         resetGryo(pathFollower.getStartRotation());
         Logger.getInstance().recordOutput("startRotation", pathFollower.getStart());
-        setTrajectory(trajectory);
         resetTimer();
 
     }
@@ -852,6 +851,17 @@ offset--;// sets desired scoring station to snap to the next one down
 
         };
 
+    }
+
+    public Request setTrajectoryRequest(PathPlannerTrajectory trajectory){
+        return new Request() {
+
+            @Override
+            public void act() {
+                setTrajectory(trajectory);
+            }
+            
+        };
     }
 
     public void resetOffset() {
