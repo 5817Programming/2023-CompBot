@@ -39,6 +39,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 
 /** Add your docs here. */
 public class Swerve extends Subsystem {
+    Timer visionUpdateTimer = new Timer();
 
     public static Swerve instance = null;
 
@@ -110,6 +111,8 @@ public class Swerve extends Subsystem {
     boolean targetTracked;
 
     public Swerve() {
+        visionUpdateTimer.start();
+
         // setting values for the modules, id, and wether or not the encoders are
         // flipped
         frontRightModule = new SwerveDriveModule(Ports.FRONT_RIGHT_ROTATION, Ports.FRONT_RIGHT_DRIVE, 0,

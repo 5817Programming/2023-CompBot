@@ -2,9 +2,11 @@
 // Open Source Software; you can modify and/or share it under the terms of
 // the WPILib BSD license file in the root directory of this project.
 
-package com.wcp.frc.subsystems;
+package com.wcp.frc;
 
 import java.util.List;
+
+import com.wcp.frc.subsystems.Subsystem;
 
 /** Add your docs here. */
 public class SubsystemManager {//uodates all new subsystem methods

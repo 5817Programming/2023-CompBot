@@ -7,13 +7,21 @@ package com.wcp.frc.subsystems;
 import org.littletonrobotics.junction.Logger;
 
 import com.wcp.frc.Constants;
+import com.wcp.lib.geometry.Pose2d;
+import com.wcp.lib.geometry.Rotation2d;
 
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.networktables.DoubleArraySubscriber;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableEntry;
 import edu.wpi.first.networktables.NetworkTableInstance;
 
 public class Vision extends Subsystem {
+  double lastY;
+  double lastX;
+  Pose2d lastPose;
+  double[] empty = {5.0,5.0,0.0,0.0,0.0,0.0};
+
   
   
   public double height;
@@ -25,7 +33,7 @@ public class Vision extends Subsystem {
   NetworkTableEntry ta = table.getEntry("ta");
   NetworkTableEntry tv = table.getEntry("tv");
 
-  NetworkTableEntry pos = table.getEntry("MegaTag BotPose");
+  DoubleArraySubscriber posesub = table.getDoubleArrayTopic("botpose").subscribe(empty);
 
   double x;
   double y;
@@ -89,7 +97,55 @@ public class Vision extends Subsystem {
 
 
   }
+  public Pose2d getPose(){
+    double[] result = posesub.get();
+    
+    Logger.getInstance().recordOutput("LimePose", new Pose2d(new Translation2d(result[0]+8.2296,result[1]+3.9624), new Rotation2d()));
+    lastPose = new Pose2d(new Translation2d(result[0]+8.2296,result[1]+3.9624), new Rotation2d());
+    return new Pose2d(new Translation2d(result[0]+8.2296,result[1]+3.9624), new Rotation2d());
 
+  }
+  public Pose2dd getWeightedPose(Pose2dd odomotryPose){
+    if(getPose().transformBy(lastPose.inverse()).getTranslation().norm()<1&&hasTarget()){
+      if(odomotryPose.getTranslation().x() < VisionConstants.lowerThreshold){
+        return getPose();
+      }
+      else{
+        return odomotryPose;
+      }
+    }else{
+      return odomotryPose;
+    }
+  }
+
+  // public boolean hasTarget() {//returns in binary so we convert to boolean 
+  //   double v = tv.getDouble(0.0);
+  //   if (v == 0.0f) {
+  //     return false;
+  //   } else {
+  //     return true;
+  //   }
+  // }
+
+  public boolean hasTarget() {//returns in binary so we convert to boolean 
+    if(lastX==tx.getDouble(0.0)&lastY==ty.getDouble(0.0)){
+      lastX= tx.getDouble(0.0);
+      lastY = ty.getDouble(0.0);
+      return false;
+    }else{
+      lastX= tx.getDouble(0.0);
+      lastY = ty.getDouble(0.0);
+      return true;
+    }
+
+     
+  }
+  @Override
+  public void update(){
+
+
+    hasTarget();
+  }
 
   public double getDistance(){//gets distance to target
     double distanceFromLimelightToGoalInches = (0 - Constants.VisionConstants.LIMELIGHT_LENS_HEIGHT_INCHES)/Math.tan(Math.toRadians(Constants.VisionConstants.LIMELIGHT_MOUNT_ANGLE_DEGREES + getY()));

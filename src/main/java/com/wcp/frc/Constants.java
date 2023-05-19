@@ -206,6 +206,8 @@ public class Constants {
 
         // distance from the center of the Limelight lens to the floor
         public final static double LIMELIGHT_LENS_HEIGHT_INCHES = 28.6;
+        public static final double lowerThreshold = 1.5;
+        public static final double upperThreshold = 3.3;
     }
 
     public static final class LightConstants {
