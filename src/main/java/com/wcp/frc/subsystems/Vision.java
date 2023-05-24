@@ -7,23 +7,24 @@ package com.wcp.frc.subsystems;
 import org.littletonrobotics.junction.Logger;
 
 import com.wcp.frc.Constants;
+import com.wcp.lib.Conversions;
 import com.wcp.lib.geometry.Pose2d;
 import com.wcp.lib.geometry.Rotation2d;
+import com.wcp.lib.geometry.Translation2d;
+import com.wcp.lib.util.Util;
+
 
 import edu.wpi.first.math.util.Units;
-import edu.wpi.first.networktables.DoubleArraySubscriber;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableEntry;
 import edu.wpi.first.networktables.NetworkTableInstance;
+import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 public class Vision extends Subsystem {
-  double lastY;
-  double lastX;
-  Pose2d lastPose;
-  double[] empty = {5.0,5.0,0.0,0.0,0.0,0.0};
+  
+  Swerve swerve = Swerve.getInstance();
+  double[] empty = {0.0,0.0,0.0,0.0,0.0,0.0};
 
-  
-  
   public double height;
   public static Vision instance = null;
   public int setPoint;
@@ -33,7 +34,7 @@ public class Vision extends Subsystem {
   NetworkTableEntry ta = table.getEntry("ta");
   NetworkTableEntry tv = table.getEntry("tv");
 
-  DoubleArraySubscriber posesub = table.getDoubleArrayTopic("botpose").subscribe(empty);
+  NetworkTableEntry botpose = table.getEntry("botpose");
 
   double x;
   double y;
@@ -50,6 +51,10 @@ public class Vision extends Subsystem {
 
   /** Creates a new Vision. */
   public Vision() {
+    // read values periodically
+    Swerve swerve = Swerve.getInstance();
+    // post to smart dashboard periodically
+
   }
 
   public double getX() {
@@ -66,18 +71,26 @@ public class Vision extends Subsystem {
     double area = ta.getDouble(0.0);//gets limelight area
     return area;
   }
-  
-  /*
-   * public void setfinished(boolean isFinishedd){
-   * 
-   * isFinished = isFinishedd;
-   * }
-   */
+
 
   public double getYaw() {
     yaw = tx.getDouble(0.0);
     return yaw;
   }
+  public Pose2d getPose(){
+    double[] poseList = botpose.getDoubleArray(empty);
+    Logger.getInstance().recordOutput("LimePose", new Pose2d(new Translation2d(poseList[0],poseList[1]), new Rotation2d()));
+    return new Pose2d(new Translation2d(poseList[0],poseList[1]), new Rotation2d());
+
+  }
+  public Pose2d getWeightedPose(){
+    double odometryWheight = (getDistance()- Constants.VisionConstants.lowerThreshold)/( Constants.VisionConstants.upperThreshold- Constants.VisionConstants.lowerThreshold);
+    if(odometryWheight >1){
+      odometryWheight = 1;
+    }
+    Logger.getInstance().recordOutput("wheghtedPose",( getPose().scale(odometryWheight).transformBy(swerve.getPose().scale((1-odometryWheight)))).toWPI());
+    return getPose().scale(odometryWheight).transformBy(swerve.getPose().scale((1-odometryWheight)));
+    }
 
   public boolean hasTarget() {//returns in binary so we convert to boolean 
     double v = tv.getDouble(0.0);
@@ -97,58 +110,20 @@ public class Vision extends Subsystem {
 
 
   }
-  public Pose2d getPose(){
-    double[] result = posesub.get();
-    
-    Logger.getInstance().recordOutput("LimePose", new Pose2d(new Translation2d(result[0]+8.2296,result[1]+3.9624), new Rotation2d()));
-    lastPose = new Pose2d(new Translation2d(result[0]+8.2296,result[1]+3.9624), new Rotation2d());
-    return new Pose2d(new Translation2d(result[0]+8.2296,result[1]+3.9624), new Rotation2d());
 
-  }
-  public Pose2dd getWeightedPose(Pose2dd odomotryPose){
-    if(getPose().transformBy(lastPose.inverse()).getTranslation().norm()<1&&hasTarget()){
-      if(odomotryPose.getTranslation().x() < VisionConstants.lowerThreshold){
-        return getPose();
-      }
-      else{
-        return odomotryPose;
-      }
+  public double getHeight(){
+    if(swerve.getPose().getTranslation().getX()>8.29){
+
+      height = Constants.VisionConstants.HEIGHTS.get(2);
+      
     }else{
-      return odomotryPose;
+     height = Constants.VisionConstants.HEIGHTS.get(setPoint);
     }
-  }
-
-  // public boolean hasTarget() {//returns in binary so we convert to boolean 
-  //   double v = tv.getDouble(0.0);
-  //   if (v == 0.0f) {
-  //     return false;
-  //   } else {
-  //     return true;
-  //   }
-  // }
-
-  public boolean hasTarget() {//returns in binary so we convert to boolean 
-    if(lastX==tx.getDouble(0.0)&lastY==ty.getDouble(0.0)){
-      lastX= tx.getDouble(0.0);
-      lastY = ty.getDouble(0.0);
-      return false;
-    }else{
-      lastX= tx.getDouble(0.0);
-      lastY = ty.getDouble(0.0);
-      return true;
-    }
-
-     
-  }
-  @Override
-  public void update(){
-
-
-    hasTarget();
+    return height;
   }
 
   public double getDistance(){//gets distance to target
-    double distanceFromLimelightToGoalInches = (0 - Constants.VisionConstants.LIMELIGHT_LENS_HEIGHT_INCHES)/Math.tan(Math.toRadians(Constants.VisionConstants.LIMELIGHT_MOUNT_ANGLE_DEGREES + getY()));
+    double distanceFromLimelightToGoalInches = (getHeight() - Constants.VisionConstants.LIMELIGHT_LENS_HEIGHT_INCHES)/Math.tan(Math.toRadians(Constants.VisionConstants.LIMELIGHT_MOUNT_ANGLE_DEGREES + getY()));
   return distanceFromLimelightToGoalInches>0&&distanceFromLimelightToGoalInches<1000?Units.inchesToMeters(distanceFromLimelightToGoalInches):0;
   }
   public void   setPipeline(Integer pipeline) {

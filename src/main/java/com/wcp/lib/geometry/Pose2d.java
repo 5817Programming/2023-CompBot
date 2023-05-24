@@ -51,6 +51,9 @@ public class Pose2d extends edu.wpi.first.math.geometry.Pose2d {
         return new Pose2d(m_translation.inverse().rotateBy(rotation_inverted), rotation_inverted);
 
     }
+    public Pose2d scale(double scaleFactor){
+        return new Pose2d(new Translation2d(m_translation.m_x*scaleFactor,m_translation.m_x*scaleFactor),m_rotation);
+    }
     
     @Override
     public Rotation2d getRotation() {
