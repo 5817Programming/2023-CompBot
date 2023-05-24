@@ -217,7 +217,6 @@ public class Arm extends Subsystem {
         double velocity = 0;
 
         ControlMode driveControlMode = ControlMode.MotionMagic;
-        double rotationDemand = 0.0;
         double driveDemand = 0.0;
     }
 	@Override

@@ -35,6 +35,9 @@ public class Vision extends Subsystem {
   NetworkTableEntry tv = table.getEntry("tv");
 
   NetworkTableEntry botpose = table.getEntry("botpose");
+  double lastY= 0;
+  double lastX = 0;
+
 
   double x;
   double y;
@@ -92,14 +95,18 @@ public class Vision extends Subsystem {
     return getPose().scale(odometryWheight).transformBy(swerve.getPose().scale((1-odometryWheight)));
     }
 
-  public boolean hasTarget() {//returns in binary so we convert to boolean 
-    double v = tv.getDouble(0.0);
-    if (v == 0.0f) {
-      return false;
-    } else {
-      return true;
+    public boolean hasTarget() {//returns in binary so we convert to boolean 
+      if(lastX==tx.getDouble(0.0)&lastY==ty.getDouble(0.0)){
+        lastX= tx.getDouble(0.0);
+        lastY = ty.getDouble(0.0);
+        return false;
+      }else{
+        lastX= tx.getDouble(0.0);
+        lastY = ty.getDouble(0.0);
+        return true;
+      }
     }
-  }
+  
   public void setIndex(double pipelineIndex, int _setPoint){//sets pipline index
     table.getEntry("pipeline").setNumber(pipelineIndex);   
     this.setPoint = _setPoint;
@@ -149,7 +156,10 @@ public class Vision extends Subsystem {
     double distanceFromLimelightToGoalInches = (0 - Constants.VisionConstants.LIMELIGHT_LENS_HEIGHT_INCHES)/Math.tan(Math.toRadians(Constants.VisionConstants.LIMELIGHT_MOUNT_ANGLE_DEGREES + getY()));
   return distanceFromLimelightToGoalInches>0&&distanceFromLimelightToGoalInches<1000?Units.inchesToMeters(distanceFromLimelightToGoalInches):0;
   }
-
+@Override
+public void update(){
+  hasTarget();
+}
 
 
   @Override

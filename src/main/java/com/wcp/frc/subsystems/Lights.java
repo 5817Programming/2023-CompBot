@@ -25,7 +25,6 @@ public class Lights extends Subsystem {
     lights = new Spark(Ports.light);
   }
 
-  Ports ports = new Ports();
   // Vision vision;
   double color = Constants.LightConstants.NORMAL_LIGHT;
 
