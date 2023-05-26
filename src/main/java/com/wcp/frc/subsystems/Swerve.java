@@ -104,7 +104,6 @@ public class Swerve extends Subsystem {
     double lastTimeStamp = 0;
     double Roboty;
     double Robotx;
-    Vision vision = Vision.getInstance();
     Gyro pigeon = Pigeon.getInstance();
     double xERROR;
     double yERROR;
@@ -139,6 +138,7 @@ public class Swerve extends Subsystem {
 
         pathFollower = PathFollower.getInstance();
         gyro = Pigeon.getInstance();
+        visionUpdateTimer.start();
 
     }
 
@@ -280,54 +280,64 @@ public class Swerve extends Subsystem {
     }
 
     /** The tried and true algorithm for keeping track of position */
-    public synchronized void updatePose(double timestamp) {
-        double x = 0.0;
-        double y = 0.0;
-        Rotation2d heading = getRobotHeading();
+    public synchronized void updatePose(double timestamp){
+        
+		double x = 0.0;
+		double y = 0.0;
+		Rotation2d heading = getRobotHeading();
+		
+		double averageDistance = 0.0;
+		double[] distances = new double[4];
+		for(SwerveDriveModule m : positionModules){
+			m.updatePose(heading);
+			double distance = m.getEstimatedRobotPose().getTranslation().translateBy(pose.getTranslation().inverse()).norm();
+			distances[m.moduleID] = distance;
+			averageDistance += distance;
+		}
+		averageDistance /= positionModules.size();
+		
+		int minDevianceIndex = 0;
+		double minDeviance = Units.inchesToMeters(100);
+		List<SwerveDriveModule> modulesToUse = new ArrayList<>();
+		for(SwerveDriveModule m : positionModules){
+				double deviance = Math.abs(distances[m.moduleID] - averageDistance);
+				if(deviance < minDeviance){
+					minDeviance = deviance;
+					minDevianceIndex = m.moduleID;
+				}
+				if(deviance <= 10000){
+					modulesToUse.add(m);
+				}
+			}
+		
+		if(modulesToUse.isEmpty()){
+			modulesToUse.add(modules.get(minDevianceIndex));
+		}
+		
 
-        double averageDistance = 0.0;
-        double[] distances = new double[4];
-        for (SwerveDriveModule m : positionModules) {
-            m.updatePose(heading);
-            double distance = m.getEstimatedRobotPose().getTranslation().translateBy(pose.getTranslation().inverse())
-                    .norm();
-            distances[m.moduleID] = distance;
-            averageDistance += distance;
-        }
-        averageDistance /= positionModules.size();
 
-        int minDevianceIndex = 0;
-        double minDeviance = Units.inchesToMeters(100);
-        List<SwerveDriveModule> modulesToUse = new ArrayList<>();
-        for (SwerveDriveModule m : positionModules) {
-            double deviance = Math.abs(distances[m.moduleID] - averageDistance);
-            if (deviance < minDeviance) {
-                minDeviance = deviance;
-                minDevianceIndex = m.moduleID;
-            }
-            if (deviance <= 10000) {
-                modulesToUse.add(m);
-            }
-        }
-
-        if (modulesToUse.isEmpty()) {
-            modulesToUse.add(modules.get(minDevianceIndex));
-        }
-
-        // SmartDashboard.putNumber("Modules Used", modulesToUse.size());
-
-        for (SwerveDriveModule m : modulesToUse) {
-            x += m.getEstimatedRobotPose().getTranslation().getX();
-            y += m.getEstimatedRobotPose().getTranslation().getY();
-        }
-        Pose2d updatedPose = new Pose2d(new Translation2d(x / modulesToUse.size(), y / modulesToUse.size()), heading);
-        double deltaPos = updatedPose.getTranslation().translateBy(pose.getTranslation().inverse()).norm();
+		//SmartDashboard.putNumber("Modules Used", modulesToUse.size());
+		
+		for(SwerveDriveModule m : modulesToUse){
+			x += m.getEstimatedRobotPose().getTranslation().getX();
+			y += m.getEstimatedRobotPose().getTranslation().getY();
+		}
+		Pose2d updatedPose = new Pose2d(new Translation2d(x / modulesToUse.size(), y / modulesToUse.size()), heading);
+		double deltaPos = updatedPose.getTranslation().translateBy(pose.getTranslation().inverse()).norm();
         Logger.getInstance().recordOutput("delta pose", deltaPos);
-        distanceTraveled += deltaPos;
-        currentVelocity = deltaPos / (timestamp - lastUpdateTimestamp);
+		distanceTraveled += deltaPos;
+		currentVelocity = deltaPos / (timestamp - lastUpdateTimestamp);
+
         pose = updatedPose;
+
+        if(visionUpdateTimer.get()>0.1 && Vision.getInstance().hasTarget()){
+            Vision.getInstance().getWeightedPose(updatedPose);
+            visionUpdateTimer.reset();
+        }
+
         modules.forEach((m) -> m.resetPose(pose));
-    }
+        lastUpdateTimestamp = timestamp;
+	}
 
     public void setTrajectory(PathPlannerTrajectory trajectory, List<Translation2d> eventTimings, List<Command> events,
             List<Double> waitTiming) {
@@ -578,15 +588,16 @@ public class Swerve extends Subsystem {
 
             @Override
             public void act() {
-                goToObject();
+              //  goToObject();
             }
 
             @Override
             public boolean isFinished() {
-                if (goToObject()) {
-                    setState(State.MANUAL);
-                }
-                return goToObject();
+                // if (goToObject()) {
+                //     setState(State.MANUAL);
+                // }
+                // return goToObject();
+                return true;
             }
 
         };
@@ -692,7 +703,7 @@ public class Swerve extends Subsystem {
         Logger.getInstance().recordOutput("xerror", xError);
 
         Aim(new Translation2d(-xError, yError), Rotation2d.fromDegrees(rotation));
-        if (Math.abs(xError) < .03 && Math.abs(yError) < .3)
+        if (Math.abs(xError) < .3 && Math.abs(yError) < .3)
             aimTimer.start();
         else
             aimTimer.reset();
@@ -756,28 +767,7 @@ offset--;// sets desired scoring station to snap to the next one down
 
     }
 
-    public boolean goToObject() {
-        // makes sure we have can see a target
-        vision.setPipeline(Constants.VisionConstants.CONE_PIPELNE);
-        if (!vision.hasTarget()) {// if we cant see a cone we will look for a cube
-            vision.setPipeline(Constants.VisionConstants.CUBE_PIPELINE);
-            if (!vision.hasTarget()) {
-                return false;// if we cant see a cube we will exit the function becuase we dont have anywhere
-                             // to go
-            }
-        }
-        // gets error
-        double xERROR = thetaController.calculate(vision.getX(), 0);
-        double yERROR = advanceController.calculate(vision.getY(), -5);
-        // corrects for error
-        Aim(new Translation2d(xERROR, yERROR), 0);
-        if (Math.abs(new Translation2d(xERROR, yERROR).norm()) < .3) {
-            return true;
-        } else {
-            return false;
-        }
-
-    }
+  
 
     public boolean isAiming() {
         return !aimFinished;
@@ -874,21 +864,21 @@ offset--;// sets desired scoring station to snap to the next one down
         aimTimer.stop();
     }
 
-    public void goToObject(boolean cube) {
+    public boolean goToObject(boolean cube) {
         Rotation2d heading = Rotation2d.fromDegrees(pigeon.getAngle());
         if (cube) {
-            vision.setPipeline(Constants.VisionConstants.CUBE_PIPELINE);
+         //   vision.setPipeline(Constants.VisionConstants.CUBE_PIPELINE);
         } else {
-            vision.setPipeline(Constants.VisionConstants.CONE_PIPELNE);
+         //   vision.setPipeline(Constants.VisionConstants.CONE_PIPELNE);
         }
         double xSetPoint = (.1 * heading.getCos());
         double ySetPoint = (.1 * heading.getSin());
-        double xError = xPID.calculate(vision.getDistanceToGroundObject() * heading.getCos(), xSetPoint);
-        double yError = yPID.calculate(vision.getDistanceToGroundObject() * heading.getSin(), ySetPoint);
-        double thetaControl = rPID.calculate(vision.getY(), 0);
+        double xError = xPID.calculate(1* heading.getCos(), xSetPoint);
+        double yError = yPID.calculate(1 * heading.getSin(), ySetPoint);
+        double thetaControl = rPID.calculate(1, 0);
 
         Aim(new Translation2d(xError, yError), thetaControl);
-
+        return true;
     }
 
     @Override
@@ -897,6 +887,7 @@ offset--;// sets desired scoring station to snap to the next one down
             m.outputTelemetry();
         });
         Logger.getInstance().recordOutput("Odometry", pose.toWPI());
+        Logger.getInstance().recordOutput("heading", getRobotHeading().getDegrees());
 
     }
 

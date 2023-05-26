@@ -228,33 +228,15 @@ public class SwerveDriveModule extends Subsystem {
 		Translation2d deltaPosition = new Translation2d(-currentWheelAngle.cos()*deltaEncDistance, 
 				currentWheelAngle.sin()*deltaEncDistance);
 
+
 		double xScrubFactor = Constants.kXScrubFactor;
 		double yScrubFactor = Constants.kYScrubFactor;
         if(Util.epsilonEquals(Math.signum(deltaPosition.getX()), 1.0)){
-            if(standardCarpetDirection){
-                xScrubFactor = 1.0;
-            }else{
-                
-            }
-        }else{
-            if(standardCarpetDirection){
-                
-            }else{
-                xScrubFactor = 1.0;
-            }
+            xScrubFactor = 0.9;
+
         }
         if(Util.epsilonEquals(Math.signum(deltaPosition.getY()), 1.0)){
-            if(standardCarpetDirection){
-                yScrubFactor = 1;
-            }else{
-                
-            }
-        }else{
-            if(standardCarpetDirection){
-                
-            }else{
-                yScrubFactor = 1;
-            }
+            yScrubFactor = 0.845;
         }
 	
 		deltaPosition = new Translation2d(deltaPosition.getX() * xScrubFactor,

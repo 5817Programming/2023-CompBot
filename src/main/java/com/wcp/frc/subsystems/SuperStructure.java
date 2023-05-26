@@ -326,7 +326,8 @@ public class SuperStructure extends Subsystem {
                 sideElevator.stateRequest(currentState.sideElevatorState),
                 arm.stateRequest(currentState.armState),
                 elevator.stateRequest(currentState.elevatorState),
-                intake.percentOutputRequest(!cube),
+                waitForElevators(),
+                intake.percentOutputRequest(cube),
                 intake.stopIntakeRequest(),
                 swerve.openLoopRequest(swerveControls, swerveRotation)
                 ),

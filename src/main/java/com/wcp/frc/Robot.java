@@ -87,7 +87,6 @@ swerve.updatePose(Timer.getFPGATimestamp());
     subsystemManager.outputSystemsTelemetry();
     CommandScheduler.getInstance().run();
 
-
   }
 
   /**

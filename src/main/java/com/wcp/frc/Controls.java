@@ -14,6 +14,7 @@ import com.wcp.frc.subsystems.SideElevator;
 import com.wcp.frc.subsystems.SuperStructure;
 import com.wcp.frc.subsystems.Swerve;
 import com.wcp.frc.subsystems.Vision;
+import com.wcp.lib.geometry.Pose2d;
 import com.wcp.lib.geometry.Translation2d;
 import com.wcp.frc.subsystems.Lights;
 import com.wcp.frc.subsystems.Scores;
@@ -174,6 +175,9 @@ public class Controls {
         }
         else if(driverLeftBumper.isPressed())
            s.intakeState(SuperStructure.PreState.HOOMAN);
+        else if(driverStartButton.isPressed())
+            swerve.resetOdometry(vision.getPose(),swerve.getRobotHeading());
+        
         else if(driverLeftBumper.isPressed())
            s.intakeState(SuperStructure.PreState.CHUTE);
         else if(!driverLeftBumper.isActive() && !driverRightBumper.isActive() && !driverLeftTrigger.isActive() && !driverRightTrigger.isActive() && !s.elevatorIsLocked()){
