@@ -7,7 +7,10 @@ package com.wcp.frc.subsystems.encoders;
 import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.DutyCycle;
 
-/** Add your docs here. */
+/** 
+  * This class allows us to make our own methods for the encoder in the future
+  * currently we havent implemented any new methods but simplifyed the use of the prebuilt methods
+ */
 public class NewEncoder extends Encoder {
     DutyCycle encoder;
     public NewEncoder(int port) {

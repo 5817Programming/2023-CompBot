@@ -136,7 +136,7 @@ public Request stateRequest(State newState){
 	};
 }
 
-public Request percenRequest(double percent){
+public Request percentRequest(double percent){
 	return new Request() {
 		@Override
 			public void act() {
