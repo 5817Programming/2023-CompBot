@@ -6,7 +6,10 @@ package com.wcp.frc.subsystems.encoders;
 
 import com.ctre.phoenix.sensors.CANCoder;
 
-/** Add your docs here. */
+/** 
+ * This class inherits from "Encoder" see "Encoder.java"
+ * We made this class so we can customize the behavior of the code that they wrote for us
+ */
 public class CANEncoder extends Encoder{
     CANCoder encoder;
     public CANEncoder(int id) {

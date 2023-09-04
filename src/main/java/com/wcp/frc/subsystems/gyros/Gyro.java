@@ -4,8 +4,11 @@
 
 package com.wcp.frc.subsystems.gyros;
 
-/** Add your docs here. */
-public abstract class Gyro {
+/** 
+ * This is an abstract class
+ * abstract classes tell its child methods it needs to have or it will raise an errror
+ * we have to implement a method called setAngle, getAngle, and getPitch
+ */public abstract class Gyro {
     /**
      * @param angle Sets the angle of the gyro angle(used for resetting the robot's heading)
      */

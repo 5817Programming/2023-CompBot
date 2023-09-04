@@ -8,7 +8,11 @@ import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.DutyCycleEncoder;
 
 
-/** Add your docs here. */
+/** 
+ * This class inherits from "Encoder" see "Encoder.java"
+ * We made this class so we can customize the behavior of the code that they wrote for us
+ * We also have this class do the setup for all of our encoders automatically
+ */
 public class InductiveEncoder extends Encoder{
     DutyCycleEncoder encoder;
     private double lowBound = 0.10;

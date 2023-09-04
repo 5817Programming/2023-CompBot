@@ -14,6 +14,11 @@ import com.wcp.frc.Constants;
 import com.wcp.frc.Ports;
 import com.wcp.frc.subsystems.Requests.Request;
 
+/**
+ * This class uses motion magic
+ * moton magic is used to smoothly go to a specifeied postion 
+ * we use the motion magic libarary to set the arm motor to a specific rotation
+ */
 public class Arm extends Subsystem {
 
 	public static Arm instance = null;
@@ -24,7 +29,8 @@ public class Arm extends Subsystem {
 		return instance;
 	}
 	
-
+	//we use states to keep our code easy to read
+	//states store the value they goto so we can just say their name and it will act like their value
 	public enum State{
 		HIGHCONE(Constants.ArmConstants.HIGH_CONE),
 		HIGHCUBE(Constants.ArmConstants.HIGH_CUBE),
@@ -138,7 +144,7 @@ public class Arm extends Subsystem {
 	}
 
 
-
+	//this sets the position for motion magic to set the arm to 
 	public void setMotionMagic(double targetPos) {
 		mPeriodicIO.driveControlMode = ControlMode.MotionMagic;
 		mPeriodicIO.driveDemand = targetPos;
@@ -156,11 +162,15 @@ public class Arm extends Subsystem {
 	public void conformToState(State newState){
 		setMotionMagic(newState.output);
 	}
+
+	//determines whether or nit the arm is at it s postion by checkign if the distacne is udnder 3000 ticks 
 	public synchronized boolean isFinished(){
 		Logger.getInstance().recordOutput("arm error", Math.abs(mPeriodicIO.driveDemand-mPeriodicIO.drivePosition));
 		return Math.abs(mPeriodicIO.driveDemand-mPeriodicIO.drivePosition)<3000;
 	}
 
+
+	//makes the arm go to the specified position using motion magic
 	public Request stateRequest(State newState){
 		return new Request() {
 			@Override
@@ -174,7 +184,8 @@ public class Arm extends Subsystem {
 		
 	}
 
-	public Request percenRequest(double percent){
+	//sets the percent of power the motor will output
+	public Request percentRequest(double percent){
 		return new Request() {
 			@Override
 				public void act() {
@@ -189,6 +200,7 @@ public class Arm extends Subsystem {
 	}
 
 	
+		//sets the percent of power the motor will output
 
 	public void setPercentOutput(double speed) {
 		mPeriodicIO.driveControlMode = ControlMode.PercentOutput;
@@ -199,19 +211,27 @@ public class Arm extends Subsystem {
 		arm.configMotionCruiseVelocity(velocity, Constants.TIMEOUT_MILLISECONDS);
 
 	}
+
+	//returns the position of the arm in ticks
 	public double getEncoder(){
 		Logger.getInstance().recordOutput("side elevator", mPeriodicIO.drivePosition);
 		return mPeriodicIO.drivePosition;
 	  }
+
+	  //updates the periodic IO's knowlage of the state of the robot to stay organized
 	@Override
     public void writePeriodicOutputs() {
         mPeriodicIO.drivePosition = arm.getSelectedSensorPosition();
         mPeriodicIO.velocity = arm.getSelectedSensorVelocity();
     }
+
+	//Listens to what the periodic IO tells it to do
     @Override
     public void readPeriodicInputs() {
         arm.set(mPeriodicIO.driveControlMode, mPeriodicIO.driveDemand);
     }
+
+	//Defines  the Periodic IO
 	public static class PeriodicIO  {
         double drivePosition = 0;
         double velocity = 0;
@@ -219,11 +239,14 @@ public class Arm extends Subsystem {
         ControlMode driveControlMode = ControlMode.MotionMagic;
         double driveDemand = 0.0;
     }
+
+	//logs the motors drive demand
 	@Override
 	public void outputTelemetry() {
 	Logger.getInstance().recordOutput("armDemand", mPeriodicIO.driveDemand);		
 	}
 
+	//emegergency stop of all power to the motor
 	@Override
 	public void stop() {
 		setPercentOutput(0);

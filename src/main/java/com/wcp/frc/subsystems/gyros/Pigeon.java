@@ -8,7 +8,10 @@ import com.ctre.phoenix.sensors.Pigeon2;
 import com.wcp.frc.Constants;
 import com.wcp.frc.Ports;
 
-/** Add your docs here. */
+/** 
+ * This class is used as an extention of the original pidgeon class
+ * we improved on their methods by offsetting the error on get pitch and by inverting getangle in order to better suit our robots needs
+ */
 public class Pigeon extends Gyro {
     private static Pigeon instance = null;
 

@@ -4,7 +4,11 @@
 
 package com.wcp.frc.subsystems.encoders;
 
-/** Add your docs here. */
+/** 
+ * This is an abstract class
+ * abstract classes tell its child methods it needs to have or it will raise an errror
+ * we have to implement a method called getOutput and a method called isConnected
+ */
 public abstract class Encoder {
     public abstract double getOutput();
     public abstract boolean isConnected();
