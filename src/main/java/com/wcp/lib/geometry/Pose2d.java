@@ -31,7 +31,7 @@ public class Pose2d extends edu.wpi.first.math.geometry.Pose2d {
     }
 
 
-    public static Pose2d fromRotaiton(final Rotation2d rotation) {
+    public static Pose2d fromRotation(final Rotation2d rotation) {
         return new Pose2d(new Translation2d(), rotation);
     }
         public static edu.wpi.first.math.geometry.Pose2d toWPI(Translation2d translation, Rotation2d rotation) {

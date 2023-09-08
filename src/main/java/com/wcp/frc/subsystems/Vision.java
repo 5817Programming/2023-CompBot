@@ -95,16 +95,12 @@ public class Vision extends Subsystem {
 
   }
   public Pose2d getWeightedPose(Pose2d odomotryPose){
-    if(getPose().transformBy(lastPose.inverse()).getTranslation().norm()<1&&hasTarget()){
-      if(getPose().transformBy(odomotryPose).scale(.5).getX() <2){
-        return getPose();
-      }
-      else{
-        return odomotryPose;
-      }
+    if(getPose().getTranslation().distance(lastPose.getTranslation()) < .1){
+      return getPose();
     }else{
       return odomotryPose;
     }
+    
   }
 
   // public boolean hasTarget() {//returns in binary so we convert to boolean 
@@ -117,7 +113,15 @@ public class Vision extends Subsystem {
   // }
 
   public boolean hasTarget() {//returns in binary so we convert to boolean 
-    return tv.getDouble(0.0)==1.0f;     
+    double currentX = getX();
+    if(lastX != currentX){
+      lastX = currentX;
+      return true; 
+    }
+    else{
+      lastX = currentX;
+      return false;
+    }
   }
   @Override
   public void update(){
@@ -151,7 +155,7 @@ public class Vision extends Subsystem {
     double distanceFromLimelightToGoalInches = (getHeight() - Constants.VisionConstants.LIMELIGHT_LENS_HEIGHT_INCHES)/Math.tan(Math.toRadians(Constants.VisionConstants.LIMELIGHT_MOUNT_ANGLE_DEGREES + getY()));
   return distanceFromLimelightToGoalInches>0&&distanceFromLimelightToGoalInches<1000?Units.inchesToMeters(distanceFromLimelightToGoalInches):0;
   }
-  public void   setPipeline(Integer pipeline) {
+  public void setPipeline(Integer pipeline) {
     if(pipeline<0){
         pipeline = 0;
         throw new IllegalArgumentException("Pipeline can not be less than zero");

@@ -178,7 +178,7 @@ public class Controls {
         else if(driverStartButton.isPressed())
             swerve.resetOdometry(vision.getPose(),swerve.getRobotHeading());
         
-        else if(driverLeftBumper.isPressed())
+        else if(driverRightBumper.isPressed())
            s.intakeState(SuperStructure.PreState.CHUTE);
         else if(!driverLeftBumper.isActive() && !driverRightBumper.isActive() && !driverLeftTrigger.isActive() && !driverRightTrigger.isActive() && !s.elevatorIsLocked()){
            s.clearQueues();

@@ -82,6 +82,7 @@ public class Swerve extends Subsystem {
     double distanceTraveled;
     double currentVelocity = 0;
     double lastUpdateTimestamp = 0;
+    double errorFromScore = 0;
 
     SwerveInverseKinematics inverseKinematics = new SwerveInverseKinematics();
     public HeadingController headingController = new HeadingController();
@@ -331,7 +332,7 @@ public class Swerve extends Subsystem {
         pose = updatedPose;
 
         if(visionUpdateTimer.get()>0.1 && Vision.getInstance().hasTarget()){
-            Vision.getInstance().getWeightedPose(updatedPose);
+            pose = Vision.getInstance().getWeightedPose(updatedPose);
             visionUpdateTimer.reset();
         }
 
@@ -409,7 +410,7 @@ public class Swerve extends Subsystem {
     @Override
     public void update() {
         double timeStamp = Timer.getFPGATimestamp();
-        drivingpose = Pose2d.fromRotaiton(getRobotHeading());
+        drivingpose = Pose2d.fromRotation(getRobotHeading());
 
         switch (currentState) {
             case MANUAL:
@@ -703,6 +704,8 @@ public class Swerve extends Subsystem {
         Logger.getInstance().recordOutput("xerror", xError);
 
         Aim(new Translation2d(-xError, yError), Rotation2d.fromDegrees(rotation));
+
+        errorFromScore = pose.getTranslation().distance(new Translation2d(2,Constants.scoresY.get(scoringNode)));
         if (Math.abs(xError) < .3 && Math.abs(yError) < .3)
             aimTimer.start();
         else
@@ -712,6 +715,7 @@ public class Swerve extends Subsystem {
         }
         lastTimeStamp = currentTime;
     }
+
     public void updateOffset(boolean snapUp, boolean snapDown){
         if (snapDown && (bestScore + offset +1 < Constants.scoresY.size())) {
             aimTimer.reset();
@@ -888,7 +892,7 @@ offset--;// sets desired scoring station to snap to the next one down
         });
         Logger.getInstance().recordOutput("Odometry", pose.toWPI());
         Logger.getInstance().recordOutput("heading", getRobotHeading().getDegrees());
-
+        Logger.getInstance().recordOutput("scoreError", errorFromScore);
     }
 
     @Override

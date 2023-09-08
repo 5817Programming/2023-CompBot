@@ -232,11 +232,15 @@ public class SwerveDriveModule extends Subsystem {
 		double xScrubFactor = Constants.kXScrubFactor;
 		double yScrubFactor = Constants.kYScrubFactor;
         if(Util.epsilonEquals(Math.signum(deltaPosition.getX()), 1.0)){
-            xScrubFactor = 0.9;
+            xScrubFactor = 1;
 
+        }else{
+            xScrubFactor = 1;
         }
         if(Util.epsilonEquals(Math.signum(deltaPosition.getY()), 1.0)){
-            yScrubFactor = 0.845;
+            yScrubFactor = 1;
+        }else{
+            yScrubFactor = 1;
         }
 	
 		deltaPosition = new Translation2d(deltaPosition.getX() * xScrubFactor,
