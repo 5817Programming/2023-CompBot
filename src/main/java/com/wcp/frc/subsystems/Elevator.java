@@ -118,7 +118,7 @@ public Request stateRequest(State newState){
 public synchronized boolean isFinished(){
 	Logger.getInstance().recordOutput("elevator error", Math.abs(mPeriodicIO.driveDemand-mPeriodicIO.drivePosition));
 
-	return Math.abs(mPeriodicIO.driveDemand-mPeriodicIO.drivePosition)<1000;
+	return Math.abs(mPeriodicIO.driveDemand-mPeriodicIO.drivePosition)<2000;
 }
 
 public Request idleRequest(){

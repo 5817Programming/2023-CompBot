@@ -166,7 +166,7 @@ public class Arm extends Subsystem {
 	//determines whether or nit the arm is at it s postion by checkign if the distacne is udnder 3000 ticks 
 	public synchronized boolean isFinished(){
 		Logger.getInstance().recordOutput("arm error", Math.abs(mPeriodicIO.driveDemand-mPeriodicIO.drivePosition));
-		return Math.abs(mPeriodicIO.driveDemand-mPeriodicIO.drivePosition)<3000;
+		return Math.abs(mPeriodicIO.driveDemand-mPeriodicIO.drivePosition)<4000;
 	}
 
 

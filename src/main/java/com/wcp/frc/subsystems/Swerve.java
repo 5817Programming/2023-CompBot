@@ -18,6 +18,7 @@ import com.wcp.frc.Ports;
 import com.wcp.frc.subsystems.Requests.Request;
 import com.wcp.frc.subsystems.gyros.Gyro;
 import com.wcp.frc.subsystems.gyros.Pigeon;
+import com.wcp.lib.Conversions;
 import com.wcp.lib.HeadingController;
 import com.wcp.lib.SwerveInverseKinematics;
 import com.wcp.lib.geometry.Pose2d;
@@ -144,8 +145,12 @@ public class Swerve extends Subsystem {
     }
 
     public void setTrajectory(PathPlannerTrajectory trajectory) {
-        pathFollower.clearEvents();
-        pathFollower.setTrajectory(trajectory);
+         pathFollower.setTrajectory(trajectory);
+         pathFollower.startTimer();
+        Translation2d newpose=new Translation2d( trajectory.getInitialHolonomicPose().getTranslation().getX(), trajectory.getInitialHolonomicPose().getTranslation().getY());
+        modules.forEach((m) -> m.resetPose(new Pose2d( newpose,new Rotation2d())));
+        pigeon.setAngle(trajectory.getInitialHolonomicPose().getRotation().getDegrees());
+
     }
 
     public enum State {
@@ -332,7 +337,7 @@ public class Swerve extends Subsystem {
         pose = updatedPose;
 
         if(visionUpdateTimer.get()>0.1 && Vision.getInstance().hasTarget()){
-            pose = Vision.getInstance().getWeightedPose(updatedPose);
+            pose = new Pose2d( Vision.getInstance().getWeightedPose(updatedPose).getTranslation(), getRobotHeading());
             visionUpdateTimer.reset();
         }
 
@@ -340,24 +345,14 @@ public class Swerve extends Subsystem {
         lastUpdateTimestamp = timestamp;
 	}
 
-    public void setTrajectory(PathPlannerTrajectory trajectory, List<Translation2d> eventTimings, List<Command> events,
-            List<Double> waitTiming) {
-        pathFollower.setTrajectory(trajectory);
-        pathFollower.setEventTimings(eventTimings);
-        pathFollower.setEvents(events);
-        pathFollower.setWaitTimings(waitTiming);
-        resetOdometry(pathFollower.getStart(), Rotation2d.fromDegrees(pathFollower.getrotation()));
-        resetGryo(pathFollower.getStartRotation());
-        Logger.getInstance().recordOutput("startRotation", pathFollower.getStart());
-        resetTimer();
-
-    }
+  
 
     public void resetOdometry(Pose2d newpose, Rotation2d rotation) {
         Pose2d newpose2 = new Pose2d(newpose.getTranslation(), rotation);
         modules.forEach((m) -> m.resetPose(newpose2));
 
     }
+
 
     public void resetTimer() {
         PathFollower.getInstance().resetTimer();
@@ -378,12 +373,14 @@ public class Swerve extends Subsystem {
         Logger.getInstance().recordOutput("rotationErorr", getRobotHeading().getDegrees() - targetHeading.getDegrees());
 
         lastTimestamp = timestamp;
-        if (Math.abs(xError + yError) / 2 < .05 && PathFollower.getInstance().isFinished()) {
+        if (Math.abs(xError + yError) / 2 < .1 && PathFollower.getInstance().isFinished()) {
             setState(State.OFF);
             trajectoryFinished = true;
+            Logger.getInstance().recordOutput("traj finished", trajectoryFinished);
 
             return new Translation2d();
         }
+        Logger.getInstance().recordOutput("traj finished", trajectoryFinished);
         return new Translation2d(xError, -yError);
 
     }
@@ -411,6 +408,7 @@ public class Swerve extends Subsystem {
     public void update() {
         double timeStamp = Timer.getFPGATimestamp();
         drivingpose = Pose2d.fromRotation(getRobotHeading());
+        Logger.getInstance().recordOutput("swerve state", currentState.name());
 
         switch (currentState) {
             case MANUAL:
@@ -826,7 +824,8 @@ offset--;// sets desired scoring station to snap to the next one down
 
             @Override
             public void act() {
-                PathPlannerTrajectory trajectory = PathGenerator.generatePath(new PathConstraints(4, 4),
+                PathPlannerTrajectory 
+                trajectory = PathGenerator.generatePath(new PathConstraints(4, 4),
                         new Node(Constants.scoresY.get(node), DriverStation.getAlliance() == Alliance.Blue ? 2 : 14.71),
                         Constants.FieldConstants.obstacles);
                 setTrajectory(trajectory);

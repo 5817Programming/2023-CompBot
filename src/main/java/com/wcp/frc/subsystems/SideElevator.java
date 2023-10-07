@@ -111,7 +111,7 @@ public void setState(State state){
 public synchronized boolean isFinished(){
 	Logger.getInstance().recordOutput("side elevator error", Math.abs(mPeriodicIO.driveDemand-mPeriodicIO.drivePosition));
 
-	return Math.abs(mPeriodicIO.driveDemand-mPeriodicIO.drivePosition)<3000;
+	return Math.abs(mPeriodicIO.driveDemand-mPeriodicIO.drivePosition)<4000;
 }
 
 public State getState(){

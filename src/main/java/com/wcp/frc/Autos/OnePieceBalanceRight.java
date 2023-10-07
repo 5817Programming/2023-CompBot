@@ -16,8 +16,8 @@ public class OnePieceBalanceRight extends AutoBase{
     @Override
     public void auto() {
         s.scoreState(SuperStructure.PreState.HIGH, true);
-        s.trajectoryState(rightPT1);
-        s.trajectoryState(rightPT2);
+        s.trajectoryState(rightPT1,false);
+        s.trajectoryState(rightPT2,false);
         s.balanceState();
     }
 }

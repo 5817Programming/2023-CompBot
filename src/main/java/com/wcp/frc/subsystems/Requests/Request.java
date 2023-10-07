@@ -12,7 +12,7 @@ public abstract class Request {
 
 	public Request(){
 	}
-    public abstract void act();
+    public  void act(){}
 	
 	public boolean isFinished(){return true;}
 

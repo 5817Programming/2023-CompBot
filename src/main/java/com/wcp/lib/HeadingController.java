@@ -23,7 +23,7 @@ public class HeadingController {
 
     private SynchronousPIDF pidController;
     public HeadingController() {
-        pidController = new SynchronousPIDF(0.0005, 0.0, 0.0, 0.0);
+        pidController = new SynchronousPIDF(0.0005, 0.00000001, 0.00000010, 0.0);
     }
     public void setTargetHeading(Rotation2d heading) {
         targetHeading = Rotation2d.fromDegrees(heading.getDegrees()+0);

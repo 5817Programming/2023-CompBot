@@ -15,6 +15,6 @@ public class OnePieceRight extends AutoBase{
     @Override
     public void auto() {
         s.scoreState(SuperStructure.PreState.HIGH, true);
-        s.trajectoryState(rightPT1);
+        s.trajectoryState(rightPT1,false);
     }
 }

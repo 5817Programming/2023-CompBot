@@ -28,10 +28,7 @@ public class PathFollower extends SubsystemBase {
   boolean useEvents = false;
   boolean ran= false;
   boolean red= false;
-  
-  List<Translation2d> eventTimings;
-  List<Double> waitTimings;
-  List <Command> events;
+
   int EventIndex= 0;
 
   
@@ -44,7 +41,10 @@ public class PathFollower extends SubsystemBase {
     this.timer.start();
   }
   public void setTrajectory (PathPlannerTrajectory trajectory){
+    resetTimer();
     this.transformedTrajectory = trajectory;
+    Logger.getInstance().recordOutput("Trajectory", this.transformedTrajectory);
+
     if(DriverStation.getAlliance()==Alliance.Blue){
       red=false;
     }
@@ -53,26 +53,8 @@ public class PathFollower extends SubsystemBase {
     }
 
   }
-  public void setEventTimings(List<Translation2d> eventTimings){
-    this.eventTimings = eventTimings;
-    useEvents = true;
-  }
-  public void setWaitTimings(List<Double> waitTimings){
-    this.waitTimings= waitTimings;
-  }
-  public void setEvents (List<Command> events){
-    this.events = events;
-    useEvents = true;
-  }
 
-  public void clearEvents(){
-    eventTimings.clear();
-    waitTimings.clear();
-    events.clear();
-    resetTimer();
-    waitTimer.reset();
-    waitTimer.stop();
-  }
+ 
 
   
 
@@ -83,9 +65,6 @@ public class PathFollower extends SubsystemBase {
     this.timer.start();
     double currentTime = this.timer.get()*.5;
     this.speed = speed;
-    if (eventTimings != null){
-      runEvents();
-    }
 
     PathPlannerState desiredState = (PathPlannerState) transformedTrajectory.sample(currentTime);
 
@@ -94,6 +73,7 @@ double desiredX = desiredState.poseMeters.getTranslation().getX();
 double desiredY = desiredState.poseMeters.getTranslation().getY();
 double desiredRotation =  desiredState.holonomicRotation.getDegrees();
 this.desiredRotation = desiredRotation;
+      Logger.getInstance().recordOutput("Current time", currentTime);
     Logger.getInstance().recordOutput("desiredPose", new Pose2d(new Translation2d(desiredX,desiredY), Rotation2d.fromDegrees(desiredRotation)));
 
     if(red&&useAllianceColor){
@@ -135,46 +115,11 @@ public double getStartRotation(){
     timer.reset();
     timer.stop();
   }
-  public void runEvents(){
-    Logger.getInstance().recordOutput("WaitTimer", waitTimer.get());
-    Logger.getInstance().recordOutput("WaitTiming", waitTimings.get(EventIndex));
-    Logger.getInstance().recordOutput("EventIndex", EventIndex);
-
-    Logger.getInstance().recordOutput("currentPoseHypot", currentPose.getTranslation().getNorm());
-    if (EventIndex<waitTimings.size()-1){
-      if(red){
-        if((Math.abs(currentPose.getTranslation().getY()-eventTimings.get(EventIndex).getY())<.1)&& Math.abs(currentPose.getTranslation().getX()-(eventTimings.get(EventIndex).getX()+(2*Math.abs(8.25-eventTimings.get(EventIndex).getX()))))<.05) {
-          runEvent();
-    }
-      }else{
-        if((Math.abs(currentPose.getTranslation().getY()-eventTimings.get(EventIndex).getY())<.1)&& Math.abs(currentPose.getTranslation().getX()-eventTimings.get(EventIndex).getX())<.06) {
-          runEvent();
-    }
-      }
-      }
-  }
-  void runEvent(){
-    if(!ran){
-      events.get(EventIndex).schedule();
-    }
-    ran= true;
-    timer.stop();
-    waitTimer.start();
-    if (waitTimer.hasElapsed(waitTimings.get(EventIndex))){
-      timer.start();
-      waitTimer.reset();
-      waitTimer.stop();
-      EventIndex++;
-      ran = false;
-    }
-  }
-  
+ 
 
   public boolean isFinished() {
     double extraSeconds =0;
-    for (int i=0; i< waitTimings.size();i++){
-      extraSeconds += waitTimings.get(i);
-    }
+
     if (this.timer.hasElapsed((transformedTrajectory.getTotalTimeSeconds()+extraSeconds/speed)+2)){
       EventIndex = 0;
       useEvents = false;

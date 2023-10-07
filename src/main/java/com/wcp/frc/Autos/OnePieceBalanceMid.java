@@ -18,9 +18,9 @@ public class OnePieceBalanceMid extends AutoBase{
     @Override
     public void auto() {
         s.scoreState(SuperStructure.PreState.HIGH, true);
-        s.trajectoryState(midPT1);
-        s.trajectoryState(midPT2);
-        s.trajectoryState(midPT3);
+        s.trajectoryState(midPT1,false);
+        s.trajectoryState(midPT2,false);
+        s.trajectoryState(midPT3,false);
         s.balanceState();
     }
 }

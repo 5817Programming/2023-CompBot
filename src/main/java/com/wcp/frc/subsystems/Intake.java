@@ -141,13 +141,18 @@ public Request stopIntakeRequest(){
 
 public Request waitUntilIntakedPieceRequest(){
   return new Request(){
-    @Override 
+      public void initialize(){
+        waitTimer.reset();
+        waitTimer.start();
+      }
+    @Override
       public void act(){
 
       }
+      
     @Override
       public boolean isFinished(){
-        return intake.getStatorCurrent()>60;
+        return intake.getStatorCurrent()>60 || waitTimer.get() > 2;
       }
   };
 }
@@ -243,6 +248,8 @@ public void readPeriodicInputs() {
   @Override
   public void outputTelemetry() {
     Logger.getInstance().recordOutput("intakeDemand", mPeriodicIO.driveDemand);		
+    Logger.getInstance().recordOutput("Timwr",waitTimer.get());
+
 
   }
 }

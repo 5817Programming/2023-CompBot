@@ -62,6 +62,8 @@ public class SuperStructure extends Subsystem {
 
     private boolean newRequests;
     private boolean activeRequestsComplete = true;
+    private String currentRequestLog;
+    private double RequestLogSwitch = 0;
     private boolean allRequestsComplete;
 
     private boolean requestsCompleted() {
@@ -187,7 +189,6 @@ public class SuperStructure extends Subsystem {
         setQueueRequests(new RequestList(Arrays.asList(request), false));
     }
     public synchronized void clearQueues(){
-        System.out.println("ran");
         queuedRequests.clear();
         activeRequests = new RequestList();
         activeRequestsComplete = true;
@@ -317,6 +318,7 @@ public class SuperStructure extends Subsystem {
 
     public void aimState(boolean snapUp, boolean snapDown) {
         RequestList request = new RequestList(Arrays.asList(
+                logCurrentRequest("aim"),
                 arm.stateRequest(Arm.State.ZERO),
                 sideElevator.stateRequest(SideElevator.State.ZERO),
                 elevator.idleRequest()),
@@ -341,6 +343,7 @@ public class SuperStructure extends Subsystem {
 
     public void toChuteState(){
         RequestList request = new RequestList(Arrays.asList(
+            logCurrentRequest("toChute"),
             elevator.idleRequest(),
             sideElevator.stateRequest(SideElevator.State.ZERO),
             arm.stateRequest(Arm.State.ZERO))
@@ -361,6 +364,7 @@ public class SuperStructure extends Subsystem {
 
     public void objectTargetState(){
         RequestList request = new RequestList(Arrays.asList(
+            logCurrentRequest("objectTarget"),
             elevator.stateRequest(Elevator.State.PICKUP),
             arm.stateRequest(Arm.State.PICKUP),
             sideElevator.stateRequest(SideElevator.State.PICKUP),
@@ -377,6 +381,7 @@ public class SuperStructure extends Subsystem {
     }
     public void targetNodeState(int node){
         RequestList request = new RequestList(Arrays.asList(
+                logCurrentRequest("targetNode"),
                 arm.stateRequest(Arm.State.ZERO),
                 sideElevator.stateRequest(SideElevator.State.ZERO),
                 elevator.stateRequest(Elevator.State.ZERO)),
@@ -394,6 +399,7 @@ public class SuperStructure extends Subsystem {
     }
 
     public void idleState() {
+        currentRequestLog = "idle";
         RequestList request = new RequestList(Arrays.asList(
             swerve.openLoopRequest(swerveControls, swerveRotation),
             elevator.idleRequest(),
@@ -429,10 +435,12 @@ public class SuperStructure extends Subsystem {
         currentUnprocessedState = state;
         setPiece(cube);
         RequestList request = new RequestList(Arrays.asList(
+            logCurrentRequest("score"),
             swerve.setStateRequest(Swerve.State.OFF),
             sideElevator.stateRequest(currentState.sideElevatorState),
             arm.stateRequest(currentState.armState),
-            elevator.stateRequest(currentState.elevatorState)
+            elevator.stateRequest(currentState.elevatorState),
+            waitForElevators()
             ),false);
         RequestList queue = new RequestList(Arrays.asList(
             intake.percentOutputRequest(!this.cube),
@@ -444,6 +452,7 @@ public class SuperStructure extends Subsystem {
     public void scoreState(State state){
         currentState = state;
         RequestList request = new RequestList(Arrays.asList(
+            logCurrentRequest("score"),
             swerve.setStateRequest(Swerve.State.OFF),
             sideElevator.stateRequest(currentState.sideElevatorState),
             arm.stateRequest(currentState.armState),
@@ -460,6 +469,7 @@ public class SuperStructure extends Subsystem {
 
     public void trajectoryState(int node){
         RequestList request = new RequestList(Arrays.asList(
+            logCurrentRequest("trajectory"),
             swerve.generateTrajectoryRequest(node),
             swerve.startPathRequest(4, true)
         ),false);
@@ -468,6 +478,7 @@ public class SuperStructure extends Subsystem {
 
     public void trajectoryState(Node node){
         RequestList request = new RequestList(Arrays.asList(
+            logCurrentRequest("trajectory"),
             swerve.generateTrajectoryRequest(node),
             swerve.startPathRequest(4, true)
         ),false);
@@ -475,8 +486,9 @@ public class SuperStructure extends Subsystem {
     }
 
     
-    public void trajectoryState(PathPlannerTrajectory trajectory){
+    public void trajectoryState(PathPlannerTrajectory trajectory,boolean parrellel){
         RequestList request = new RequestList(Arrays.asList(
+            logCurrentRequest("trajectory"),
             elevator.idleRequest(),
             sideElevator.stateRequest(SideElevator.State.ZERO),
             arm.stateRequest(Arm.State.ZERO),
@@ -485,8 +497,8 @@ public class SuperStructure extends Subsystem {
         ), true);
         RequestList queue = new RequestList(Arrays.asList(
             swerve.setTrajectoryRequest(trajectory),
-            swerve.startPathRequest(4, true)
-        ),false);
+             swerve.startPathRequest(4, true)
+        ),parrellel);
        queue(request);
        queue(queue);
     }
@@ -494,6 +506,7 @@ public class SuperStructure extends Subsystem {
     public void scoreState(PreState state){
         processState();
         RequestList request = new RequestList(Arrays.asList(
+            logCurrentRequest("score"),
             swerve.setStateRequest(Swerve.State.OFF),
             sideElevator.stateRequest(currentState.sideElevatorState),
             arm.stateRequest(currentState.armState),
@@ -504,6 +517,7 @@ public class SuperStructure extends Subsystem {
     }
     public void scoreReleaseState(){
         RequestList request = new RequestList(Arrays.asList(
+            logCurrentRequest("scoreRelease"),
             intake.percentOutputRequest(!this.cube),
             intake.stopIntakeRequest(),
             lockElevatorRequest(false)
@@ -529,8 +543,19 @@ public class SuperStructure extends Subsystem {
                 }
         };
     }
+
+    public Request logCurrentRequest(String newLog){
+        return new Request() {
+            @Override  
+                public void act(){
+                    currentRequestLog = newLog;
+                    RequestLogSwitch++;
+                }
+        };
+    }
     public void scoreState(){
         RequestList request = new RequestList(Arrays.asList(
+            logCurrentRequest("scoreState"),
             sideElevator.stateRequest(currentState.sideElevatorState),
             arm.stateRequest(currentState.armState),
             elevator.stateRequest(currentState.elevatorState),
@@ -561,6 +586,7 @@ public class SuperStructure extends Subsystem {
         }
 
             RequestList request = new RequestList(Arrays.asList(
+                logCurrentRequest("Intake"),
                 intake.continuousIntakeRequest(cube),
                 elevator.stateRequest(intakeState.elevatorState),
                 sideElevator.stateRequest(intakeState.sideElevatorState),
@@ -592,6 +618,7 @@ public class SuperStructure extends Subsystem {
         }
 
             RequestList request = new RequestList(Arrays.asList(
+                logCurrentRequest("intakeState"),
                 intake.continuousIntakeRequest(cube),
                 elevator.stateRequest(intakeState.elevatorState),
                 sideElevator.stateRequest(intakeState.sideElevatorState),
@@ -645,6 +672,8 @@ public class SuperStructure extends Subsystem {
     @Override
     public void outputTelemetry() {
         Logger.getInstance().recordOutput("RequestsCompleted", requestsCompleted());
+        Logger.getInstance().recordOutput("CurrentRequest", currentRequestLog);
+        Logger.getInstance().recordOutput("RequestSwitch", RequestLogSwitch%2);
     }
 
     @Override
