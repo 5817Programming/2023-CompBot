@@ -16,14 +16,13 @@ public class TwoPieceBalanceLeft extends AutoBase{
 
     @Override
     public void auto() {
-        //s.scoreState(SuperStructure.PreState.HIGH, true);
-         s.trajectoryState(maderaPT1,false);
-      //  s.intakeState(SuperStructure.PreState.GROUND, true);
-      
+        s.scoreState(SuperStructure.PreState.HIGH, true);
+        s.trajectoryState(maderaPT1,false);
+        s.intakeState(SuperStructure.PreState.GROUND, true);
         s.trajectoryState(maderaPT2,false);
-        // s.scoreState(SuperStructure.PreState.HIGH, true);
-        // s.trajectoryState(maderaPT3,false);
-        // s.balanceState();
+        s.scoreState(SuperStructure.PreState.HIGH, true);
+        s.trajectoryState(maderaPT3,false);
+        s.balanceState();
     }
 
     

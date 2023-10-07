@@ -145,9 +145,9 @@ public class Swerve extends Subsystem {
     }
 
     public void setTrajectory(PathPlannerTrajectory trajectory) {
-         pathFollower.setTrajectory(trajectory);
-         pathFollower.startTimer();
-        Translation2d newpose=new Translation2d( trajectory.getInitialHolonomicPose().getTranslation().getX(), trajectory.getInitialHolonomicPose().getTranslation().getY());
+        trajectoryFinished = false;
+        pathFollower.setTrajectory(trajectory);
+        Translation2d newpose = new Translation2d( trajectory.getInitialHolonomicPose().getTranslation().getX(), trajectory.getInitialHolonomicPose().getTranslation().getY());
         modules.forEach((m) -> m.resetPose(new Pose2d( newpose,new Rotation2d())));
         pigeon.setAngle(trajectory.getInitialHolonomicPose().getRotation().getDegrees());
 
@@ -223,8 +223,6 @@ public class Swerve extends Subsystem {
         scaleFactor = speed;
         targetHeading = desiredPose.getRotation().inverse();
         targetFollowTranslation = desiredPose.getTranslation();
-        trajectoryFinished = false;
-
     }
 
     public boolean inAimRange() {
@@ -269,17 +267,6 @@ public class Swerve extends Subsystem {
     SynchronousPIDF xPID = new SynchronousPIDF(.8, 0.0, 0);
     SynchronousPIDF yPID = new SynchronousPIDF(.8, 0.0, 0);
     private double lastTimestamp = Timer.getFPGATimestamp();
-
-    public void followTranslation2d(Translation2d translation2d, Rotation2d targetRobotHeading, double speed) {
-        setState(State.TRAJECTORY);
-        scaleFactor = speed;
-
-
-        targetHeading = targetRobotHeading;
-        targetFollowTranslation = translation2d;
-        trajectoryFinished = false;
-
-    }
 
     public void resetPose(Pose2d newPose) {
         modules.forEach((m) -> m.resetPose(newPose));
@@ -376,8 +363,6 @@ public class Swerve extends Subsystem {
         if (Math.abs(xError + yError) / 2 < .1 && PathFollower.getInstance().isFinished()) {
             setState(State.OFF);
             trajectoryFinished = true;
-            Logger.getInstance().recordOutput("traj finished", trajectoryFinished);
-
             return new Translation2d();
         }
         Logger.getInstance().recordOutput("traj finished", trajectoryFinished);
@@ -389,15 +374,6 @@ public class Swerve extends Subsystem {
         modules.forEach((m) -> {
             m.resetModulePositionToAbsolute();
         });
-    }
-
-    public boolean isTrajectoryFollowed() {
-        setState(State.MANUAL);
-        return trajectoryFinished;
-    }
-
-    public void resetTrajectoryFollowed() {
-        trajectoryFinished = false;
     }
 
     public Rotation2d getRobotHeading() {
