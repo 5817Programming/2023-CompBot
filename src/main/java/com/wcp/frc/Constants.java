@@ -85,10 +85,10 @@ public class Constants {
 
     ///The absolute starting postion for each module
     //originally +180 to each
-    public static final double kFrontRightStartingEncoderPosition = -82.2; //-354.950352
-    public static final double kFrontLeftStartingEncoderPosition = -290.9; //-263.094811
-    public static final double kRearLeftStartingEncoderPosition = -8.84; //-121.094031
-    public static final double kRearRightStartingEncoderPosition = -108.1; //-355.170825    
+    public static final double kFrontRightStartingEncoderPosition = -81.6; //-354.950352
+    public static final double kFrontLeftStartingEncoderPosition = -287.3; //-263.094811
+    public static final double kRearLeftStartingEncoderPosition = -358.45; //-121.094031
+    public static final double kRearRightStartingEncoderPosition = -112.1; //-355.170825    
         
         
     public static final class ElevatorConstants {
@@ -172,7 +172,7 @@ public class Constants {
 
         public static final double LOW_SCORE_CUBE = 0;
 
-        public static final double PICKUP = -60605;
+        public static final double PICKUP = -48000;
         
         public static final double HOLD = -5000;//MAX_UP_TICKS-2000
 

@@ -118,13 +118,8 @@ public double getStartRotation(){
  
 
   public boolean isFinished() {
-    double extraSeconds =0;
-
-    if (this.timer.hasElapsed((transformedTrajectory.getTotalTimeSeconds()+extraSeconds/speed)+2)){
-      EventIndex = 0;
-      useEvents = false;
-    }
-    return this.timer.hasElapsed((transformedTrajectory.getTotalTimeSeconds()/.5)+2);
+  
+    return this.timer.hasElapsed(transformedTrajectory.getTotalTimeSeconds()+2);
     
   }
  

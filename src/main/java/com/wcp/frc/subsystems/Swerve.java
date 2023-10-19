@@ -168,6 +168,7 @@ public class Swerve extends Subsystem {
         return this.currentState;
     }
 
+
     public void setState(State desiredState) {
         currentState = desiredState;
     }
@@ -323,10 +324,10 @@ public class Swerve extends Subsystem {
 
         pose = updatedPose;
 
-        if(visionUpdateTimer.get()>0.1 && Vision.getInstance().hasTarget()){
-            pose = new Pose2d( Vision.getInstance().getWeightedPose(updatedPose).getTranslation(), getRobotHeading());
-            visionUpdateTimer.reset();
-        }
+        // if(visionUpdateTimer.get()>0.1 && Vision.getInstance().hasTarget()){
+        //     pose = new Pose2d( Vision.getInstance().getWeightedPose(updatedPose).getTranslation(), getRobotHeading());
+        //     visionUpdateTimer.reset();
+        // }
 
         modules.forEach((m) -> m.resetPose(pose));
         lastUpdateTimestamp = timestamp;
@@ -614,6 +615,8 @@ public class Swerve extends Subsystem {
         };
 
     }
+
+
     public Request aimStateRequest(boolean snapUp, boolean snapDown) {
         return new Request() {
 

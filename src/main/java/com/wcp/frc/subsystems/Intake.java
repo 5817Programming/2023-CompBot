@@ -71,24 +71,35 @@ public class Intake extends Subsystem {
 }
 
 public Request percentOutputRequest(double percent, boolean cube){
-    return new Request() {
+  return new Request() {
+
+    @Override 
+      public void initialize(){
+        waitTimer.reset();
+      }
+    @Override
+      public void act(){
+        waitTimer.start();
+        intake(cube ? percent: percent, !cube);
+      }
       @Override
-        public void act(){
-          waitTimer.start();
-          intake(percent,cube);
-        }
-      @Override
-        public boolean isFinished(){
-            if(waitTimer.hasElapsed(.4)){
-              waitTimer.reset();
-              waitTimer.stop();
-            }
-          return waitTimer.hasElapsed(.4);
-        }
-    };
+      public boolean isFinished(){
+          if(waitTimer.hasElapsed(.4)){
+            waitTimer.reset();
+            waitTimer.stop();
+            return true;
+          }
+          else return false;
+      }
+  };
 }
 public Request percentOutputRequest(boolean cube){
   return new Request() {
+
+    @Override 
+      public void initialize(){
+        waitTimer.reset();
+      }
     @Override
       public void act(){
         waitTimer.start();
@@ -152,7 +163,7 @@ public Request waitUntilIntakedPieceRequest(){
       
     @Override
       public boolean isFinished(){
-        return intake.getStatorCurrent()>60 || waitTimer.get() > 2;
+        return intake.getStatorCurrent()>60 || waitTimer.get() > 1.5;
       }
   };
 }

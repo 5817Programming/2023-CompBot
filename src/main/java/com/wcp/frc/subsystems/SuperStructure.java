@@ -337,6 +337,14 @@ public class SuperStructure extends Subsystem {
             request(request,queue);
     }
 
+    public void outtakeState(boolean cube){
+        RequestList request = new RequestList(Arrays.asList(
+            logCurrentRequest("outtake"),
+            intake.percentOutputRequest(!this.cube))
+            , false);
+        queue(request);
+    }
+
     public void balanceState(){
         queue(swerve.balanceRequest());
     } 

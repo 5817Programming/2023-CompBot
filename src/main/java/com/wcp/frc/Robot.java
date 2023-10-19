@@ -16,6 +16,8 @@ import com.wcp.frc.subsystems.Swerve;
 import com.wcp.frc.subsystems.Vision;
 import com.wcp.frc.subsystems.gyros.Gyro;
 import com.wcp.frc.subsystems.Lights;
+import com.wcp.frc.Autos.OdometryTuner;
+import com.wcp.frc.Autos.OnePieceRight;
 import com.wcp.frc.Autos.TwoPieceBalanceLeft;
 import com.wcp.frc.subsystems.Arm;
 import com.wcp.frc.subsystems.SideElevator;
@@ -112,13 +114,14 @@ swerve.updatePose(Timer.getFPGATimestamp());
   @Override
   public void autonomousInit() {
     swerve = Swerve.getInstance();
+    
     swerve.fieldzeroSwerve();
     swerve.sendInput(0, 0,0);
     swerve.stop();
 
     startime = Timer.getFPGATimestamp();
 
-    new TwoPieceBalanceLeft().runAuto();
+    new OnePieceRight().runAuto();
       
   }
 
@@ -131,6 +134,7 @@ swerve.updatePose(Timer.getFPGATimestamp());
   /** This function is called once when teleop is enabled. */
   @Override
   public void teleopInit() {
+    SuperStructure.getInstance().idleState();
     swerve = Swerve.getInstance();
     swerve.fieldzeroSwerve();
 
