@@ -63,6 +63,7 @@ public class Controls {
     ButtonCheck driverDpadUp = new ButtonCheck();
     ButtonCheck driverDpadRight = new ButtonCheck();
     ButtonCheck driverDpadDown = new ButtonCheck();
+    ButtonCheck driverBackButtonDown = new ButtonCheck();
 
 
     ButtonCheck coDriverStart = new ButtonCheck();
@@ -149,18 +150,29 @@ public class Controls {
          coDriverBackButton.update(CoDriver.getBackButton());
 
     
-        if(driverAButton.isPressed()) 
+        if(driverAButton.isPressed()) {
            s.setHeight(SuperStructure.PreState.LOW);
-        if(driverBButton.isPressed())
-           s.setHeight(SuperStructure.PreState.HOOMAN);
-        if(driverXButton.isPressed())
-           s.setHeight(SuperStructure.PreState.MID);
-        if(driverYButton.isPressed())
-           s.setHeight(SuperStructure.PreState.HIGH);
-        if(driverLeftStick.isPressed())
-           s.setPiece();
-        if(driverLeftTrigger.isPressed())
            s.scoreState();
+        }
+        else if(driverBButton.isPressed()){
+           s.setHeight(SuperStructure.PreState.HOOMAN);
+           s.scoreState();
+        }
+        else if(driverXButton.isPressed()){
+           s.setHeight(SuperStructure.PreState.MID);
+           s.scoreState();
+        }
+        else if(driverYButton.isPressed()){
+           s.setHeight(SuperStructure.PreState.HIGH);
+           s.scoreState();
+        }
+        else if(driverAButton.isReleased()||driverBButton.isReleased()||driverYButton.isReleased()||driverXButton.isReleased()){
+           s.scoreReleaseState();
+        }
+        if(codriverLeftBumper.isPressed())
+           s.setPiece(false);
+        if(codriverRightBumper.isPressed())
+           s.setPiece(true);
         else if(driverLeftTrigger.isReleased() && s.elevatorIsLocked())
            s.scoreReleaseState();
         else if(!driverLeftBumper.isActive() && !driverRightBumper.isActive() && !driverLeftTrigger.isActive() && !driverRightTrigger.isActive() && !s.elevatorIsLocked()){
