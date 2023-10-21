@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Queue;
 
 import org.littletonrobotics.junction.Logger;
 
@@ -340,7 +341,7 @@ public class SuperStructure extends Subsystem {
     public void outtakeState(boolean cube){
         RequestList request = new RequestList(Arrays.asList(
             logCurrentRequest("outtake"),
-            intake.percentOutputRequest(!this.cube))
+            intake.percentOutputRequest(1,!this.cube))
             , false);
         queue(request);
     }
@@ -509,6 +510,13 @@ public class SuperStructure extends Subsystem {
         ),parrellel);
        queue(request);
        queue(queue);
+    }
+    public void waitForTrajectoryState(double PercentageToRun){
+        RequestList request = new RequestList(Arrays.asList(
+            swerve.waitForTrajectoryRequest(PercentageToRun)
+        ),
+        false);
+        queue(request);
     }
   
     public void scoreState(PreState state){

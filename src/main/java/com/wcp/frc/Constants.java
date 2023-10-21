@@ -172,7 +172,7 @@ public class Constants {
 
         public static final double LOW_SCORE_CUBE = 0;
 
-        public static final double PICKUP = -48000;
+        public static final double PICKUP = -52000;
         
         public static final double HOLD = -5000;//MAX_UP_TICKS-2000
 

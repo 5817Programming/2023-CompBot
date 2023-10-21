@@ -795,6 +795,18 @@ offset--;// sets desired scoring station to snap to the next one down
             }
         };
     }
+    
+
+
+    public Request waitForTrajectoryRequest(double PercentageToRun) {
+        return new Request() {
+            @Override
+            public boolean isFinished() {
+                return pathFollower.hasElapsedPercentage(PercentageToRun);
+            }
+        };
+    }
+    
 
     
 

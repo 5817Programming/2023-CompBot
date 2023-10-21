@@ -75,6 +75,7 @@ double desiredRotation =  desiredState.holonomicRotation.getDegrees();
 this.desiredRotation = desiredRotation;
       Logger.getInstance().recordOutput("Current time", currentTime);
     Logger.getInstance().recordOutput("desiredPose", new Pose2d(new Translation2d(desiredX,desiredY), Rotation2d.fromDegrees(desiredRotation)));
+    Logger.getInstance().recordOutput("Percentage Ran", percentageDone());
 
     if(red&&useAllianceColor){
       return   new Pose2d(new Translation2d(desiredX+(2*Math.abs(8.25-desiredX)),desiredY), Rotation2d.fromDegrees(desiredRotation-180));
@@ -121,6 +122,12 @@ public double getStartRotation(){
   
     return this.timer.hasElapsed(transformedTrajectory.getTotalTimeSeconds()+2);
     
+  }
+  public double percentageDone(){
+    return this.timer.get()/(transformedTrajectory.getTotalTimeSeconds()+2);
+  }
+  public boolean hasElapsedPercentage(double percent){
+    return percentageDone()>percent;
   }
  
 
