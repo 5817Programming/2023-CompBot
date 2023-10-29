@@ -102,7 +102,7 @@ HashMap<String,AutoBase> autos = new HashMap<String,AutoBase>();
    * 
    * <p>
    * This runs after the mode specific periodic functions, but before LiveWindow
-   * and
+   * and 
    * SmartDashboard integrated updating.
    */
   @Override
