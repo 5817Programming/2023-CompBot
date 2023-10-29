@@ -103,7 +103,7 @@ public Request percentOutputRequest(boolean cube){
     @Override
       public void act(){
         waitTimer.start();
-        intake(cube ? 1: .5, !cube);
+        intake(cube ? 1: .3, !cube);
       }
       @Override
       public boolean isFinished(){
@@ -121,7 +121,7 @@ public Request continuousIntakeRequest(boolean cube){
   return new Request(){
         @Override
       public void act(){
-           intake(cube ? 1: 1, !cube);
+           intake(cube ? .5: .7, !cube);
            isIntaking = true;
       }
     
@@ -150,7 +150,7 @@ public Request stopIntakeRequest(){
   };
 }
 
-public Request waitUntilIntakedPieceRequest(){
+public Request waitUntilIntakedPieceRequest(boolean timer){
   return new Request(){
       public void initialize(){
         waitTimer.reset();
@@ -163,7 +163,10 @@ public Request waitUntilIntakedPieceRequest(){
       
     @Override
       public boolean isFinished(){
+        if(timer){
         return intake.getStatorCurrent()>60 || waitTimer.get() > 1.5;
+        }
+        return intake.getStatorCurrent()>60;
       }
   };
 }

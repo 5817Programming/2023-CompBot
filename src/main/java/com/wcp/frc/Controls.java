@@ -107,7 +107,7 @@ public class Controls {
 
 
 
-
+        Acelerator = 1-Driver.getLeftTriggerAxis()/1.5;
         double driverLeftXInput = -(((Driver.getLeftX())) * Acelerator);
         double driverLeftYInput = (Driver.getLeftY() * Acelerator);// drive
         double driverRightXInput = -((((Driver.getRightX() * ignore) + rotate) * 2) * Acelerator);// drive
@@ -149,58 +149,54 @@ public class Controls {
          coDriverRightStickDown.update(CoDriver.getLeftStickButtonPressed());
          coDriverBackButton.update(CoDriver.getBackButton());
 
-    
-        if(driverAButton.isPressed()) {
+        if (coDriverXButton.isActive()){
+           s.intakeState();
+        }else if(coDriverXButton.isReleased()){
+            s.stopIntake();
+        }
+        if(coDriverAButton.isActive()) {
            s.setHeight(SuperStructure.PreState.LOW);
            s.scoreState();
         }
-        else if(driverBButton.isPressed()){
-           s.setHeight(SuperStructure.PreState.HOOMAN);
-           s.scoreState();
-        }
-        else if(driverXButton.isPressed()){
+        if(coDriverBButton.isActive()){
            s.setHeight(SuperStructure.PreState.MID);
            s.scoreState();
         }
-        else if(driverYButton.isPressed()){
+        if(coDriverYButton.isActive()){
            s.setHeight(SuperStructure.PreState.HIGH);
            s.scoreState();
         }
-        else if(driverAButton.isReleased()||driverBButton.isReleased()||driverYButton.isReleased()||driverXButton.isReleased()){
-           s.scoreReleaseState();
-        }
+
         if(codriverLeftBumper.isPressed())
            s.setPiece(false);
         if(codriverRightBumper.isPressed())
            s.setPiece(true);
-        else if(driverLeftTrigger.isReleased() && s.elevatorIsLocked())
-           s.scoreReleaseState();
-        else if(!driverLeftBumper.isActive() && !driverRightBumper.isActive() && !driverLeftTrigger.isActive() && !driverRightTrigger.isActive() && !s.elevatorIsLocked()){
-           s.clearQueues();
-           Acelerator = 1;
+        else if(driverRightTrigger.isActive() && s.elevatorIsLocked())
+            s.countinousIntakeState();
+        else if(driverRightTrigger.isReleased()){
+            s.scoreReleaseState();
         }
         if(driverRightTrigger.isPressed()){
-            s.aimState(driverLeftBumper.isPressed(), driverRightBumper.isPressed());
+            // s.aimState(driverLeftBumper.isPressed(), driverRightBumper.isPressed());
         }
         else if(driverRightTrigger.isActive()){
-            swerve.updateOffset(driverLeftBumper.isPressed(), driverRightBumper.isPressed());            
+            // swerve.updateOffset(driverLeftBumper.isPressed(), driverRightBumper.isPressed());            
         }
-        else if(driverLeftBumper.isPressed())
+        else if(coDriverRightTrigger.isPressed())
            s.intakeState(SuperStructure.PreState.HOOMAN);
+        
         else if(driverStartButton.isPressed())
-            swerve.resetOdometry(vision.getPose(),swerve.getRobotHeading());
+            swerve.resetGryo(180);
         
-        else if(driverRightBumper.isPressed())
+        else if(coDriverLeftTrigger.isPressed())
            s.intakeState(SuperStructure.PreState.CHUTE);
-        else if(!driverLeftBumper.isActive() && !driverRightBumper.isActive() && !driverLeftTrigger.isActive() && !driverRightTrigger.isActive() && !s.elevatorIsLocked()){
-           s.clearQueues();
-           Acelerator = 1;
+        if(coDriverLeftTrigger.isReleased()||coDriverRightTrigger.isReleased()||coDriverLeftTrigger.isReleased()||coDriverRightTrigger.isReleased()){
+            s.clearQueues();
+            s.stopIntake();
         }
-        else
-           Acelerator = .5;
-        
 
 
+       Arm.getInstance().changeOffset(CoDriver.getRightY());
        s.requestSwerveInput(new Translation2d(driverLeftYInput, driverLeftXInput), driverRightXInput);
 
 

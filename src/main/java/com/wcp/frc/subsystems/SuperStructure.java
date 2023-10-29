@@ -361,7 +361,7 @@ public class SuperStructure extends Subsystem {
             swerve.goToChuteRequest(),
             arm.stateRequest(Arm.State.CHUTE),
             intake.percentOutputRequest(!cube),
-            intake.waitUntilIntakedPieceRequest(),
+            intake.waitUntilIntakedPieceRequest(true),
             intake.stopIntakeRequest())
             ,false);
         request(request, queue);
@@ -381,7 +381,7 @@ public class SuperStructure extends Subsystem {
         ),true);
         RequestList queue = new RequestList(Arrays.asList(
             swerve.objectTartgetRequest(),
-            intake.waitUntilIntakedPieceRequest(),
+            intake.waitUntilIntakedPieceRequest(true),
             intake.stopIntakeRequest(),
             intake.intakeBrakeRequest(),
             swerve.openLoopRequest(swerveControls, swerveRotation)
@@ -414,7 +414,6 @@ public class SuperStructure extends Subsystem {
             elevator.idleRequest(),
             sideElevator.stateRequest(SideElevator.State.ZERO),
             arm.stateRequest(Arm.State.ZERO),
-            intake.intakeBrakeRequest(),
             lights.lightRequest(cube ? Lights.State.CUBE: Lights.State.CONE)
         ), true);
         idleRequests = request;
@@ -581,7 +580,19 @@ public class SuperStructure extends Subsystem {
             ),false);
         request(request);
     }
-
+    public void intakeState(){
+        if(!cube)
+        intake.setPercentOutput(-.4);
+    }
+    public void stopIntake(){
+        intake.setPercentOutput(0);
+    }
+    public void countinousIntakeState(){
+        RequestList queue = new RequestList(Arrays.asList(
+            intake.continuousIntakeRequest(!cube)
+        ),false);      
+        request(queue);  
+    }
     public void intakeState(PreState state){
         State intakeState = State.ZERO;
         switch(state){
@@ -609,11 +620,12 @@ public class SuperStructure extends Subsystem {
                 arm.stateRequest(intakeState.armState)
             ), true);
             RequestList queue = new RequestList(Arrays.asList(
-                intake.waitUntilIntakedPieceRequest()
+                intake.waitUntilIntakedPieceRequest(false)
             ),false);        
             request(request, queue);
     }
-    public void intakeState(PreState state, boolean cube){
+    public void intakeState(PreState state, boolean cube,boolean timer){
+
         setPiece(cube);
         State intakeState = State.ZERO;
         switch(state){
@@ -641,12 +653,13 @@ public class SuperStructure extends Subsystem {
                 arm.stateRequest(intakeState.armState)
             ), true);
             RequestList queue = new RequestList(Arrays.asList(
-                intake.waitUntilIntakedPieceRequest()
+                intake.waitUntilIntakedPieceRequest(timer)
             ),false);      
             queue(request);
             queue(queue);  
     }
 
+    
 
   
     public Request waitRequest(double waitTime){

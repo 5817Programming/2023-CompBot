@@ -163,6 +163,7 @@ public Request percentRequest(double percent){
 
 @Override
 public void outputTelemetry() {
+	Logger.getInstance().recordOutput("sideElevator", getEncoder());
 	Logger.getInstance().recordOutput("sideElevatorDemand", mPeriodicIO.driveDemand);		
 	
 }

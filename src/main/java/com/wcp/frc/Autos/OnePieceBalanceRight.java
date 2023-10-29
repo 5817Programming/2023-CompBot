@@ -10,8 +10,8 @@ import com.wcp.frc.subsystems.SuperStructure;
 public class OnePieceBalanceRight extends AutoBase{
     SuperStructure s = SuperStructure.getInstance();
 
-    PathPlannerTrajectory rightPT1 = PathPlanner.loadPath("RIGHT PT1", new PathConstraints(4, 4));
-    PathPlannerTrajectory rightPT2 = PathPlanner.loadPath("RIGHT PT2", new PathConstraints(4, 4));
+    PathPlannerTrajectory rightPT1 = PathPlanner.loadPath("RIGHT PT1", new PathConstraints(6, 6));
+    PathPlannerTrajectory rightPT2 = PathPlanner.loadPath("RIGHT PT2", new PathConstraints(6, 6));
 
     @Override
     public void auto() {

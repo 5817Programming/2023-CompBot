@@ -147,9 +147,9 @@ public class Swerve extends Subsystem {
     public void setTrajectory(PathPlannerTrajectory trajectory) {
         trajectoryFinished = false;
         pathFollower.setTrajectory(trajectory);
-        Translation2d newpose = new Translation2d( trajectory.getInitialHolonomicPose().getTranslation().getX(), trajectory.getInitialHolonomicPose().getTranslation().getY());
-        modules.forEach((m) -> m.resetPose(new Pose2d( newpose,new Rotation2d())));
-        pigeon.setAngle(trajectory.getInitialHolonomicPose().getRotation().getDegrees());
+        Pose2d newpose = (pathFollower.getInitial(trajectory));
+        modules.forEach((m) -> m.resetPose(new Pose2d( newpose.getTranslation(),new Rotation2d())));
+        pigeon.setAngle(newpose.getRotation().getDegrees());
 
     }
 

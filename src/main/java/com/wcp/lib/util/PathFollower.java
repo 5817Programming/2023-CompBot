@@ -6,6 +6,7 @@ import com.wcp.lib.geometry.Pose2d;
 import com.wcp.lib.geometry.Rotation2d;
 import com.wcp.lib.geometry.Translation2d;
 
+import edu.wpi.first.math.trajectory.Trajectory;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
@@ -60,7 +61,12 @@ public class PathFollower extends SubsystemBase {
 
   public Pose2d getDesiredPose2d(
     boolean useAllianceColor, double speed, Pose2d currentPose2d) {
-
+      if(DriverStation.getAlliance()==Alliance.Blue){
+        red=false;
+      }
+      else{
+        red=true;
+      }
     this.currentPose = currentPose2d;
     this.timer.start();
     double currentTime = this.timer.get()*.5;
@@ -77,7 +83,7 @@ this.desiredRotation = desiredRotation;
     Logger.getInstance().recordOutput("desiredPose", new Pose2d(new Translation2d(desiredX,desiredY), Rotation2d.fromDegrees(desiredRotation)));
     Logger.getInstance().recordOutput("Percentage Ran", percentageDone());
 
-    if(red&&useAllianceColor){
+    if(DriverStation.getAlliance() == DriverStation.Alliance.Red){
       return   new Pose2d(new Translation2d(desiredX+(2*Math.abs(8.25-desiredX)),desiredY), Rotation2d.fromDegrees(desiredRotation-180));
     }else{
       return   new Pose2d(new Translation2d(desiredX,desiredY), Rotation2d.fromDegrees(desiredRotation));
@@ -85,6 +91,17 @@ this.desiredRotation = desiredRotation;
     
   }
   
+  public Pose2d getInitial(PathPlannerTrajectory trajectory){
+    double initX = trajectory.getInitialHolonomicPose().getX();
+    double initY = trajectory.getInitialHolonomicPose().getY();
+    double initRot = trajectory.getInitialHolonomicPose().getRotation().getDegrees();
+
+    if(!(DriverStation.getAlliance()==Alliance.Blue)){
+      return   new Pose2d(new Translation2d(initX+(2*Math.abs(8.25-initX)),initY), Rotation2d.fromDegrees(initRot-180));
+    }else{
+      return   new Pose2d(new Translation2d(initX,initY), Rotation2d.fromDegrees(initRot));
+    }
+  }
   public static PathFollower instance = null;
 
   public static PathFollower getInstance() {// if doesnt have an instance of swerve will make a new one

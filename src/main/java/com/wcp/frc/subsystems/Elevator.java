@@ -88,8 +88,8 @@ public class Elevator extends Subsystem {
 			mLeftElevator.config_kP(Constants.kSlotIdx, 0.344444444, Constants.TIMEOUT_MILLISECONDS);//0.7161
 			mLeftElevator.config_kI(Constants.kSlotIdx, 0.001, Constants.TIMEOUT_MILLISECONDS);//0.001
 			mLeftElevator.config_kD(Constants.kSlotIdx, 3.4444444, Constants.TIMEOUT_MILLISECONDS);//P value * ten
-			mLeftElevator.configMotionCruiseVelocity(16881, Constants.TIMEOUT_MILLISECONDS);
-			mLeftElevator.configMotionAcceleration(16880.55, Constants.TIMEOUT_MILLISECONDS);
+			mLeftElevator.configMotionCruiseVelocity(32000, Constants.TIMEOUT_MILLISECONDS);
+			mLeftElevator.configMotionAcceleration(32000.55, Constants.TIMEOUT_MILLISECONDS);
 			mLeftElevator.setSelectedSensorPosition(0, Constants.kPIDLoopIdx, Constants.TIMEOUT_MILLISECONDS);
 			
 }

@@ -5,6 +5,7 @@
 package com.wcp.frc;
 
 import java.util.Arrays;
+import java.util.HashMap;
 
 import org.littletonrobotics.junction.LoggedRobot;
 
@@ -15,10 +16,18 @@ import com.wcp.frc.subsystems.SuperStructure;
 import com.wcp.frc.subsystems.Swerve;
 import com.wcp.frc.subsystems.Vision;
 import com.wcp.frc.subsystems.gyros.Gyro;
+import com.wcp.lib.util.PathFollower;
 import com.wcp.frc.subsystems.Lights;
+import com.google.flatbuffers.FlexBuffers.Map;
+import com.wcp.frc.Autos.AutoBase;
 import com.wcp.frc.Autos.OdometryTuner;
+import com.wcp.frc.Autos.OnePieceBalanceCommunityMid;
+import com.wcp.frc.Autos.OnePieceBalanceRight;
+import com.wcp.frc.Autos.OnePieceLeftBalance;
 import com.wcp.frc.Autos.OnePieceRight;
-import com.wcp.frc.Autos.TwoPieceBalanceLeft;
+import com.wcp.frc.Autos.Place;
+import com.wcp.frc.Autos.TwoPieceLeft;
+import com.wcp.frc.Autos.TwoPieceRight;
 import com.wcp.frc.subsystems.Arm;
 import com.wcp.frc.subsystems.SideElevator;
 import com.wcp.frc.subsystems.Elevator;
@@ -28,6 +37,8 @@ import edu.wpi.first.wpilibj.PowerDistribution;
 import edu.wpi.first.wpilibj.Timer;
 //https://github.com/Mechanical-Advantage/AdvantageKit/releases/latest/download/AdvantageKit.json
 import edu.wpi.first.wpilibj.PowerDistribution.ModuleType;
+import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 //https://maven.photonvision.org/repository/internal/org/photonvision/PhotonLib-json/1.0/PhotonLib-json-1.0.json
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 
@@ -46,9 +57,26 @@ public class Robot extends LoggedRobot {
   Arm arm = Arm.getInstance();
   Lights lights;
   Gyro pigeon;
+  public SendableChooser<AutoBase> autoChooser = new SendableChooser<>();
 
+HashMap<String,AutoBase> autos = new HashMap<String,AutoBase>();
   @Override
   public void robotInit() {
+    autos.put("2PieceLeft", new TwoPieceLeft());
+    autos.put("1PieceBalanceCommunityMid", new OnePieceBalanceCommunityMid());
+    autos.put("1PieceRight", new OnePieceRight());
+    autos.put("1PieceBalanceRight",new OnePieceBalanceRight());
+    autos.put("1PieceBalanceLeft", new OnePieceLeftBalance());
+    autos.put("2PieceRight", new TwoPieceRight());
+
+    for(HashMap.Entry<String, AutoBase> entry : autos.entrySet()) {
+      String N = entry.getKey();
+      AutoBase A = entry.getValue();
+      autoChooser.addOption(N, A);
+    }
+
+    SmartDashboard.putData("Autonomous routine", autoChooser);
+    
     Logger.getInstance().recordMetadata("ProjectName", "MyProject"); // Set a metadata value
     new PowerDistribution(1, ModuleType.kRev); // Enables power distribution logging
 
@@ -111,6 +139,7 @@ swerve.updatePose(Timer.getFPGATimestamp());
 
   double startime;
 
+
   @Override
   public void autonomousInit() {
     swerve = Swerve.getInstance();
@@ -120,8 +149,13 @@ swerve.updatePose(Timer.getFPGATimestamp());
     swerve.stop();
 
     startime = Timer.getFPGATimestamp();
+    
+    if(autoChooser.getSelected() != null){
+      autoChooser.getSelected().runAuto();
+    }else{
+      new Place().runAuto();
+    }
 
-    new OnePieceRight().runAuto();
       
   }
 
@@ -156,6 +190,8 @@ swerve.updatePose(Timer.getFPGATimestamp());
     subsystemManager.stopSubsystems();
     arm.setPercentOutput(0);
     elevator.percentOutput(0);
+    SuperStructure.getInstance().clearQueues();
+    PathFollower.getInstance().resetTimer();
  //   scores.setHeight(Constants.ElevatorConstants.ZERO,true);
   }
 

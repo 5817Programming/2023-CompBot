@@ -20,6 +20,7 @@ import com.wcp.frc.subsystems.Requests.Request;
  * we use the motion magic libarary to set the arm motor to a specific rotation
  */
 public class Arm extends Subsystem {
+	double offset = 0;
 
 	public static Arm instance = null;
 
@@ -126,7 +127,7 @@ public class Arm extends Subsystem {
 		arm.selectProfileSlot(Constants.kSlotIdx, Constants.kPIDLoopIdx);
 		arm.config_kF(Constants.kSlotIdx, 0.07856539436, Constants.TIMEOUT_MILLISECONDS);//0.0649
 		arm.config_kP(Constants.kSlotIdx, 0.03100469768, Constants.TIMEOUT_MILLISECONDS);//0.7161
-		arm.config_kI(Constants.kSlotIdx, 0.00, Constants.TIMEOUT_MILLISECONDS);//0.001
+		arm.config_kI(Constants.kSlotIdx, 0.0, Constants.TIMEOUT_MILLISECONDS);//0.001
 		arm.config_kD(Constants.kSlotIdx, .3100469768, Constants.TIMEOUT_MILLISECONDS);//P value * ten
 
 		/*mLeftElevator.selectProfileSlot(Constants.kSlotIdx, Constants.kPIDLoopIdx);
@@ -160,9 +161,14 @@ public class Arm extends Subsystem {
 	}
 
 	public void conformToState(State newState){
-		setMotionMagic(newState.output);
+		setMotionMagic(newState.output+offset);
 	}
+	public void changeOffset(double delta){
 
+		Logger.getInstance().recordOutput("DeltaOffset", delta);
+		if(Math.abs(delta)>0.1)
+			offset += delta*100;
+	}
 	//determines whether or nit the arm is at it s postion by checkign if the distacne is udnder 3000 ticks 
 	public synchronized boolean isFinished(){
 		Logger.getInstance().recordOutput("arm error", Math.abs(mPeriodicIO.driveDemand-mPeriodicIO.drivePosition));
@@ -243,7 +249,9 @@ public class Arm extends Subsystem {
 	//logs the motors drive demand
 	@Override
 	public void outputTelemetry() {
+	Logger.getInstance().recordOutput("armPos", mPeriodicIO.drivePosition);
 	Logger.getInstance().recordOutput("armDemand", mPeriodicIO.driveDemand);		
+	Logger.getInstance().recordOutput("armOffset", offset);
 	}
 
 	//emegergency stop of all power to the motor

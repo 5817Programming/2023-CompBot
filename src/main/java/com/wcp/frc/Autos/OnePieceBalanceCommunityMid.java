@@ -7,12 +7,12 @@ import com.pathplanner.lib.PathPlannerTrajectory;
 import com.wcp.frc.subsystems.SuperStructure;
 
 
-public class OnePieceBalanceMid extends AutoBase{
+public class OnePieceBalanceCommunityMid extends AutoBase{
     SuperStructure s = SuperStructure.getInstance();
-
-    PathPlannerTrajectory midPT1 = PathPlanner.loadPath("MID PT1", new PathConstraints(4, 4));
-    PathPlannerTrajectory midPT2 = PathPlanner.loadPath("MID PT2", new PathConstraints(4, 4));
-    PathPlannerTrajectory midPT3 = PathPlanner.loadPath("MID PT3", new PathConstraints(4, 4));
+    double speed = 4;
+    PathPlannerTrajectory midPT1 = PathPlanner.loadPath("MID PT1", new PathConstraints(speed, speed));
+    PathPlannerTrajectory midPT2 = PathPlanner.loadPath("MID PT2", new PathConstraints(speed, speed));
+    PathPlannerTrajectory midPT3 = PathPlanner.loadPath("MID PT3", new PathConstraints(speed, speed));
 
 
     @Override
