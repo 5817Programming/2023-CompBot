@@ -62,12 +62,12 @@ public class Robot extends LoggedRobot {
 HashMap<String,AutoBase> autos = new HashMap<String,AutoBase>();
   @Override
   public void robotInit() {
-    autos.put("2PieceLeft", new TwoPieceLeft());
+    autos.put("2PieceNB", new TwoPieceLeft());
     autos.put("1PieceBalanceCommunityMid", new OnePieceBalanceCommunityMid());
-    autos.put("1PieceRight", new OnePieceRight());
-    autos.put("1PieceBalanceRight",new OnePieceBalanceRight());
-    autos.put("1PieceBalanceLeft", new OnePieceLeftBalance());
-    autos.put("2PieceRight", new TwoPieceRight());
+    autos.put("1PieceB", new OnePieceRight());
+    autos.put("1PieceBalanceB",new OnePieceBalanceRight());
+    autos.put("1PieceBalanceNB", new OnePieceLeftBalance());
+    autos.put("2PieceB", new TwoPieceRight());
 
     for(HashMap.Entry<String, AutoBase> entry : autos.entrySet()) {
       String N = entry.getKey();
@@ -211,5 +211,7 @@ swerve.updatePose(Timer.getFPGATimestamp());
   /** This function is called periodically during test mode. */
   @Override
   public void testPeriodic() {
+    DevControls.getInstance().update();
+
   }
 }

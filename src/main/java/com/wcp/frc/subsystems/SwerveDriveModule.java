@@ -333,6 +333,8 @@ public class SwerveDriveModule extends Subsystem {
         Logger.getInstance().recordOutput(this.name + " Absolute Position", getModuleAbsolutePosition());
         Logger.getInstance().recordOutput(this.name + " Drive Motor Demand", mPeriodicIO.driveDemand);
         Logger.getInstance().recordOutput(this.name + " Status", getModuleStatus().toString());
+        Logger.getInstance().recordOutput(this.name + " Drive Position", mPeriodicIO.drivePosition);
+        Logger.getInstance().recordOutput(this.name + " A", Constants.kWheelCircumference);
     }
 
     @Override

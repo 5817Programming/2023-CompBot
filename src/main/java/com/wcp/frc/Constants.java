@@ -59,8 +59,8 @@ public class Constants {
     	//Scrub Factors
 	public static final boolean kSimulateReversedCarpet = false;
 	public static final double[] kWheelScrubFactors = new double[]{1.0, 1.0, 1.0, 1.0};
-	public static final double kXScrubFactor =0.877;
-	public static final double kYScrubFactor =0.845;
+	public static final double kXScrubFactor =1;
+	public static final double kYScrubFactor =1;
     
     public static final double driveKS = (0.32 / 12);
     public static final double driveKV = (1.51 / 12);
@@ -80,7 +80,7 @@ public class Constants {
 
     public static final double kSwerveEncUnitsPerWheelRev = kSwerveDriveEncoderResolution * 2048;
 	public static final double kSwerveEncUnitsPerInch = kSwerveEncUnitsPerWheelRev / (Math.PI * kSwerveWheelDiameter);
-    public static final double kWheelCircumference = Units.inchesToMeters(kSwerveWheelDiameter*Math.PI);
+    public static final double kWheelCircumference = 0.29248049165;
 
 
     ///The absolute starting postion for each module
@@ -100,7 +100,7 @@ public class Constants {
         public static final double MAX_DOWN = 800;
 
         public static final double LOW_CONE = MAX_UP * .1 ;
-        public static final double MID_CONE = 18600;
+        public static final double MID_CONE = 16600;
         public static final double HIGH_CONE = 67700;
         public static final double LOW_CUBE = MAX_UP * .1 ;
         public static final double MID_CUBE = 6000;

@@ -20,7 +20,7 @@ public class TwoPieceLeft extends AutoBase{
         s.trajectoryState(maderaPT1,false);
         s.intakeState(SuperStructure.PreState.GROUND, true,true);
         s.trajectoryState(maderaPT2,false);
-        s.scoreState(SuperStructure.PreState.MID, true);
+        s.outtakeState(true);
         s.trajectoryState(maderaPT3,false);
         // s.balanceState();
     }

@@ -103,7 +103,7 @@ public Request percentOutputRequest(boolean cube){
     @Override
       public void act(){
         waitTimer.start();
-        intake(cube ? 1: .3, !cube);
+        intake(cube ? 1: .4, !cube);
       }
       @Override
       public boolean isFinished(){
