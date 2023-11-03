@@ -22,7 +22,7 @@ import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 
 /** Add your docs here. */
-public class Constants {
+public class CompConstants {
     public static final int kCANTimeoutMs = 20;//The refresh rate of the periodic looper
 
 
@@ -59,8 +59,8 @@ public class Constants {
     	//Scrub Factors
 	public static final boolean kSimulateReversedCarpet = false;
 	public static final double[] kWheelScrubFactors = new double[]{1.0, 1.0, 1.0, 1.0};
-	public static final double kXScrubFactor =0.877;
-	public static final double kYScrubFactor =0.845;
+	public static final double kXScrubFactor =1;
+	public static final double kYScrubFactor =1;
     
     public static final double driveKS = (0.32 / 12);
     public static final double driveKV = (1.51 / 12);
@@ -80,30 +80,30 @@ public class Constants {
 
     public static final double kSwerveEncUnitsPerWheelRev = kSwerveDriveEncoderResolution * 2048;
 	public static final double kSwerveEncUnitsPerInch = kSwerveEncUnitsPerWheelRev / (Math.PI * kSwerveWheelDiameter);
-    public static final double kWheelCircumference = Units.inchesToMeters(kSwerveWheelDiameter*Math.PI);
+    public static final double kWheelCircumference = 0.29248049165;
 
 
     ///The absolute starting postion for each module
     //originally +180 to each
-    public static final double kFrontRightStartingEncoderPosition = -81.6; //-354.950352
-    public static final double kFrontLeftStartingEncoderPosition = -287.3; //-263.094811
-    public static final double kRearLeftStartingEncoderPosition = -358.45; //-121.094031
-    public static final double kRearRightStartingEncoderPosition = -112.1; //-355.170825    
+    public static final double kFrontRightStartingEncoderPosition = -82; //-354.950352
+    public static final double kFrontLeftStartingEncoderPosition = -289; //-263.094811
+    public static final double kRearLeftStartingEncoderPosition = -24; //-121.094031
+    public static final double kRearRightStartingEncoderPosition = -112.4; //-355.170825    
         
         
     public static final class ElevatorConstants {
 
         //IN TIK
         public static final double MAX_UP = 78000;
-        public static final double HOOMAN_CONE = 54700;
+        public static final double HOOMAN_CONE = 52000;
         public static final double HOOMAN_CUBE = 52000;
         public static final double MAX_DOWN = 800;
 
         public static final double LOW_CONE = MAX_UP * .1 ;
-        public static final double MID_CONE = 27000;
-        public static final double HIGH_CONE = 67000;
+        public static final double MID_CONE = 16600;
+        public static final double HIGH_CONE = 67700;
         public static final double LOW_CUBE = MAX_UP * .1 ;
-        public static final double MID_CUBE = 1100;
+        public static final double MID_CUBE = 6000;
         public static final double HIGH_CUBE = 65000;
 
 
@@ -125,9 +125,9 @@ public class Constants {
 
         public static final double LOW_CONE = MAX_UP * .1;
         
-        public static final double MID_CONE =  1000;
+        public static final double MID_CONE =  3665;
         
-        public static final double HIGH_CONE = 35000;
+        public static final double HIGH_CONE = 42300;
 
         public static final double LOW_CUBE = MAX_DOWN;
         
@@ -158,11 +158,11 @@ public class Constants {
         
         public static final double MAX_DOWN_TICKS = -63605;
         
-        public static final double MIDDLE_CONE = -26000;
+        public static final double MIDDLE_CONE = -15500;
 
-        public static final double HIGH_CONE = -25000;
+        public static final double HIGH_CONE = -27700;
 
-        public static final double HOOMAN = -29000  ;
+        public static final double HOOMAN = -27000  ;
 
         public static final double LOW_SCORE_CONE = MIDDLE_CONE;
 
@@ -172,7 +172,7 @@ public class Constants {
 
         public static final double LOW_SCORE_CUBE = 0;
 
-        public static final double PICKUP = -48000;
+        public static final double PICKUP = -52000;
         
         public static final double HOLD = -5000;//MAX_UP_TICKS-2000
 
