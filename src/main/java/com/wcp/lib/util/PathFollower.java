@@ -57,10 +57,9 @@ public class PathFollower extends SubsystemBase {
 
  
 
-  
 
-  public Pose2d getDesiredPose2d(
-    boolean useAllianceColor, double speed, Pose2d currentPose2d) {
+
+  public Pose2d getDesiredPose2d(boolean useAllianceColor, double speed, Pose2d currentPose2d,double percentToRotate) {
       if(DriverStation.getAlliance()==Alliance.Blue){
         red=false;
       }
@@ -73,12 +72,19 @@ public class PathFollower extends SubsystemBase {
     this.speed = speed;
 
     PathPlannerState desiredState = (PathPlannerState) transformedTrajectory.sample(currentTime);
+    PathPlannerState finalState = (PathPlannerState) transformedTrajectory.sample(transformedTrajectory.getTotalTimeSeconds());
+    double desiredRotation = ((PathPlannerState)transformedTrajectory.sample(0.000000000001)).holonomicRotation.getDegrees();
 
 
-double desiredX = desiredState.poseMeters.getTranslation().getX();
-double desiredY = desiredState.poseMeters.getTranslation().getY();
-double desiredRotation =  desiredState.holonomicRotation.getDegrees();
-this.desiredRotation = desiredRotation;
+
+    double desiredX = desiredState.poseMeters.getTranslation().getX();
+    double desiredY = desiredState.poseMeters.getTranslation().getY();
+    if(currentTime/transformedTrajectory.getTotalTimeSeconds()>percentToRotate){
+      desiredRotation =  finalState.holonomicRotation.getDegrees();
+    }
+
+    Logger.getInstance().recordOutput("Percent Done", currentTime/transformedTrajectory.getTotalTimeSeconds());
+
       Logger.getInstance().recordOutput("Current time", currentTime);
     Logger.getInstance().recordOutput("desiredPose", new Pose2d(new Translation2d(desiredX,desiredY), Rotation2d.fromDegrees(desiredRotation)));
     Logger.getInstance().recordOutput("Percentage Ran", percentageDone());

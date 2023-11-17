@@ -66,6 +66,7 @@ public class Swerve extends Subsystem {
     boolean trajectoryStarted = false;
     boolean trajectoryFinished = false;
     double speed;
+    double percentToRotate;
     boolean useAllianceColor;
     Pigeon gyro;
     PathFollower pathFollower;
@@ -159,6 +160,7 @@ public class Swerve extends Subsystem {
         OFF,
         OBJECT,
         SCORE,
+        SNAP,
         BALANCE;
     }
 
@@ -182,7 +184,7 @@ public class Swerve extends Subsystem {
     }
 
     //
-    public void sendInput(double x, double y, double rotation) {
+    public void sendInput(double x,double y, double rotation) {
         translationVector = new Translation2d(x, y);// makes vector to input
         // sets rotation to zero if it doesnt pass deadband
         if (Math.abs(rotation) <= rotationDeadband) {
@@ -220,7 +222,7 @@ public class Swerve extends Subsystem {
     }
 
     public void updateTrajectory() {
-        Pose2d desiredPose = pathFollower.getDesiredPose2d(useAllianceColor, speed, getPose());
+        Pose2d desiredPose = pathFollower.getDesiredPose2d(useAllianceColor, speed, getPose(),percentToRotate);
         scaleFactor = speed;
         targetHeading = desiredPose.getRotation().inverse();
         targetFollowTranslation = desiredPose.getTranslation();
@@ -409,7 +411,6 @@ public class Swerve extends Subsystem {
 
             case BALANCE:
                 headingController.setTargetHeading(targetHeading);
-                ;
                 rotationCorrection = headingController.getRotationCorrection(targetHeading, timeStamp);
                 commandModules(inverseKinematics.updateDriveVectors(translationVector, rotationCorrection, drivingpose,
                         robotCentric));
@@ -434,6 +435,18 @@ public class Swerve extends Subsystem {
             case OFF:
                 commandModules(inverseKinematics.updateDriveVectors(new Translation2d(), 0, drivingpose, robotCentric));
                 break;
+            
+            case SNAP:
+                headingController.setTargetHeading(targetHeading);
+                rotationCorrection = headingController.getRotationCorrection(getRobotHeading(), timeStamp);
+                if(Math.abs(rotationCorrection) > .2){
+                    rotationCorrection = Math.signum(rotationCorrection)*.2;
+                }
+                desiredRotationScalar = rotationCorrection;
+                Logger.getInstance().recordOutput("rot", rotationCorrection);
+                commandModules(inverseKinematics.updateDriveVectors(translationVector, rotationCorrection*0.5, pose,
+                        robotCentric));
+                break;
 
         }
 
@@ -441,7 +454,7 @@ public class Swerve extends Subsystem {
 
     public boolean balance() {
         double x = 0;
-        double scalar = .012;
+        double scalar = .009;
         if (pigeon.getPitch() > 1) {
             x = -scalar * pigeon.getPitch();
         } else if (pigeon.getPitch() < -1) {
@@ -457,6 +470,12 @@ public class Swerve extends Subsystem {
         }
         return Math.abs(x) < .03;
 
+    }
+
+    public void snap(Translation2d x, double r){
+        translationVector = x;
+        targetHeading = Rotation2d.fromDegrees(r);
+        headingController.setTargetHeading(targetHeading);
     }
 
     public void Aim(Translation2d aimingVector, double scalar) {
@@ -544,9 +563,10 @@ public class Swerve extends Subsystem {
 
             @Override
             public boolean isFinished() {
-                if (balance())
-                    setState(State.MANUAL);
-                return balance();
+                // if (balance())
+                //     setState(State.MANUAL);
+                // return balance();
+                return false;
             }
         };
     }
@@ -767,13 +787,20 @@ offset--;// sets desired scoring station to snap to the next one down
         };
 
     }
-    public Request snapRequest() {
+
+    public Request snapRequest(Translation2d x, double r) {
         return new Request() {
 
             @Override
             public void act() {
-                setState(State.MANUAL);
-                headingController.setTargetHeading(Rotation2d.fromDegrees(gyro.getAngle()));
+                setState(State.SNAP);
+                snap(x, r);
+            }
+
+
+            @Override
+            public boolean isFinished(){
+                return Math.abs(headingController.getRotationCorrection(getRobotHeading(), Timer.getFPGATimestamp())) < .1;
             }
 
         };
@@ -840,11 +867,12 @@ offset--;// sets desired scoring station to snap to the next one down
 
     }
 
-    public Request setTrajectoryRequest(PathPlannerTrajectory trajectory){
+    public Request setTrajectoryRequest(PathPlannerTrajectory trajectory, double x){
         return new Request() {
 
             @Override
             public void act() {
+                percentToRotate = x;
                 setTrajectory(trajectory);
             }
             

@@ -4,8 +4,11 @@
 
 package com.wcp.lib;
 
+import org.littletonrobotics.junction.Logger;
+
 import com.wcp.lib.geometry.Rotation2d;
 import com.wcp.lib.util.SynchronousPIDF;
+import com.wcp.lib.util.Util;
 
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
@@ -23,10 +26,10 @@ public class HeadingController {
 
     private SynchronousPIDF pidController;
     public HeadingController() {
-        pidController = new SynchronousPIDF(0.0005, 0, 0, 0.0);
+        pidController = new SynchronousPIDF(0.00018, 0, 0, 0.0);
     }
     public void setTargetHeading(Rotation2d heading) {
-        targetHeading = Rotation2d.fromDegrees(heading.getDegrees()+0);
+        targetHeading = Rotation2d.fromDegrees(heading.getDegrees());
     }
     public double updateRotationCorrection(Rotation2d heading, double timestamp) {
         if(isDisabled) {
@@ -41,9 +44,13 @@ public class HeadingController {
     public double getRotationCorrection(Rotation2d heading, double timestamp) {
         double error = new Rotation2d(targetHeading).rotateBy(heading.inverse()).getDegrees();
         double dt = timestamp - lastTimestamp;
-        SmartDashboard.putNumber("Target Heading", targetHeading.getDegrees());
+        Logger.getInstance().recordOutput("headingCorrection", pidController.calculate(error, dt));
         lastTimestamp = timestamp;
-        return pidController.calculate(error, dt);
+        double pid = pidController.calculate(error, dt);
+        if(Math.abs(pid) >.001){
+            pid = .001* Math.signum(pid);
+        }
+        return pid;
     }
 
 }

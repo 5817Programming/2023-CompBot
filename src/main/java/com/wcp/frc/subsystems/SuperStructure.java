@@ -494,6 +494,22 @@ public class SuperStructure extends Subsystem {
     }
 
     
+    public void trajectoryState(PathPlannerTrajectory trajectory, double x,boolean parrellel){
+        RequestList request = new RequestList(Arrays.asList(
+            logCurrentRequest("trajectory"),
+            elevator.idleRequest(),
+            sideElevator.stateRequest(SideElevator.State.ZERO),
+            arm.stateRequest(Arm.State.ZERO),
+            intake.intakeBrakeRequest(),
+            lights.lightRequest(cube ? Lights.State.CUBE: Lights.State.CONE)
+        ), true);
+        RequestList queue = new RequestList(Arrays.asList(
+            swerve.setTrajectoryRequest(trajectory, x),
+             swerve.startPathRequest(4, true)
+        ),parrellel);
+       queue(request);
+       queue(queue);
+    }
     public void trajectoryState(PathPlannerTrajectory trajectory,boolean parrellel){
         RequestList request = new RequestList(Arrays.asList(
             logCurrentRequest("trajectory"),
@@ -504,7 +520,7 @@ public class SuperStructure extends Subsystem {
             lights.lightRequest(cube ? Lights.State.CUBE: Lights.State.CONE)
         ), true);
         RequestList queue = new RequestList(Arrays.asList(
-            swerve.setTrajectoryRequest(trajectory),
+            swerve.setTrajectoryRequest(trajectory, 0),
              swerve.startPathRequest(4, true)
         ),parrellel);
        queue(request);
