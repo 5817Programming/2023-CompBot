@@ -15,6 +15,7 @@ import com.wcp.frc.subsystems.SuperStructure;
 import com.wcp.frc.subsystems.Swerve;
 import com.wcp.frc.subsystems.Vision;
 import com.wcp.frc.subsystems.gyros.Gyro;
+import com.wcp.lib.KalmanFilter;
 import com.wcp.frc.subsystems.Lights;
 import com.wcp.frc.Autos.OdometryTuner;
 import com.wcp.frc.Autos.OnePieceRight;
@@ -49,6 +50,8 @@ public class Robot extends LoggedRobot {
 
   @Override
   public void robotInit() {
+    new KalmanFilter();
+
     Logger.getInstance().recordMetadata("ProjectName", "MyProject"); // Set a metadata value
     new PowerDistribution(1, ModuleType.kRev); // Enables power distribution logging
 
@@ -137,6 +140,7 @@ swerve.updatePose(Timer.getFPGATimestamp());
     SuperStructure.getInstance().idleState();
     swerve = Swerve.getInstance();
     swerve.fieldzeroSwerve();
+
 
 
 
