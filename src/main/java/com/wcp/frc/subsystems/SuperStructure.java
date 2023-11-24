@@ -349,6 +349,9 @@ public class SuperStructure extends Subsystem {
     public void balanceState(){
         queue(swerve.balanceRequest());
     } 
+    public void snapState(double r){
+        request(swerve.snapRequest(r));
+    }
 
     public void toChuteState(){
         RequestList request = new RequestList(Arrays.asList(

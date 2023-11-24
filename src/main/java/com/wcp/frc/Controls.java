@@ -111,6 +111,8 @@ public class Controls {
         double driverLeftXInput = -(((Driver.getLeftX())) * Acelerator);
         double driverLeftYInput = (Driver.getLeftY() * Acelerator);// drive
         double driverRightXInput = -((((Driver.getRightX() * ignore) + rotate) * 2) * Acelerator);// drive
+        double driverRightXInputSnap = Driver.getRightX();
+        double driverRightYInputSnap = Driver.getRightY();
 
 
 
@@ -198,6 +200,31 @@ public class Controls {
 
        Arm.getInstance().changeOffset(CoDriver.getRightY());
        s.requestSwerveInput(new Translation2d(driverLeftYInput, driverLeftXInput), driverRightXInput);
+
+       if(driverRightBumper.isActive()){
+        if(Math.abs(driverRightYInputSnap)> Math.abs(driverRightXInputSnap)){
+            if(Math.abs (driverRightYInputSnap) > .2){    
+                if(driverRightYInputSnap > 0){
+                    s.snapState(180);
+                }
+                else{
+                    s.snapState(0);
+                }
+            }
+        }
+        else {
+            if(Math.abs(driverRightXInputSnap) > .2){
+            if(driverRightXInputSnap > 0){
+                s.snapState(90);
+            }
+            else{
+                s.snapState(-90);
+            }
+        }
+        }
+       }
+
+
 
 
 

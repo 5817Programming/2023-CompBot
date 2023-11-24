@@ -87,7 +87,7 @@ public class Constants {
     //originally +180 to each
     public static final double kFrontRightStartingEncoderPosition = -81.6; //-354.950352
     public static final double kFrontLeftStartingEncoderPosition = -287.3; //-263.094811
-    public static final double kRearLeftStartingEncoderPosition = -234.45; //-121.094031
+    public static final double kRearLeftStartingEncoderPosition = -265; //-121.094031
     public static final double kRearRightStartingEncoderPosition = -112.1; //-355.170825    
         
         
@@ -108,7 +108,7 @@ public class Constants {
 
 
         public static final double PICKUP = MAX_DOWN+5;
-        public static final double ZERO = 801;
+        public static final double ZERO =800;
         public static final double HOLD = MAX_DOWN;//800
        
     }

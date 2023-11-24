@@ -439,12 +439,9 @@ public class Swerve extends Subsystem {
             case SNAP:
                 headingController.setTargetHeading(targetHeading);
                 rotationCorrection = headingController.getRotationCorrection(getRobotHeading(), timeStamp);
-                if(Math.abs(rotationCorrection) > .2){
-                    rotationCorrection = Math.signum(rotationCorrection)*.2;
-                }
                 desiredRotationScalar = rotationCorrection;
                 Logger.getInstance().recordOutput("rot", rotationCorrection);
-                commandModules(inverseKinematics.updateDriveVectors(translationVector, rotationCorrection*0.5, pose,
+                commandModules(inverseKinematics.updateDriveVectors(translationVector, rotationCorrection, pose,
                         robotCentric));
                 break;
 
@@ -472,10 +469,11 @@ public class Swerve extends Subsystem {
 
     }
 
-    public void snap(Translation2d x, double r){
-        translationVector = x;
+    public void snap(double r){
         targetHeading = Rotation2d.fromDegrees(r);
         headingController.setTargetHeading(targetHeading);
+        Logger.getInstance().recordOutput("targetHEadingSnap", r);
+
     }
 
     public void Aim(Translation2d aimingVector, double scalar) {
@@ -788,13 +786,13 @@ offset--;// sets desired scoring station to snap to the next one down
 
     }
 
-    public Request snapRequest(Translation2d x, double r) {
+    public Request snapRequest( double r) {
         return new Request() {
 
             @Override
             public void act() {
                 setState(State.SNAP);
-                snap(x, r);
+                snap(r);
             }
 
 

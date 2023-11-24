@@ -26,7 +26,7 @@ public class HeadingController {
 
     private SynchronousPIDF pidController;
     public HeadingController() {
-        pidController = new SynchronousPIDF(0.00018, 0, 0, 0.0);
+        pidController = new SynchronousPIDF(0.0004, 0, 0, 0.0);
     }
     public void setTargetHeading(Rotation2d heading) {
         targetHeading = Rotation2d.fromDegrees(heading.getDegrees());
@@ -44,11 +44,11 @@ public class HeadingController {
     public double getRotationCorrection(Rotation2d heading, double timestamp) {
         double error = new Rotation2d(targetHeading).rotateBy(heading.inverse()).getDegrees();
         double dt = timestamp - lastTimestamp;
-        Logger.getInstance().recordOutput("headingCorrection", pidController.calculate(error, dt));
+        Logger.getInstance().recordOutput("headingCorrection",error);
         lastTimestamp = timestamp;
         double pid = pidController.calculate(error, dt);
-        if(Math.abs(pid) >.001){
-            pid = .001* Math.signum(pid);
+        if(Math.abs(pid) >.017){
+            pid = .017* Math.signum(pid);
         }
         return pid;
     }
