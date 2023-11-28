@@ -27,7 +27,7 @@ public class KalmanFilter {
     public KalmanFilter(){
 }
  
-    public void update(double[] deltaPose, double[] Yk){
+    public double[] update(double[] deltaPose, double[] Yk){
     Ykh.add(Yk);
     for(int i = 0; i<2; i++){
         Xkp[i] = (Xkz[i]) + (deltaPose[i]);
@@ -37,8 +37,9 @@ public class KalmanFilter {
     }
     Pkz =Pkp.clone();
     Xkz =Xk.clone();
-
+    return Xk;
     }
+
     public double[] getR(){
         
         double[] var = new double[2];
