@@ -10,6 +10,7 @@ import org.littletonrobotics.junction.Logger;
 
 import com.wcp.frc.Constants;
 import com.wcp.frc.Constants.VisionConstants;
+import com.wcp.frc.subsystems.Requests.Request;
 import com.wcp.lib.Conversions;
 import com.wcp.lib.geometry.Pose2d;
 import com.wcp.lib.geometry.Rotation2d;
@@ -125,6 +126,8 @@ public class Vision extends Subsystem {
   }
   @Override
   public void update(){
+    Logger.getInstance().recordOutput("Xpos", getX());   
+
 
     getPose();
     hasTarget();
@@ -133,7 +136,6 @@ public class Vision extends Subsystem {
     table.getEntry("pipeline").setNumber(pipelineIndex);   
     this.setPoint = _setPoint;
      height = Constants.VisionConstants.HEIGHTS.get(setPoint);
-     Logger.getInstance().recordOutput("heigh", height);   
      
 
 
@@ -173,6 +175,14 @@ public class Vision extends Subsystem {
 
     }
 
+  }
+
+  public Request pipleLineRequest(int pipeline){
+    return new Request () {
+      public void act() {
+          setPipeline(pipeline);
+      }
+    };
   }
   public double getDistanceToGroundObject(){//gets distance to target
     double distanceFromLimelightToGoalInches = (0 - Constants.VisionConstants.LIMELIGHT_LENS_HEIGHT_INCHES)/Math.tan(Math.toRadians(Constants.VisionConstants.LIMELIGHT_MOUNT_ANGLE_DEGREES + getY()));

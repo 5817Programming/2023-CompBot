@@ -13,6 +13,7 @@ import java.util.Queue;
 import org.littletonrobotics.junction.Logger;
 
 import com.pathplanner.lib.PathPlannerTrajectory;
+import com.wcp.frc.Constants;
 import com.wcp.frc.subsystems.Requests.Request;
 import com.wcp.frc.subsystems.Requests.RequestList;
 import com.wcp.lib.geometry.Translation2d;
@@ -76,7 +77,7 @@ public class SuperStructure extends Subsystem {
     PreState currentUnprocessedState = PreState.ZERO;
     
     boolean lockElevator = false;
-    boolean cube = true;
+    boolean cube = false;
     boolean isIntaking = false;
     
     public enum GameState{
@@ -317,25 +318,13 @@ public class SuperStructure extends Subsystem {
         }
     
 
-    public void aimState(boolean snapUp, boolean snapDown) {
-        RequestList request = new RequestList(Arrays.asList(
+    public void aimState() {
+            RequestList request = new RequestList(Arrays.asList(
                 logCurrentRequest("aim"),
-                arm.stateRequest(Arm.State.ZERO),
-                sideElevator.stateRequest(SideElevator.State.ZERO),
-                elevator.idleRequest()),
-                true);
-        RequestList queue = new RequestList(Arrays.asList(
-                swerve.aimStateRequest(snapUp, snapDown),
-                sideElevator.stateRequest(currentState.sideElevatorState),
-                arm.stateRequest(currentState.armState),
-                elevator.stateRequest(currentState.elevatorState),
-                waitForElevators(),
-                intake.percentOutputRequest(cube),
-                intake.stopIntakeRequest(),
-                swerve.openLoopRequest(swerveControls, swerveRotation)
-                ),
-                 false);
-            request(request,queue);
+                swerve.aimStateRequest(cube)
+            ), false);
+       request(request);
+
     }
 
     public void outtakeState(boolean cube){
@@ -417,7 +406,8 @@ public class SuperStructure extends Subsystem {
             elevator.idleRequest(),
             sideElevator.stateRequest(SideElevator.State.ZERO),
             arm.stateRequest(Arm.State.ZERO),
-            lights.lightRequest(cube ? Lights.State.CUBE: Lights.State.CONE)
+            lights.lightRequest(cube ? Lights.State.CUBE: Lights.State.CONE),
+            vision.pipleLineRequest(Constants.VisionConstants.APRIL_PIPLINE)
         ), true);
         idleRequests = request;
     }

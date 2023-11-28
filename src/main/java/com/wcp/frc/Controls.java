@@ -7,6 +7,8 @@ package com.wcp.frc;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.littletonrobotics.junction.Logger;
+
 import com.wcp.frc.subsystems.Arm;
 import com.wcp.frc.subsystems.Elevator;
 import com.wcp.frc.subsystems.Intake;
@@ -108,8 +110,8 @@ public class Controls {
 
 
         Acelerator = 1-Driver.getLeftTriggerAxis()/1.5;
-        double driverLeftXInput = -(((Driver.getLeftX())) * Acelerator);
-        double driverLeftYInput = (Driver.getLeftY() * Acelerator);// drive
+        double driverLeftXInput = -(((Driver.getLeftX())) * Acelerator)*.3;
+        double driverLeftYInput = (Driver.getLeftY() * Acelerator)*.3;// drive
         double driverRightXInput = -((((Driver.getRightX() * ignore) + rotate) * 2) * Acelerator);// drive
         double driverRightXInputSnap = Driver.getRightX();
         double driverRightYInputSnap = Driver.getRightY();
@@ -184,6 +186,8 @@ public class Controls {
         else if(driverRightTrigger.isActive()){
             // swerve.updateOffset(driverLeftBumper.isPressed(), driverRightBumper.isPressed());            
         }
+        else if(driverLeftBumper.isPressed())
+        s.aimState();
         else if(coDriverRightTrigger.isPressed())
            s.intakeState(SuperStructure.PreState.HOOMAN);
         
@@ -192,11 +196,13 @@ public class Controls {
         
         else if(coDriverLeftTrigger.isPressed())
            s.intakeState(SuperStructure.PreState.CHUTE);
-        if(coDriverLeftTrigger.isReleased()||coDriverRightTrigger.isReleased()||coDriverLeftTrigger.isReleased()||coDriverRightTrigger.isReleased()){
+        if(coDriverLeftTrigger.isReleased()||coDriverRightTrigger.isReleased()||coDriverLeftTrigger.isReleased()||coDriverRightTrigger.isReleased()||driverLeftBumper.isReleased()){
             s.clearQueues();
             s.stopIntake();
         }
 
+     
+        Logger.getInstance().recordOutput("driverleftbumper", driverLeftBumper.isReleased());
 
        Arm.getInstance().changeOffset(CoDriver.getRightY());
        s.requestSwerveInput(new Translation2d(driverLeftYInput, driverLeftXInput), driverRightXInput);

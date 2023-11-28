@@ -4,6 +4,7 @@
 
 package com.wcp.frc.subsystems;
 
+import java.sql.Driver;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -267,8 +268,9 @@ public class Swerve extends Subsystem {
     private Translation2d targetFollowTranslation = new Translation2d();
     private Rotation2d targetHeading = new Rotation2d();
 
-    SynchronousPIDF xPID = new SynchronousPIDF(.8, 0.0, 0);
-    SynchronousPIDF yPID = new SynchronousPIDF(.8, 0.0, 0);
+    SynchronousPIDF xOPID = new SynchronousPIDF(.8, 0.0, 0);
+    SynchronousPIDF yOPID = new SynchronousPIDF(.8, 0.0, 0);
+    SynchronousPIDF xVPID = new SynchronousPIDF(.015, 0.0, 0);
     private double lastTimestamp = Timer.getFPGATimestamp();
 
     public void resetPose(Pose2d newPose) {
@@ -326,10 +328,10 @@ public class Swerve extends Subsystem {
 
         pose = updatedPose;
 
-        // if(visionUpdateTimer.get()>0.1 && Vision.getInstance().hasTarget()){
-        //     pose = new Pose2d( Vision.getInstance().getWeightedPose(updatedPose).getTranslation(), getRobotHeading());
-        //     visionUpdateTimer.reset();
-        // }
+        if(visionUpdateTimer.get()>0.1 && Vision.getInstance().hasTarget()){
+            pose = new Pose2d( Vision.getInstance().getWeightedPose(updatedPose).getTranslation(), getRobotHeading());
+            visionUpdateTimer.reset();
+        }
 
         modules.forEach((m) -> m.resetPose(pose));
         lastUpdateTimestamp = timestamp;
@@ -354,8 +356,8 @@ public class Swerve extends Subsystem {
                 new Pose2d(targetFollowTranslation, targetHeading).toWPI());
 
         Translation2d currentRobotPositionFromStart = pose.getTranslation();
-        double xError = xPID.calculate(targetFollowTranslation.getX() - currentRobotPositionFromStart.getX(), dt);
-        double yError = yPID.calculate(targetFollowTranslation.getY() - currentRobotPositionFromStart.getY(), dt);
+        double xError = xOPID.calculate(targetFollowTranslation.getX() - currentRobotPositionFromStart.getX(), dt);
+        double yError = yOPID.calculate(targetFollowTranslation.getY() - currentRobotPositionFromStart.getY(), dt);
         Logger.getInstance().recordOutput("xError",
                 targetFollowTranslation.getX() - currentRobotPositionFromStart.getX());
         Logger.getInstance().recordOutput("yError",
@@ -601,7 +603,7 @@ public class Swerve extends Subsystem {
         return new Request() {
             @Override
             public void act() {
-                targetNode(node);
+                targetNode(node, false);
             }
 
             @Override
@@ -635,25 +637,28 @@ public class Swerve extends Subsystem {
     }
 
 
-    public Request aimStateRequest(boolean snapUp, boolean snapDown) {
+    public Request aimStateRequest(boolean cube) {
         return new Request() {
+
+
+            public void act() {
+                setState(State.SCORE);
+                targetNode(0, cube);
+            }
 
             @Override
             public void initialize() {
-                aimFinished = false;
+                if(!cube)
+                Vision.getInstance().setPipeline(Constants.VisionConstants.LOW_RETRO_PIPLINE);
+                else
+                Vision.getInstance().setPipeline(Constants.VisionConstants.APRIL_PIPLINE);
             }
 
-            @Override
-            public void act() {
-                setState(State.SCORE);
-                aimAtScore(snapUp, snapDown);
-            }
+    
 
             @Override
             public boolean isFinished() {
-                if (aimFinished)
-                    resetOffset();
-                return aimFinished;
+                return false;
             }
         };
 
@@ -667,8 +672,8 @@ public class Swerve extends Subsystem {
         double currentTime = Timer.getFPGATimestamp();
         double dt = currentTime - chuteLastTimeStamp;
         double Robotx = getPose().getTranslation().getX();
-        xPID.setSetpoint(2);
-        double xError = xPID.calculate(Robotx, dt);
+        xOPID.setSetpoint(2);
+        double xError = xOPID.calculate(Robotx, dt);
         Aim(new Translation2d(-xError, 0), Rotation2d.fromDegrees(rotation));
         if (Math.abs(xError) < .03 && Math.abs(yError) < .3)
             aimTimer.start();
@@ -681,33 +686,34 @@ public class Swerve extends Subsystem {
 
     }
 
-    public void targetNode(int scoringNode) {
+    public void targetNode(int scoringNode, boolean cube) {
+        xVPID.setOutputRange(-.2, .2);
+        xOPID.setOutputRange(-.2, .2);
+
         double Roboty = getPose().getTranslation().getY();
         double Robotx = getPose().getTranslation().getX();
         double rotation = 0;
         if (DriverStation.getAlliance() == Alliance.Blue) {
             rotation = 180;
         }
+        if (DriverStation.getAlliance() == Alliance.Red){
+            rotation = 0;
+        }
         double currentTime = Timer.getFPGATimestamp();
         double dt = currentTime - lastTimeStamp;
 
-        xPID.setSetpoint(2);
-        yPID.setSetpoint(Constants.scoresY.get(scoringNode));
-        double xError = xPID.calculate(Robotx, dt);
-        double yError = yPID.calculate(Roboty, dt);
-        Logger.getInstance().recordOutput("yerror", yError);
-        Logger.getInstance().recordOutput("xerror", xError);
+        xOPID.setSetpoint(2);
+        yOPID.setSetpoint(Constants.scoresY.get(scoringNode));
+        xVPID.setSetpoint(0);
+        double odomentryXError = xOPID.calculate(Robotx - 2, dt);
+        double odometryYError = yOPID.calculate(Roboty - Constants.scoresY.get(scoringNode), dt);
+        double visionXError = xVPID.calculate(-Vision.getInstance().getX(), dt);
 
-        Aim(new Translation2d(-xError, yError), Rotation2d.fromDegrees(rotation));
+        yError = visionXError;
+        Logger.getInstance().recordOutput("yErorr", xError);
 
-        errorFromScore = pose.getTranslation().distance(new Translation2d(2,Constants.scoresY.get(scoringNode)));
-        if (Math.abs(xError) < .3 && Math.abs(yError) < .3)
-            aimTimer.start();
-        else
-            aimTimer.reset();
-        if (aimTimer.get() > .5) {
-            aimFinished = true;
-        }
+
+        Aim(new Translation2d(xError, yError), Rotation2d.fromDegrees(rotation));
         lastTimeStamp = currentTime;
     }
 
@@ -723,7 +729,7 @@ offset++;// sets desired scoring station to snap to the next one up
 offset--;// sets desired scoring station to snap to the next one down
 }
     }
-    public void aimAtScore(boolean snapDown, boolean snapUp) {
+    public void aimAtScore() {
         double Roboty = getPose().getTranslation().getY();
         bestDistance = 11111;
         if (!ran) {
@@ -740,30 +746,10 @@ offset--;// sets desired scoring station to snap to the next one down
 
             }
         }
-        Logger.getInstance().recordOutput("offset", offset);
 
-        if (DriverStation.getAlliance() == Alliance.Blue) {
-            if (Robotx < 2.5) {
-                targetNode(bestScore + offset);
-                Logger.getInstance().recordOutput("BEst", bestScore);
+        targetNode(bestScore, false);
 
-            } else {
-                targetNode(bestScore);
-                Logger.getInstance().recordOutput("BEst", bestScore);
-
-            }
-
-        } else {
-            if (Robotx < 14.02) {
-                targetNode(bestScore + offset);
-                Logger.getInstance().recordOutput("BEst", bestScore);
-
-            } else {
-                targetNode(bestScore);
-                Logger.getInstance().recordOutput("BEst", bestScore);
-            }
-        }
-
+  
     }
 
   
@@ -893,8 +879,8 @@ offset--;// sets desired scoring station to snap to the next one down
         }
         double xSetPoint = (.1 * heading.getCos());
         double ySetPoint = (.1 * heading.getSin());
-        double xError = xPID.calculate(1* heading.getCos(), xSetPoint);
-        double yError = yPID.calculate(1 * heading.getSin(), ySetPoint);
+        double xError = xOPID.calculate(1* heading.getCos(), xSetPoint);
+        double yError = yOPID.calculate(1 * heading.getSin(), ySetPoint);
         double thetaControl = rPID.calculate(1, 0);
 
         Aim(new Translation2d(xError, yError), thetaControl);
