@@ -28,6 +28,8 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 public class Vision extends Subsystem {
   double lastY;
   double lastX;
+  double lastX2;
+
   Swerve swerve = Swerve.getInstance();
   double[] empty = {5.0,5.0,0.0,0.0,0.0,0.0};
 
@@ -114,12 +116,14 @@ public class Vision extends Subsystem {
 
   public boolean hasTarget() {//returns in binary so we convert to boolean 
     double currentX = getX();
-    if(lastX != currentX){
+    if(lastX != currentX || lastX !=lastX2){
       lastX = currentX;
+      lastX2 = lastX;
       return true; 
     }
     else{
       lastX = currentX;
+      lastX2 = lastX;
       return false;
     }
   }

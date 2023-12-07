@@ -326,7 +326,8 @@ public class Swerve extends Subsystem {
 		distanceTraveled += deltaPos.norm();
 		currentVelocity = deltaPos.norm() / (timestamp - lastUpdateTimestamp);
 
-        pose = new Pose2d(new Translation2d(Filter.update(deltaPos.getArray(), Vision.getInstance().getPose().getTranslation().getArray())),getRobotHeading());
+        if(Vision.getInstance().hasTarget())
+             pose = new Pose2d(new Translation2d(Filter.update(deltaPos.getArray(), Vision.getInstance().getPose().getTranslation().getArray())),getRobotHeading());
 
         // if(visionUpdateTimer.get()>0.1 && Vision.getInstance().hasTarget()){
         //     pose = new Pose2d( Vision.getInstance().getWeightedPose(updatedPose).getTranslation(), getRobotHeading());
