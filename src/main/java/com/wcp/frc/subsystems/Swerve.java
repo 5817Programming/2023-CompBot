@@ -21,6 +21,7 @@ import com.wcp.frc.subsystems.gyros.Gyro;
 import com.wcp.frc.subsystems.gyros.    Pigeon;
 import com.wcp.lib.Conversions;
 import com.wcp.lib.HeadingController;
+import com.wcp.lib.KalmanFilter;
 import com.wcp.lib.SwerveInverseKinematics;
 import com.wcp.lib.geometry.Pose2d;
 import com.wcp.lib.geometry.Rotation2d;
@@ -112,6 +113,8 @@ public class Swerve extends Subsystem {
     double xERROR;
     double yERROR;
     boolean targetTracked;
+
+    KalmanFilter filter = new KalmanFilter();
 
     public Swerve() {
         visionUpdateTimer.start();
@@ -321,16 +324,15 @@ public class Swerve extends Subsystem {
 			y += m.getEstimatedRobotPose().getTranslation().getY();
 		}
 		Pose2d updatedPose = new Pose2d(new Translation2d(x / modulesToUse.size(), y / modulesToUse.size()), heading);
-		double deltaPos = updatedPose.getTranslation().translateBy(pose.getTranslation().inverse()).norm();
-        Logger.getInstance().recordOutput("delta pose", deltaPos);
-		distanceTraveled += deltaPos;
-		currentVelocity = deltaPos / (timestamp - lastUpdateTimestamp);
+		Translation2d deltaPos = updatedPose.getTranslation().translateBy(pose.getTranslation().inverse());
+        Logger.getInstance().recordOutput("delta pose", deltaPos.getNorm());
+		distanceTraveled += deltaPos.getNorm();
+		currentVelocity = deltaPos.getNorm() / (timestamp - lastUpdateTimestamp);
 
         pose = updatedPose;
 
-        if(visionUpdateTimer.get()>0.1 && Vision.getInstance().hasTarget()){
-            pose = new Pose2d( Vision.getInstance().getWeightedPose(updatedPose).getTranslation(), getRobotHeading());
-            visionUpdateTimer.reset();
+        if( Vision.getInstance().hasTarget()){
+            pose = new Pose2d( new Translation2d(filter.update(deltaPos.getArray(), Vision.getInstance().getPose().getTranslation().getArray())),getRobotHeading());
         }
 
         modules.forEach((m) -> m.resetPose(pose));

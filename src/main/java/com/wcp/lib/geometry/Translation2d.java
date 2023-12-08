@@ -17,6 +17,10 @@ public class Translation2d extends edu.wpi.first.math.geometry.Translation2d{
         m_x = x;
         m_y = y;
     }
+        public Translation2d(double[] pose) {
+        m_x = pose[0];
+        m_y = pose[1];
+    }
     public Translation2d(final Translation2d otherVec) {
         m_x = otherVec.m_x;
         m_y = otherVec.m_y;
@@ -87,5 +91,9 @@ public class Translation2d extends edu.wpi.first.math.geometry.Translation2d{
 
     public double distance(final Translation2d other) {
         return this.translateBy(other.inverse()).norm();
+    }
+    public double[] getArray(){
+        double[] arrray ={m_x,m_y};
+        return arrray;
     }
 }
