@@ -96,7 +96,7 @@ public class Vision extends SubsystemBase {
     double distanceFromLimelightToGoalInches = (getHeight() - Constants.VisionConstants.LIMELIGHT_LENS_HEIGHT_INCHES)
         / Math.tan(Math.toRadians(Constants.VisionConstants.LIMELIGHT_MOUNT_ANGLE_DEGREES + getY()));
     return distanceFromLimelightToGoalInches > 0 && distanceFromLimelightToGoalInches < 1000
-        ? Units.inchesToMeters(distanceFromLimelightToGoalInches)
+        ? distanceFromLimelightToGoalInches
         : 0;
   }
 
@@ -125,12 +125,13 @@ public class Vision extends SubsystemBase {
     double distanceFromLimelightToGoalInches = (0 - Constants.VisionConstants.LIMELIGHT_LENS_HEIGHT_INCHES)
         / Math.tan(Math.toRadians(Constants.VisionConstants.LIMELIGHT_MOUNT_ANGLE_DEGREES + getY()));
     return distanceFromLimelightToGoalInches > 0 && distanceFromLimelightToGoalInches < 1000
-        ? Units.inchesToMeters(distanceFromLimelightToGoalInches)
+        ? distanceFromLimelightToGoalInches
         : 0;
   }
 
   @Override
   public void periodic() {
+    setPipeline(1);
     range = getDistance();
     Logger.getInstance().recordOutput("range", range);
   }
