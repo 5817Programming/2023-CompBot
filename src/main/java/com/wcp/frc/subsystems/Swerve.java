@@ -297,11 +297,7 @@ public class Swerve extends Subsystem {
 		if(modulesToUse.isEmpty()){
 			modulesToUse.add(modules.get(minDevianceIndex));
 		}
-		
-
-
-		//SmartDashboard.putNumber("Modules Used", modulesToUse.size());
-		
+				
 		for(SwerveDriveModule m : modulesToUse){
 			x += m.getEstimatedRobotPose().getTranslation().x();
 			y += m.getEstimatedRobotPose().getTranslation().y();
@@ -374,8 +370,6 @@ public class Swerve extends Subsystem {
     public void resetTrajectoryFollowed(){
          trajectoryFinished = false;
     }
-
-
 
     public Rotation2dd getRobotHeading() {
         return Rotation2dd.fromDegrees(gyro.getAngle());
