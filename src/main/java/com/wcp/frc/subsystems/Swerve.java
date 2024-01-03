@@ -18,7 +18,7 @@ import com.wcp.frc.Constants;
 import com.wcp.frc.Ports;
 import com.wcp.frc.subsystems.Requests.Request;
 import com.wcp.frc.subsystems.gyros.Gyro;
-import com.wcp.frc.subsystems.gyros.    Pigeon;
+import com.wcp.frc.subsystems.gyros.Pigeon;
 import com.wcp.lib.Conversions;
 import com.wcp.lib.HeadingController;
 import com.wcp.lib.KalmanFilter;
@@ -55,6 +55,7 @@ public class Swerve extends Subsystem {
     SwerveDriveModule frontRightModule, frontLeftModule, rearLeftModule, rearRightModule;
     List<SwerveDriveModule> modules;
     Translation2d aimingVector = new Translation2d();
+    Vision vision;
 
     Translation2d translationVector = new Translation2d();
     public double rotationScalar = 0;
@@ -88,6 +89,16 @@ public class Swerve extends Subsystem {
     double lastUpdateTimestamp = 0;
     double errorFromScore = 0;
 
+    private Translation2d targetFollowTranslation = new Translation2d();
+    private Rotation2d targetHeading = new Rotation2d();
+
+    SynchronousPIDF xOPID = new SynchronousPIDF(.8, 0.0, 0);
+    SynchronousPIDF yOPID = new SynchronousPIDF(.8, 0.0, 0);
+    SynchronousPIDF xVPID = new SynchronousPIDF(.015, 0.0, 0);
+    SynchronousPIDF yVPID = new SynchronousPIDF(.015, 0.0, 0);
+
+
+    private double lastTimestamp = Timer.getFPGATimestamp();
     SwerveInverseKinematics inverseKinematics = new SwerveInverseKinematics();
     public HeadingController headingController = new HeadingController();
 
@@ -145,6 +156,7 @@ public class Swerve extends Subsystem {
 
         pathFollower = PathFollower.getInstance();
         gyro = Pigeon.getInstance();
+        vision = Vision.getInstance();
         visionUpdateTimer.start();
 
     }
@@ -153,7 +165,7 @@ public class Swerve extends Subsystem {
         trajectoryFinished = false;
         pathFollower.setTrajectory(trajectory);
         Pose2d newpose = (pathFollower.getInitial(trajectory));
-        modules.forEach((m) -> m.resetPose(new Pose2d( newpose.getTranslation(),new Rotation2d())));
+        modules.forEach((m) -> m.resetPose(new Pose2d(newpose.getTranslation(), new Rotation2d())));
         pigeon.setAngle(newpose.getRotation().getDegrees());
 
     }
@@ -174,7 +186,6 @@ public class Swerve extends Subsystem {
         return this.currentState;
     }
 
-
     public void setState(State desiredState) {
         currentState = desiredState;
     }
@@ -188,7 +199,7 @@ public class Swerve extends Subsystem {
     }
 
     //
-    public void sendInput(double x,double y, double rotation) {
+    public void sendInput(double x, double y, double rotation) {
         translationVector = new Translation2d(x, y);// makes vector to input
         // sets rotation to zero if it doesnt pass deadband
         if (Math.abs(rotation) <= rotationDeadband) {
@@ -226,7 +237,7 @@ public class Swerve extends Subsystem {
     }
 
     public void updateTrajectory() {
-        Pose2d desiredPose = pathFollower.getDesiredPose2d(useAllianceColor, speed, getPose(),percentToRotate);
+        Pose2d desiredPose = pathFollower.getDesiredPose2d(useAllianceColor, speed, getPose(), percentToRotate);
         scaleFactor = speed;
         targetHeading = desiredPose.getRotation().inverse();
         targetFollowTranslation = desiredPose.getTranslation();
@@ -268,85 +279,75 @@ public class Swerve extends Subsystem {
         }
     }
 
-    private Translation2d targetFollowTranslation = new Translation2d();
-    private Rotation2d targetHeading = new Rotation2d();
-
-    SynchronousPIDF xOPID = new SynchronousPIDF(.8, 0.0, 0);
-    SynchronousPIDF yOPID = new SynchronousPIDF(.8, 0.0, 0);
-    SynchronousPIDF xVPID = new SynchronousPIDF(.015, 0.0, 0);
-    private double lastTimestamp = Timer.getFPGATimestamp();
-
     public void resetPose(Pose2d newPose) {
         modules.forEach((m) -> m.resetPose(newPose));
     }
 
     /** The tried and true algorithm for keeping track of position */
-    public synchronized void updatePose(double timestamp){
-        
-		double x = 0.0;
-		double y = 0.0;
-		Rotation2d heading = getRobotHeading();
-		
-		double averageDistance = 0.0;
-		double[] distances = new double[4];
-		for(SwerveDriveModule m : positionModules){
-			m.updatePose(heading);
-			double distance = m.getEstimatedRobotPose().getTranslation().translateBy(pose.getTranslation().inverse()).norm();
-			distances[m.moduleID] = distance;
-			averageDistance += distance;
-		}
-		averageDistance /= positionModules.size();
-		
-		int minDevianceIndex = 0;
-		double minDeviance = Units.inchesToMeters(100);
-		List<SwerveDriveModule> modulesToUse = new ArrayList<>();
-		for(SwerveDriveModule m : positionModules){
-				double deviance = Math.abs(distances[m.moduleID] - averageDistance);
-				if(deviance < minDeviance){
-					minDeviance = deviance;
-					minDevianceIndex = m.moduleID;
-				}
-				if(deviance <= 10000){
-					modulesToUse.add(m);
-				}
-			}
-		
-		if(modulesToUse.isEmpty()){
-			modulesToUse.add(modules.get(minDevianceIndex));
-		}
-		
+    public synchronized void updatePose(double timestamp) {
 
+        double x = 0.0;
+        double y = 0.0;
+        Rotation2d heading = getRobotHeading();
 
-		//SmartDashboard.putNumber("Modules Used", modulesToUse.size());
-		
-		for(SwerveDriveModule m : modulesToUse){
-			x += m.getEstimatedRobotPose().getTranslation().getX();
-			y += m.getEstimatedRobotPose().getTranslation().getY();
-		}
-		Pose2d updatedPose = new Pose2d(new Translation2d(x / modulesToUse.size(), y / modulesToUse.size()), heading);
-		Translation2d deltaPos = updatedPose.getTranslation().translateBy(pose.getTranslation().inverse());
+        double averageDistance = 0.0;
+        double[] distances = new double[4];
+        for (SwerveDriveModule m : positionModules) {
+            m.updatePose(heading);
+            double distance = m.getEstimatedRobotPose().getTranslation().translateBy(pose.getTranslation().inverse())
+                    .norm();
+            distances[m.moduleID] = distance;
+            averageDistance += distance;
+        }
+        averageDistance /= positionModules.size();
+
+        int minDevianceIndex = 0;
+        double minDeviance = Units.inchesToMeters(100);
+        List<SwerveDriveModule> modulesToUse = new ArrayList<>();
+        for (SwerveDriveModule m : positionModules) {
+            double deviance = Math.abs(distances[m.moduleID] - averageDistance);
+            if (deviance < minDeviance) {
+                minDeviance = deviance;
+                minDevianceIndex = m.moduleID;
+            }
+            if (deviance <= 10000) {
+                modulesToUse.add(m);
+            }
+        }
+
+        if (modulesToUse.isEmpty()) {
+            modulesToUse.add(modules.get(minDevianceIndex));
+        }
+
+        // SmartDashboard.putNumber("Modules Used", modulesToUse.size());
+
+        for (SwerveDriveModule m : modulesToUse) {
+            x += m.getEstimatedRobotPose().getTranslation().getX();
+            y += m.getEstimatedRobotPose().getTranslation().getY();
+        }
+        Pose2d updatedPose = new Pose2d(new Translation2d(x / modulesToUse.size(), y / modulesToUse.size()), heading);
+        Translation2d deltaPos = updatedPose.getTranslation().translateBy(pose.getTranslation().inverse());
         Logger.getInstance().recordOutput("delta pose", deltaPos.getNorm());
-		distanceTraveled += deltaPos.getNorm();
-		currentVelocity = deltaPos.getNorm() / (timestamp - lastUpdateTimestamp);
+        distanceTraveled += deltaPos.getNorm();
+        currentVelocity = deltaPos.getNorm() / (timestamp - lastUpdateTimestamp);
 
         pose = updatedPose;
 
-        if( Vision.getInstance().hasTarget()){
-            pose = new Pose2d( new Translation2d(filter.update(deltaPos.getArray(), Vision.getInstance().getPose().getTranslation().getArray())),getRobotHeading());
+        if (Vision.getInstance().hasTarget()) {
+            pose = new Pose2d(new Translation2d(
+                    filter.update(deltaPos.getArray(), Vision.getInstance().getPose().getTranslation().getArray())),
+                    getRobotHeading());
         }
 
         modules.forEach((m) -> m.resetPose(pose));
         lastUpdateTimestamp = timestamp;
-	}
-
-  
+    }
 
     public void resetOdometry(Pose2d newpose, Rotation2d rotation) {
         Pose2d newpose2 = new Pose2d(newpose.getTranslation(), rotation);
         modules.forEach((m) -> m.resetPose(newpose2));
 
     }
-
 
     public void resetTimer() {
         PathFollower.getInstance().resetTimer();
@@ -439,7 +440,7 @@ public class Swerve extends Subsystem {
             case OFF:
                 commandModules(inverseKinematics.updateDriveVectors(new Translation2d(), 0, drivingpose, robotCentric));
                 break;
-            
+
             case SNAP:
                 headingController.setTargetHeading(targetHeading);
                 rotationCorrection = headingController.getRotationCorrection(getRobotHeading(), timeStamp);
@@ -473,7 +474,7 @@ public class Swerve extends Subsystem {
 
     }
 
-    public void snap(double r){
+    public void snap(double r) {
         targetHeading = Rotation2d.fromDegrees(r);
         headingController.setTargetHeading(targetHeading);
         Logger.getInstance().recordOutput("targetHEadingSnap", r);
@@ -558,26 +559,27 @@ public class Swerve extends Subsystem {
     public Request balanceRequest() {
         return new Request() {
             @Override
-                public void act() {
-                    setState(State.BALANCE);
-                    balance();
-                }
+            public void act() {
+                setState(State.BALANCE);
+                balance();
+            }
 
             @Override
             public boolean isFinished() {
                 // if (balance())
-                //     setState(State.MANUAL);
+                // setState(State.MANUAL);
                 // return balance();
                 return false;
             }
         };
     }
-    public Request setStateRequest(State state){
+
+    public Request setStateRequest(State state) {
         return new Request() {
             @Override
-                public void act() {
-                    setState(state);
-                }
+            public void act() {
+                setState(state);
+            }
         };
     }
 
@@ -586,13 +588,13 @@ public class Swerve extends Subsystem {
 
             @Override
             public void act() {
-              //  goToObject();
+                // goToObject();
             }
 
             @Override
             public boolean isFinished() {
                 // if (goToObject()) {
-                //     setState(State.MANUAL);
+                // setState(State.MANUAL);
                 // }
                 // return goToObject();
                 return true;
@@ -617,17 +619,20 @@ public class Swerve extends Subsystem {
         };
 
     }
+
     public Request goToChuteRequest() {
 
         return new Request() {
             @Override
             public void act() {
                 gotoChute();
-                }
+            }
+
             @Override
             public void initialize() {
                 aimFinished = false;
             }
+
             @Override
             public boolean isFinished() {
                 if (aimFinished)
@@ -638,10 +643,8 @@ public class Swerve extends Subsystem {
 
     }
 
-
     public Request aimStateRequest(boolean cube) {
         return new Request() {
-
 
             public void act() {
                 setState(State.SCORE);
@@ -650,13 +653,11 @@ public class Swerve extends Subsystem {
 
             @Override
             public void initialize() {
-                if(!cube)
-                Vision.getInstance().setPipeline(Constants.VisionConstants.LOW_RETRO_PIPLINE);
+                if (!cube)
+                    Vision.getInstance().setPipeline(Constants.VisionConstants.LOW_RETRO_PIPLINE);
                 else
-                Vision.getInstance().setPipeline(Constants.VisionConstants.APRIL_PIPLINE);
+                    Vision.getInstance().setPipeline(Constants.VisionConstants.APRIL_PIPLINE);
             }
-
-    
 
             @Override
             public boolean isFinished() {
@@ -666,7 +667,7 @@ public class Swerve extends Subsystem {
 
     }
 
-    public void gotoChute(){
+    public void gotoChute() {
         double rotation = -90;
         if (DriverStation.getAlliance() == Alliance.Blue) {
             rotation = 90;
@@ -684,53 +685,41 @@ public class Swerve extends Subsystem {
         if (aimTimer.get() > .5) {
             aimFinished = true;
         }
-                chuteLastTimeStamp = currentTime;
+        chuteLastTimeStamp = currentTime;
 
     }
 
     public void targetNode(int scoringNode, boolean cube) {
-        xVPID.setOutputRange(-.2, .2);
-        xOPID.setOutputRange(-.2, .2);
-
-        double Roboty = getPose().getTranslation().getY();
-        double Robotx = getPose().getTranslation().getX();
-        double rotation = 0;
-        if (DriverStation.getAlliance() == Alliance.Blue) {
-            rotation = 180;
-        }
-        if (DriverStation.getAlliance() == Alliance.Red){
-            rotation = 0;
-        }
+        
+        double rotation = DriverStation.getAlliance() == Alliance.Blue ? 180 : 0;
         double currentTime = Timer.getFPGATimestamp();
         double dt = currentTime - lastTimeStamp;
+        xVPID.setOutputRange(-.2, .2);
+        yVPID.setOutputRange(-.2, .2);
+        
+        yVPID.setSetpoint(2);
 
-        xOPID.setSetpoint(2);
-        yOPID.setSetpoint(Constants.scoresY.get(scoringNode));
-        xVPID.setSetpoint(0);
-        double odomentryXError = xOPID.calculate(Robotx - 2, dt);
-        double odometryYError = yOPID.calculate(Roboty - Constants.scoresY.get(scoringNode), dt);
-        double visionXError = xVPID.calculate(-Vision.getInstance().getX(), dt);
-
-        yError = visionXError;
-        Logger.getInstance().recordOutput("yErorr", xError);
+        xVPID.calculate(vision.getX(), dt);
+        yVPID.calculate(vision.getY()-2, dt);
 
 
         Aim(new Translation2d(xError, yError), Rotation2d.fromDegrees(rotation));
         lastTimeStamp = currentTime;
     }
 
-    public void updateOffset(boolean snapUp, boolean snapDown){
-        if (snapDown && (bestScore + offset +1 < Constants.scoresY.size())) {
+    public void updateOffset(boolean snapUp, boolean snapDown) {
+        if (snapDown && (bestScore + offset + 1 < Constants.scoresY.size())) {
             aimTimer.reset();
             // if wants to move up and isnt at 10 than
             // move up
-offset++;// sets desired scoring station to snap to the next one up
-} else if (snapUp && (bestScore + offset-1 >= 0)) {
-    aimTimer.reset();
-    // if wants to move down and isnt at zero than move down
-offset--;// sets desired scoring station to snap to the next one down
-}
+            offset++;// sets desired scoring station to snap to the next one up
+        } else if (snapUp && (bestScore + offset - 1 >= 0)) {
+            aimTimer.reset();
+            // if wants to move down and isnt at zero than move down
+            offset--;// sets desired scoring station to snap to the next one down
+        }
     }
+
     public void aimAtScore() {
         double Roboty = getPose().getTranslation().getY();
         bestDistance = 11111;
@@ -751,10 +740,7 @@ offset--;// sets desired scoring station to snap to the next one down
 
         targetNode(bestScore, false);
 
-  
     }
-
-  
 
     public boolean isAiming() {
         return !aimFinished;
@@ -774,7 +760,7 @@ offset--;// sets desired scoring station to snap to the next one down
 
     }
 
-    public Request snapRequest( double r) {
+    public Request snapRequest(double r) {
         return new Request() {
 
             @Override
@@ -783,16 +769,15 @@ offset--;// sets desired scoring station to snap to the next one down
                 snap(r);
             }
 
-
             @Override
-            public boolean isFinished(){
-                return Math.abs(headingController.getRotationCorrection(getRobotHeading(), Timer.getFPGATimestamp())) < .1;
+            public boolean isFinished() {
+                return Math
+                        .abs(headingController.getRotationCorrection(getRobotHeading(), Timer.getFPGATimestamp())) < .1;
             }
 
         };
 
     }
-
 
     public Request startPathRequest(double speed, boolean useAllianceColor) {
         return new Request() {
@@ -808,8 +793,6 @@ offset--;// sets desired scoring station to snap to the next one down
             }
         };
     }
-    
-
 
     public Request waitForTrajectoryRequest(double PercentageToRun) {
         return new Request() {
@@ -819,17 +802,13 @@ offset--;// sets desired scoring station to snap to the next one down
             }
         };
     }
-    
-
-    
 
     public Request generateTrajectoryRequest(int node) {
         return new Request() {
 
             @Override
             public void act() {
-                PathPlannerTrajectory 
-                trajectory = PathGenerator.generatePath(new PathConstraints(4, 4),
+                PathPlannerTrajectory trajectory = PathGenerator.generatePath(new PathConstraints(4, 4),
                         new Node(Constants.scoresY.get(node), DriverStation.getAlliance() == Alliance.Blue ? 2 : 14.71),
                         Constants.FieldConstants.obstacles);
                 setTrajectory(trajectory);
@@ -853,7 +832,7 @@ offset--;// sets desired scoring station to snap to the next one down
 
     }
 
-    public Request setTrajectoryRequest(PathPlannerTrajectory trajectory, double x){
+    public Request setTrajectoryRequest(PathPlannerTrajectory trajectory, double x) {
         return new Request() {
 
             @Override
@@ -861,7 +840,7 @@ offset--;// sets desired scoring station to snap to the next one down
                 percentToRotate = x;
                 setTrajectory(trajectory);
             }
-            
+
         };
     }
 
@@ -875,13 +854,13 @@ offset--;// sets desired scoring station to snap to the next one down
     public boolean goToObject(boolean cube) {
         Rotation2d heading = Rotation2d.fromDegrees(pigeon.getAngle());
         if (cube) {
-         //   vision.setPipeline(Constants.VisionConstants.CUBE_PIPELINE);
+            // vision.setPipeline(Constants.VisionConstants.CUBE_PIPELINE);
         } else {
-         //   vision.setPipeline(Constants.VisionConstants.CONE_PIPELNE);
+            // vision.setPipeline(Constants.VisionConstants.CONE_PIPELNE);
         }
         double xSetPoint = (.1 * heading.getCos());
         double ySetPoint = (.1 * heading.getSin());
-        double xError = xOPID.calculate(1* heading.getCos(), xSetPoint);
+        double xError = xOPID.calculate(1 * heading.getCos(), xSetPoint);
         double yError = yOPID.calculate(1 * heading.getSin(), ySetPoint);
         double thetaControl = rPID.calculate(1, 0);
 
@@ -907,7 +886,7 @@ offset--;// sets desired scoring station to snap to the next one down
 
         update();
         commandModuleDrivePowers(0);
-        
+
     }
 
 }

@@ -202,10 +202,10 @@ public class Constants {
             PICKUP_OFFSET);
 
         // how many degrees back is your limelight rotated from perfectly vertical?
-        public final static double LIMELIGHT_MOUNT_ANGLE_DEGREES = 1.4;
+        public final static double LIMELIGHT_MOUNT_ANGLE_DEGREES = 36.5;
 
         // distance from the center of the Limelight lens to the floor
-        public final static double LIMELIGHT_LENS_HEIGHT_INCHES = 28.6;
+        public final static double LIMELIGHT_LENS_HEIGHT_INCHES = 7.5;
         public static final double lowerThreshold = 1.5;
         public static final double upperThreshold = 3.3;
     }
