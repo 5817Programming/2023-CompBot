@@ -104,34 +104,27 @@ public class Vision extends Subsystem {
     
   }
 
+  public boolean hasTarget() {//returns in binary so we convert to boolean 
+    double v = tv.getDouble(0.0);
+    if (v == 0.0f) {
+      return false;
+    } else {
+      return true;
+    }
+  }
+
   // public boolean hasTarget() {//returns in binary so we convert to boolean 
-  //   double v = tv.getDouble(0.0);
-  //   if (v == 0.0f) {
+  //   double currentX = getX();
+  //   if(lastX != currentX){
+  //     lastX = currentX;
+  //     return true; 
+  //   }
+  //   else{
+  //     lastX = currentX;
   //     return false;
-  //   } else {
-  //     return true;
   //   }
   // }
-
-  public boolean hasTarget() {//returns in binary so we convert to boolean 
-    double currentX = getX();
-    if(lastX != currentX){
-      lastX = currentX;
-      return true; 
-    }
-    else{
-      lastX = currentX;
-      return false;
-    }
-  }
-  @Override
-  public void update(){
-    Logger.getInstance().recordOutput("Xpos", getX());   
-
-
-    getPose();
-    hasTarget();
-  }
+  
   public void setIndex(double pipelineIndex, int _setPoint){//sets pipline index
     table.getEntry("pipeline").setNumber(pipelineIndex);   
     this.setPoint = _setPoint;
@@ -154,7 +147,11 @@ public class Vision extends Subsystem {
   }
 
   public double getDistance(){//gets distance to target
-    double distanceFromLimelightToGoalInches = (getHeight() - Constants.VisionConstants.LIMELIGHT_LENS_HEIGHT_INCHES)/Math.tan(Math.toRadians(Constants.VisionConstants.LIMELIGHT_MOUNT_ANGLE_DEGREES + getY()));
+    double distanceFromLimelightToGoalInches = (Constants.VisionConstants.APRIL_HEIGHT_INCHES - Constants.VisionConstants.LIMELIGHT_LENS_HEIGHT_INCHES)/Math.tan(Math.toRadians(Constants.VisionConstants.LIMELIGHT_MOUNT_ANGLE_DEGREES + getY()));
+  return distanceFromLimelightToGoalInches>0&&distanceFromLimelightToGoalInches<1000?Units.inchesToMeters(distanceFromLimelightToGoalInches):0;
+  }
+  public double getDistanceObject(){//gets distance to target
+    double distanceFromLimelightToGoalInches = (-Constants.VisionConstants.LIMELIGHT_LENS_HEIGHT_INCHES)/Math.tan(Math.toRadians(Constants.VisionConstants.LIMELIGHT_MOUNT_ANGLE_DEGREES + getY()));
   return distanceFromLimelightToGoalInches>0&&distanceFromLimelightToGoalInches<1000?Units.inchesToMeters(distanceFromLimelightToGoalInches):0;
   }
   public void setPipeline(Integer pipeline) {
@@ -188,17 +185,25 @@ public class Vision extends Subsystem {
     double distanceFromLimelightToGoalInches = (0 - Constants.VisionConstants.LIMELIGHT_LENS_HEIGHT_INCHES)/Math.tan(Math.toRadians(Constants.VisionConstants.LIMELIGHT_MOUNT_ANGLE_DEGREES + getY()));
   return distanceFromLimelightToGoalInches>0&&distanceFromLimelightToGoalInches<1000?Units.inchesToMeters(distanceFromLimelightToGoalInches):0;
   }
+  @Override
+  public void update(){
+    Logger.getInstance().recordOutput("Xpos", getX());   
+    
+    getPose();
+    hasTarget();
+  }
 
   @Override
   public void outputTelemetry() {
-    Logger.getInstance().recordOutput("LastX", lastX);
-    Logger.getInstance().recordOutput("LastY", lastY);
+    Logger.getInstance().recordOutput("Distance", getDistance());
     Logger.getInstance().recordOutput("hasTarget", hasTarget());
     Logger.getInstance().recordOutput("tx", tx.getDouble(0.0));
-    Logger.getInstance().recordOutput("ty", ty.getDouble(0.0));        Logger.getInstance().recordOutput("WeightedPose", getPose());
-    Logger.getInstance().recordOutput("WeightedPose", getPose());
+    Logger.getInstance().recordOutput("ty", ty.getDouble(0.0));
+    Logger.getInstance().recordOutput("ta", ta.getDouble(0.0));
+    
 
   }
+  
 
   @Override
   public void stop() {

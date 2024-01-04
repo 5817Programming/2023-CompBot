@@ -16,6 +16,7 @@
       "/LiveWindow/Ungrouped/Spark[2]": "Motor Controller",
       "/LiveWindow/Vision": "Subsystem",
       "/SmartDashboard/Auto choices": "String Chooser",
+      "/SmartDashboard/Autonomous routine": "String Chooser",
       "/SmartDashboard/Choose Auto: ": "String Chooser"
     }
   },

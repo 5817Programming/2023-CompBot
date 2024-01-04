@@ -47,7 +47,6 @@ public class SuperStructure extends Subsystem {
 
     }
 
-
     public static SuperStructure instance = null;
 
     public static SuperStructure getInstance() {
@@ -55,12 +54,12 @@ public class SuperStructure extends Subsystem {
             instance = new SuperStructure();
         return instance;
     }
+
     private RequestList activeRequests;
     private RequestList idleRequests;
     private Translation2d swerveControls = new Translation2d();
     private double swerveRotation = 0;
     Request currentRequest;
-
 
     private boolean newRequests;
     private boolean activeRequestsComplete = true;
@@ -71,16 +70,16 @@ public class SuperStructure extends Subsystem {
     private boolean requestsCompleted() {
         return activeRequestsComplete;
     }
-    
+
     State currentState = State.ZERO;
     State savedState = State.ZERO;
     PreState currentUnprocessedState = PreState.ZERO;
-    
+
     boolean lockElevator = false;
     boolean cube = false;
     boolean isIntaking = false;
-    
-    public enum GameState{
+
+    public enum GameState {
         GETPIECE,
         SCORE,
         CHARGE;
@@ -91,7 +90,7 @@ public class SuperStructure extends Subsystem {
         MID,
         LOW,
         HOOMAN,
-        CHUTE,  
+        CHUTE,
         ZERO,
         GROUND;
 
@@ -181,8 +180,6 @@ public class SuperStructure extends Subsystem {
         queuedRequests.add(new RequestList(Arrays.asList(request), false));
     }
 
-
-
     public void queue(RequestList list) {
         queuedRequests.add(list);
     }
@@ -190,7 +187,8 @@ public class SuperStructure extends Subsystem {
     public void replaceQueue(Request request) {
         setQueueRequests(new RequestList(Arrays.asList(request), false));
     }
-    public synchronized void clearQueues(){
+
+    public synchronized void clearQueues() {
         queuedRequests.clear();
         activeRequests = new RequestList();
         activeRequestsComplete = true;
@@ -216,27 +214,25 @@ public class SuperStructure extends Subsystem {
                     currentState = State.HIGHCUBE;
                 else
                     currentState = State.HIGHCONE;
-            break;
+                break;
 
             case MID:
                 if (cube)
                     currentState = State.MIDCUBE;
                 else
                     currentState = State.MIDCONE;
-            break;
+                break;
 
             case LOW:
                 if (cube)
                     currentState = State.LOWCUBE;
                 else
                     currentState = State.LOWCONE;
-            break;
-
-
+                break;
 
             case ZERO:
                 currentState = State.ZERO;
-            break;
+                break;
         }
     }
 
@@ -249,7 +245,7 @@ public class SuperStructure extends Subsystem {
         processState();
     }
 
-    public void setPiece(){
+    public void setPiece() {
         cube = !cube;
         processState();
     }
@@ -262,19 +258,21 @@ public class SuperStructure extends Subsystem {
     public void update() {
         synchronized (SuperStructure.this) {
 
-            if(!activeRequestsComplete){
-                if(newRequests){
-                    if(activeRequests.isParallel()){
+            if (!activeRequestsComplete) {
+                if (newRequests) {
+                    if (activeRequests.isParallel()) {
                         boolean allActivated = true;
-                        for(Iterator<Request> iterator = activeRequests.getRequests().iterator(); iterator.hasNext();){
+                        for (Iterator<Request> iterator = activeRequests.getRequests().iterator(); iterator
+                                .hasNext();) {
                             Request request = iterator.next();
                             boolean allowed = request.allowed();
                             allActivated &= allowed;
-                            if(allowed) request.act();
+                            if (allowed)
+                                request.act();
                         }
                         newRequests = !allActivated;
-                    }else{
-                        if(activeRequests.isEmpty()){
+                    } else {
+                        if (activeRequests.isEmpty()) {
                             activeRequestsComplete = true;
                             return;
                         }
@@ -284,103 +282,91 @@ public class SuperStructure extends Subsystem {
                         newRequests = false;
                     }
                 }
-                if(activeRequests.isParallel()){
+                if (activeRequests.isParallel()) {
                     boolean done = true;
-                    for(Request request : activeRequests.getRequests()){
+                    for (Request request : activeRequests.getRequests()) {
                         done &= request.isFinished();
                     }
                     activeRequestsComplete = done;
-                }else if(currentRequest.isFinished()){
-                        if(activeRequests.isEmpty()){
-                            activeRequestsComplete = true;
-                        }else if(activeRequests.getRequests().get(0).allowed()){
-                            newRequests = true;
-                            activeRequestsComplete = false;
-                        }
-                }else{
+                } else if (currentRequest.isFinished()) {
+                    if (activeRequests.isEmpty()) {
+                        activeRequestsComplete = true;
+                    } else if (activeRequests.getRequests().get(0).allowed()) {
+                        newRequests = true;
+                        activeRequestsComplete = false;
+                    }
+                } else {
                     currentRequest.act();
                 }
-            }else{
-                if(!queuedRequests.isEmpty()){
+            } else {
+                if (!queuedRequests.isEmpty()) {
                     setActiveRequests(queuedRequests.remove(0));
-                }else{
+                } else {
                     idleState();
-                    for(Iterator<Request> iterator = idleRequests.getRequests().iterator(); iterator.hasNext();){
+                    for (Iterator<Request> iterator = idleRequests.getRequests().iterator(); iterator.hasNext();) {
                         Request request = iterator.next();
                         boolean allowed = request.allowed();
-                        if(allowed) request.act();
+                        if (allowed)
+                            request.act();
                     }
                     activeRequestsComplete = true;
                 }
             }
 
-            } 
         }
-    
+    }
 
-    public void aimState() {
-            RequestList request = new RequestList(Arrays.asList(
-                logCurrentRequest("aim"),
-                swerve.aimStateRequest(cube)
-            ), false);
-       request(request);
+    public void nodeState() {
+        RequestList request = new RequestList(Arrays.asList(
+                logCurrentRequest("nodeaim"),
+                swerve.aimStateRequest(cube)), false);
+        queue(request);
 
     }
 
-    public void outtakeState(boolean cube){
+    public void outtakeState(boolean cube) {
         RequestList request = new RequestList(Arrays.asList(
-            logCurrentRequest("outtake"),
-            intake.percentOutputRequest(1,!this.cube))
-            , false);
+                logCurrentRequest("outtake"),
+                intake.percentOutputRequest(1, !this.cube)), false);
         queue(request);
     }
 
-    public void balanceState(){
+    public void balanceState() {
         queue(swerve.balanceRequest());
-    } 
-    public void snapState(double r){
+    }
+
+    public void snapState(double r) {
         request(swerve.snapRequest(r));
     }
 
-    public void toChuteState(){
+    public void toChuteState() {
         RequestList request = new RequestList(Arrays.asList(
-            logCurrentRequest("toChute"),
-            elevator.idleRequest(),
-            sideElevator.stateRequest(SideElevator.State.ZERO),
-            arm.stateRequest(Arm.State.ZERO))
-            , true);
+                logCurrentRequest("toChute"),
+                elevator.idleRequest(),
+                sideElevator.stateRequest(SideElevator.State.ZERO),
+                arm.stateRequest(Arm.State.ZERO)), true);
         RequestList queue = new RequestList(Arrays.asList(
-            swerve.goToChuteRequest(),
-            arm.stateRequest(Arm.State.CHUTE),
-            intake.percentOutputRequest(!cube),
-            intake.waitUntilIntakedPieceRequest(true),
-            intake.stopIntakeRequest())
-            ,false);
+                swerve.goToChuteRequest(),
+                arm.stateRequest(Arm.State.CHUTE),
+                intake.percentOutputRequest(!cube),
+                intake.waitUntilIntakedPieceRequest(true),
+                intake.stopIntakeRequest()), false);
         request(request, queue);
     }
 
-    public boolean elevatorIsLocked(){
+    public boolean elevatorIsLocked() {
         return lockElevator;
     }
 
-    public void objectTargetState(){
+    public void objectTargetState() {
         RequestList request = new RequestList(Arrays.asList(
-            logCurrentRequest("objectTarget"),
-            elevator.stateRequest(Elevator.State.PICKUP),
-            arm.stateRequest(Arm.State.PICKUP),
-            sideElevator.stateRequest(SideElevator.State.PICKUP),
-            intake.percentOutputRequest(1,cube)
-        ),true);
-        RequestList queue = new RequestList(Arrays.asList(
-            swerve.objectTartgetRequest(),
-            intake.waitUntilIntakedPieceRequest(true),
-            intake.stopIntakeRequest(),
-            intake.intakeBrakeRequest(),
-            swerve.openLoopRequest(swerveControls, swerveRotation)
-        ),false);
-        request(request,queue);
+                logCurrentRequest("objectTarget"),
+                swerve.objectTargetRequest()
+                ), false);
+        queue(request);
     }
-    public void targetNodeState(int node){
+
+    public void targetNodeState(int node) {
         RequestList request = new RequestList(Arrays.asList(
                 logCurrentRequest("targetNode"),
                 arm.stateRequest(Arm.State.ZERO),
@@ -393,325 +379,313 @@ public class SuperStructure extends Subsystem {
                 arm.stateRequest(currentState.armState),
                 elevator.stateRequest(currentState.elevatorState),
                 intake.percentOutputRequest(!cube),
-                swerve.openLoopRequest(swerveControls, swerveRotation)
-                ),
-                 false);
-            request(request,queue);
+                swerve.openLoopRequest(swerveControls, swerveRotation)),
+                false);
+        request(request, queue);
     }
 
     public void idleState() {
         currentRequestLog = "idle";
         RequestList request = new RequestList(Arrays.asList(
-            swerve.openLoopRequest(swerveControls, swerveRotation),
-            elevator.idleRequest(),
-            sideElevator.stateRequest(SideElevator.State.ZERO),
-            arm.stateRequest(Arm.State.ZERO),
-            lights.lightRequest(cube ? Lights.State.CUBE: Lights.State.CONE),
-            vision.pipleLineRequest(Constants.VisionConstants.APRIL_PIPLINE)
-        ), true);
+                swerve.openLoopRequest(swerveControls, swerveRotation),
+                elevator.idleRequest(),
+                sideElevator.stateRequest(SideElevator.State.ZERO),
+                arm.stateRequest(Arm.State.ZERO),
+                lights.lightRequest(cube ? Lights.State.CUBE : Lights.State.CONE),
+                vision.pipleLineRequest(Constants.VisionConstants.APRIL_PIPLINE)), true);
         idleRequests = request;
     }
-    public Request waitForElevators(){
+
+    public Request waitForElevators() {
         return new Request() {
 
             @Override
             public void act() {
                 // TODO Auto-generated method stub
-                
+
             }
+
             @Override
-            public boolean isFinished(){
+            public boolean isFinished() {
                 boolean done = ((elevator.isFinished() & sideElevator.isFinished()) & arm.isFinished());
                 return done;
             }
-            
+
         };
     }
 
-    public void setIntakePercentOutputState(double precent){
+    public void setIntakePercentOutputState(double precent) {
         request(intake.setPercentRequest(precent));
     }
 
-    public void scoreState(PreState state, boolean cube){
+    public void scoreState(PreState state, boolean cube) {
         currentUnprocessedState = state;
         setPiece(cube);
         RequestList request = new RequestList(Arrays.asList(
-            logCurrentRequest("score"),
-            swerve.setStateRequest(Swerve.State.OFF),
-            sideElevator.stateRequest(currentState.sideElevatorState),
-            arm.stateRequest(currentState.armState),
-            elevator.stateRequest(currentState.elevatorState),
-            waitForElevators()
-            ),false);
+                logCurrentRequest("score"),
+                swerve.setStateRequest(Swerve.State.OFF),
+                sideElevator.stateRequest(currentState.sideElevatorState),
+                arm.stateRequest(currentState.armState),
+                elevator.stateRequest(currentState.elevatorState),
+                waitForElevators()), false);
         RequestList queue = new RequestList(Arrays.asList(
-            intake.percentOutputRequest(!this.cube),
-            intake.stopIntakeRequest()
-            ),false);
+                intake.percentOutputRequest(!this.cube),
+                intake.stopIntakeRequest()), false);
         queue(request);
         queue(queue);
     }
-    public void scoreState(State state){
+
+    public void scoreState(State state) {
         currentState = state;
         RequestList request = new RequestList(Arrays.asList(
-            logCurrentRequest("score"),
-            swerve.setStateRequest(Swerve.State.OFF),
-            sideElevator.stateRequest(currentState.sideElevatorState),
-            arm.stateRequest(currentState.armState),
-            elevator.stateRequest(currentState.elevatorState),
-            waitForElevators()
-            ),false);
+                logCurrentRequest("score"),
+                swerve.setStateRequest(Swerve.State.OFF),
+                sideElevator.stateRequest(currentState.sideElevatorState),
+                arm.stateRequest(currentState.armState),
+                elevator.stateRequest(currentState.elevatorState),
+                waitForElevators()), false);
         RequestList queue = new RequestList(Arrays.asList(
-            intake.percentOutputRequest(!this.cube),
-            intake.stopIntakeRequest()
-            ),false);
+                intake.percentOutputRequest(!this.cube),
+                intake.stopIntakeRequest()), false);
         request(request, queue);
-        
+
     }
 
-    public void trajectoryState(int node){
+    public void trajectoryState(int node) {
         RequestList request = new RequestList(Arrays.asList(
-            logCurrentRequest("trajectory"),
-            swerve.generateTrajectoryRequest(node),
-            swerve.startPathRequest(4, true)
-        ),false);
+                logCurrentRequest("trajectory"),
+                swerve.generateTrajectoryRequest(node),
+                swerve.startPathRequest(4, true)), false);
         request(request);
     }
 
-    public void trajectoryState(Node node){
+    public void trajectoryState(Node node) {
         RequestList request = new RequestList(Arrays.asList(
-            logCurrentRequest("trajectory"),
-            swerve.generateTrajectoryRequest(node),
-            swerve.startPathRequest(4, true)
-        ),false);
-       request(request);
+                logCurrentRequest("trajectory"),
+                swerve.generateTrajectoryRequest(node),
+                swerve.startPathRequest(4, true)), false);
+        request(request);
     }
 
-    
-    public void trajectoryState(PathPlannerTrajectory trajectory, double x,boolean parrellel){
+    public void trajectoryState(PathPlannerTrajectory trajectory, double x, boolean parrellel) {
         RequestList request = new RequestList(Arrays.asList(
-            logCurrentRequest("trajectory"),
-            elevator.idleRequest(),
-            sideElevator.stateRequest(SideElevator.State.ZERO),
-            arm.stateRequest(Arm.State.ZERO),
-            intake.intakeBrakeRequest(),
-            lights.lightRequest(cube ? Lights.State.CUBE: Lights.State.CONE)
-        ), true);
+                logCurrentRequest("trajectory"),
+                elevator.idleRequest(),
+                sideElevator.stateRequest(SideElevator.State.ZERO),
+                arm.stateRequest(Arm.State.ZERO),
+                intake.intakeBrakeRequest(),
+                lights.lightRequest(cube ? Lights.State.CUBE : Lights.State.CONE)), true);
         RequestList queue = new RequestList(Arrays.asList(
-            swerve.setTrajectoryRequest(trajectory, x),
-             swerve.startPathRequest(4, true)
-        ),parrellel);
-       queue(request);
-       queue(queue);
+                swerve.setTrajectoryRequest(trajectory, x),
+                swerve.startPathRequest(4, true)), parrellel);
+        queue(request);
+        queue(queue);
     }
-    public void trajectoryState(PathPlannerTrajectory trajectory,boolean parrellel){
+
+    public void trajectoryState(PathPlannerTrajectory trajectory, boolean parrellel) {
         RequestList request = new RequestList(Arrays.asList(
-            logCurrentRequest("trajectory"),
-            elevator.idleRequest(),
-            sideElevator.stateRequest(SideElevator.State.ZERO),
-            arm.stateRequest(Arm.State.ZERO),
-            intake.intakeBrakeRequest(),
-            lights.lightRequest(cube ? Lights.State.CUBE: Lights.State.CONE)
-        ), true);
+                logCurrentRequest("trajectory"),
+                elevator.idleRequest(),
+                sideElevator.stateRequest(SideElevator.State.ZERO),
+                arm.stateRequest(Arm.State.ZERO),
+                intake.intakeBrakeRequest(),
+                lights.lightRequest(cube ? Lights.State.CUBE : Lights.State.CONE)), true);
         RequestList queue = new RequestList(Arrays.asList(
-            swerve.setTrajectoryRequest(trajectory, 0),
-             swerve.startPathRequest(4, true)
-        ),parrellel);
-       queue(request);
-       queue(queue);
+                swerve.setTrajectoryRequest(trajectory, 0),
+                swerve.startPathRequest(4, true)), parrellel);
+        queue(request);
+        queue(queue);
     }
-    public void waitForTrajectoryState(double PercentageToRun){
+
+    public void waitForTrajectoryState(double PercentageToRun) {
         RequestList request = new RequestList(Arrays.asList(
-            swerve.waitForTrajectoryRequest(PercentageToRun)
-        ),
-        false);
+                swerve.waitForTrajectoryRequest(PercentageToRun)),
+                false);
         queue(request);
     }
-  
-    public void scoreState(PreState state){
+
+    public void scoreState(PreState state) {
         processState();
         RequestList request = new RequestList(Arrays.asList(
-            logCurrentRequest("score"),
-            swerve.setStateRequest(Swerve.State.OFF),
-            sideElevator.stateRequest(currentState.sideElevatorState),
-            arm.stateRequest(currentState.armState),
-            elevator.stateRequest(currentState.elevatorState)
-            ),false);
+                logCurrentRequest("score"),
+                swerve.setStateRequest(Swerve.State.OFF),
+                sideElevator.stateRequest(currentState.sideElevatorState),
+                arm.stateRequest(currentState.armState),
+                elevator.stateRequest(currentState.elevatorState)), false);
 
         request(request);
     }
-    public void scoreReleaseState(){
+
+    public void scoreReleaseState() {
         RequestList request = new RequestList(Arrays.asList(
-            logCurrentRequest("scoreRelease"),
-            intake.percentOutputRequest(!this.cube),
-            intake.stopIntakeRequest(),
-            lockElevatorRequest(false)
-        ), false);
+                logCurrentRequest("scoreRelease"),
+                intake.percentOutputRequest(!this.cube),
+                intake.stopIntakeRequest(),
+                lockElevatorRequest(false)), false);
         request(request);
     }
-    
 
-    public Request lockElevatorRequest(){
-        return new Request(){
-            @Override
-                public void act(){
-                    lockElevator = !lockElevator;
-                }
-        };
-    }
-
-    public Request lockElevatorRequest(boolean lock){
-        return new Request(){
-            @Override
-                public void act(){
-                    lockElevator = lock;
-                }
-        };
-    }
-
-    public Request logCurrentRequest(String newLog){
+    public Request lockElevatorRequest() {
         return new Request() {
-            @Override  
-                public void act(){
-                    currentRequestLog = newLog;
-                    RequestLogSwitch++;
-                }
+            @Override
+            public void act() {
+                lockElevator = !lockElevator;
+            }
         };
     }
-    public void scoreState(){
+
+    public Request lockElevatorRequest(boolean lock) {
+        return new Request() {
+            @Override
+            public void act() {
+                lockElevator = lock;
+            }
+        };
+    }
+
+    public Request logCurrentRequest(String newLog) {
+        return new Request() {
+            @Override
+            public void act() {
+                currentRequestLog = newLog;
+                RequestLogSwitch++;
+            }
+        };
+    }
+
+    public void scoreState() {
         RequestList request = new RequestList(Arrays.asList(
-            logCurrentRequest("scoreState"),
-            sideElevator.stateRequest(currentState.sideElevatorState),
-            arm.stateRequest(currentState.armState),
-            elevator.stateRequest(currentState.elevatorState),
-            waitForElevators(),
-            lockElevatorRequest(true),
-            neverRequest()
-            ),false);
+                logCurrentRequest("scoreState"),
+                sideElevator.stateRequest(currentState.sideElevatorState),
+                arm.stateRequest(currentState.armState),
+                elevator.stateRequest(currentState.elevatorState),
+                waitForElevators(),
+                lockElevatorRequest(true),
+                neverRequest()), false);
         request(request);
     }
-    public void intakeState(){
-        if(!cube)
-        intake.setPercentOutput(-.4);
+
+    public void intakeState() {
+        if (!cube)
+            intake.setPercentOutput(-.4);
     }
-    public void stopIntake(){
+
+    public void stopIntake() {
         intake.setPercentOutput(0);
     }
-    public void countinousIntakeState(){
+
+    public void countinousIntakeState() {
         RequestList queue = new RequestList(Arrays.asList(
-            intake.continuousIntakeRequest(!cube)
-        ),false);      
-        request(queue);  
+                intake.continuousIntakeRequest(!cube)), false);
+        request(queue);
     }
-    public void intakeState(PreState state){
+
+    public void intakeState(PreState state) {
         State intakeState = State.ZERO;
-        switch(state){
+        switch (state) {
             case HOOMAN:
-            if (cube)
-                intakeState = State.HUMANCUBE;
-            else
-                intakeState = State.HUMANCONE;
-            break;
+                if (cube)
+                    intakeState = State.HUMANCUBE;
+                else
+                    intakeState = State.HUMANCONE;
+                break;
 
             case CHUTE:
                 intakeState = State.CHUTE;
-            break;
+                break;
 
             case GROUND:
                 intakeState = State.GROUND;
-            break;
+                break;
         }
 
-            RequestList request = new RequestList(Arrays.asList(
+        RequestList request = new RequestList(Arrays.asList(
                 logCurrentRequest("Intake"),
                 intake.continuousIntakeRequest(cube),
                 elevator.stateRequest(intakeState.elevatorState),
                 sideElevator.stateRequest(intakeState.sideElevatorState),
-                arm.stateRequest(intakeState.armState)
-            ), true);
-            RequestList queue = new RequestList(Arrays.asList(
-                intake.waitUntilIntakedPieceRequest(false)
-            ),false);        
-            request(request, queue);
+                arm.stateRequest(intakeState.armState)), true);
+        RequestList queue = new RequestList(Arrays.asList(
+                intake.waitUntilIntakedPieceRequest(false)), false);
+        request(request, queue);
     }
-    public void intakeState(PreState state, boolean cube,boolean timer){
+
+    public void intakeState(PreState state, boolean cube, boolean timer) {
 
         setPiece(cube);
         State intakeState = State.ZERO;
-        switch(state){
+        switch (state) {
             case HOOMAN:
-            if (cube)
-                intakeState = State.HUMANCUBE;
-            else
-                intakeState = State.HUMANCONE;
-            break;
+                if (cube)
+                    intakeState = State.HUMANCUBE;
+                else
+                    intakeState = State.HUMANCONE;
+                break;
 
             case CHUTE:
                 intakeState = State.CHUTE;
-            break;
+                break;
 
             case GROUND:
                 intakeState = State.GROUND;
-            break;
+                break;
         }
 
-            RequestList request = new RequestList(Arrays.asList(
+        RequestList request = new RequestList(Arrays.asList(
                 logCurrentRequest("intakeState"),
                 intake.continuousIntakeRequest(cube),
                 elevator.stateRequest(intakeState.elevatorState),
                 sideElevator.stateRequest(intakeState.sideElevatorState),
-                arm.stateRequest(intakeState.armState)
-            ), true);
-            RequestList queue = new RequestList(Arrays.asList(
-                intake.waitUntilIntakedPieceRequest(timer)
-            ),false);      
-            queue(request);
-            queue(queue);  
+                arm.stateRequest(intakeState.armState)), true);
+        RequestList queue = new RequestList(Arrays.asList(
+                intake.waitUntilIntakedPieceRequest(timer)), false);
+        queue(request);
+        queue(queue);
     }
 
-    
-
-  
-    public Request waitRequest(double waitTime){
+    public Request waitRequest(double waitTime) {
         return new Request() {
             Timer timer = new Timer();
-            @Override
-                public boolean isFinished(){
-                    if(timer.hasElapsed(waitTime)){
-                        timer.reset();
-                        return true;
-                    }
-                    else return timer.hasElapsed(waitTime);
-                }
-        
 
             @Override
-                public void act() {
-                    timer.start();                    
-                }};
+            public boolean isFinished() {
+                if (timer.hasElapsed(waitTime)) {
+                    timer.reset();
+                    return true;
+                } else
+                    return timer.hasElapsed(waitTime);
+            }
+
+            @Override
+            public void act() {
+                timer.start();
+            }
+        };
     }
-    public Request neverRequest(){
+
+    public Request neverRequest() {
         return new Request() {
             @Override
-                public boolean isFinished(){
-                 
-                    return false;
-                }
-        
+            public boolean isFinished() {
+
+                return false;
+            }
 
             @Override
-                public void act() {
-                }};
+            public void act() {
+            }
+        };
     }
 
-    public void actOnGameState(){
-        
+    public void actOnGameState() {
+
     }
 
     @Override
     public void outputTelemetry() {
         Logger.getInstance().recordOutput("RequestsCompleted", requestsCompleted());
         Logger.getInstance().recordOutput("CurrentRequest", currentRequestLog);
-        Logger.getInstance().recordOutput("RequestSwitch", RequestLogSwitch%2);
+        Logger.getInstance().recordOutput("RequestSwitch", RequestLogSwitch % 2);
     }
 
     @Override

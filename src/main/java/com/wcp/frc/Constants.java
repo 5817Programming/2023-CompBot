@@ -87,7 +87,7 @@ public class Constants {
     //originally +180 to each
     public static final double kFrontRightStartingEncoderPosition = -81.6; //-354.950352
     public static final double kFrontLeftStartingEncoderPosition = -287.3; //-263.094811
-    public static final double kRearLeftStartingEncoderPosition = -90-284; //-121.094031
+    public static final double kRearLeftStartingEncoderPosition = -126; //-121.094031
     public static final double kRearRightStartingEncoderPosition = -112.1; //-355.170825    
         
         
@@ -187,7 +187,7 @@ public class Constants {
         public final static int LOW_RETRO_PIPLINE = 3;
         public final static int APRIL_PIPLINE = 0;
 
-        public final static double APRIL_HEIGHT_INCHES = 18.467;
+        public final static double APRIL_HEIGHT_INCHES = 9;
         public final static double RETRO_HEIGHT_INCHES = 26.063;
         public final static double PICKUP_HEIGHT_INCHES = 0;
         public final static double HOOMAN_HEIGHT_INCHES = 27;
@@ -202,10 +202,10 @@ public class Constants {
             PICKUP_OFFSET);
 
         // how many degrees back is your limelight rotated from perfectly vertical?
-        public final static double LIMELIGHT_MOUNT_ANGLE_DEGREES = 36.5;
+        public final static double LIMELIGHT_MOUNT_ANGLE_DEGREES =3;
 
         // distance from the center of the Limelight lens to the floor
-        public final static double LIMELIGHT_LENS_HEIGHT_INCHES = 7.5;
+        public final static double LIMELIGHT_LENS_HEIGHT_INCHES = 6.7;
         public static final double lowerThreshold = 1.5;
         public static final double upperThreshold = 3.3;
     }

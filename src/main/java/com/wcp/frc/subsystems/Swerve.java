@@ -10,6 +10,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.littletonrobotics.junction.Logger;
+import org.opencv.core.Mat;
 
 import com.ctre.phoenix.motorcontrol.TalonFXInvertType;
 import com.pathplanner.lib.PathConstraints;
@@ -32,6 +33,7 @@ import com.wcp.lib.util.PathGenerator;
 import com.wcp.lib.util.SynchronousPIDF;
 import com.wcp.lib.util.Util;
 
+import edu.wpi.first.apriltag.AprilTag;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
@@ -55,7 +57,6 @@ public class Swerve extends Subsystem {
     SwerveDriveModule frontRightModule, frontLeftModule, rearLeftModule, rearRightModule;
     List<SwerveDriveModule> modules;
     Translation2d aimingVector = new Translation2d();
-    Vision vision;
 
     Translation2d translationVector = new Translation2d();
     public double rotationScalar = 0;
@@ -94,9 +95,9 @@ public class Swerve extends Subsystem {
 
     SynchronousPIDF xOPID = new SynchronousPIDF(.8, 0.0, 0);
     SynchronousPIDF yOPID = new SynchronousPIDF(.8, 0.0, 0);
-    SynchronousPIDF xVPID = new SynchronousPIDF(.015, 0.0, 0);
-    SynchronousPIDF yVPID = new SynchronousPIDF(.015, 0.0, 0);
-
+    SynchronousPIDF xVPID = new SynchronousPIDF(.008, 0.0, 0);
+    SynchronousPIDF yVPID = new SynchronousPIDF(.35, 0.0, 0);
+    SynchronousPIDF aVPID = new SynchronousPIDF(.015, 0.0, 0);
 
     private double lastTimestamp = Timer.getFPGATimestamp();
     SwerveInverseKinematics inverseKinematics = new SwerveInverseKinematics();
@@ -156,7 +157,6 @@ public class Swerve extends Subsystem {
 
         pathFollower = PathFollower.getInstance();
         gyro = Pigeon.getInstance();
-        vision = Vision.getInstance();
         visionUpdateTimer.start();
 
     }
@@ -333,11 +333,6 @@ public class Swerve extends Subsystem {
 
         pose = updatedPose;
 
-        if (Vision.getInstance().hasTarget()) {
-            pose = new Pose2d(new Translation2d(
-                    filter.update(deltaPos.getArray(), Vision.getInstance().getPose().getTranslation().getArray())),
-                    getRobotHeading());
-        }
 
         modules.forEach((m) -> m.resetPose(pose));
         lastUpdateTimestamp = timestamp;
@@ -410,7 +405,8 @@ public class Swerve extends Subsystem {
                 headingController.setTargetHeading(targetHeading);
                 rotationCorrection = headingController.getRotationCorrection(getRobotHeading(), timeStamp);
                 SmartDashboard.putNumber("Swerve Heading Correctiomm    33  33   /n", rotationCorrection);
-                commandModules(inverseKinematics.updateDriveVectors(aimingVector, rotationCorrection, drivingpose,
+                commandModules(inverseKinematics.updateDriveVectors(translationVector.translateBy(aimingVector),
+                        rotationCorrection, drivingpose,
                         robotCentric));
                 break;
 
@@ -487,11 +483,21 @@ public class Swerve extends Subsystem {
         this.rotationScalar = scalar;
         update();
     }
+    public void Aim(Pose2d aimingVector) {
+        currentState = State.SCORE;
+        this.aimingVector = aimingVector.getTranslation();
+        targetHeading = aimingVector.getRotation();
+
+        
+        headingController.setTargetHeading(targetHeading);
+        update();
+    }
 
     public void Aim(Translation2d aimingVector, Rotation2d rotation) {
         currentState = State.SCORE;// SETS HEADING TO 0or 180
         this.aimingVector = aimingVector;
         targetHeading = rotation;
+        headingController.setTargetHeading(rotation);
         update();
 
     }
@@ -583,21 +589,27 @@ public class Swerve extends Subsystem {
         };
     }
 
-    public Request objectTartgetRequest() {
+    public Request objectTargetRequest() {
         return new Request() {
 
             @Override
             public void act() {
-                // goToObject();
+                setState(State.SCORE);
+                Aim(targetObject());
+            }
+
+            @Override
+            public void initialize() {
+                Vision.getInstance().setPipeline(0);
             }
 
             @Override
             public boolean isFinished() {
-                // if (goToObject()) {
-                // setState(State.MANUAL);
-                // }
-                // return goToObject();
-                return true;
+                Translation2d translation = targetObject().getTranslation();
+                if( Math.abs(translation.getX())<.02 && Math.abs(translation.getY())<.04 && Vision.getInstance().hasTarget()){
+                    aimingVector = new Translation2d();
+                }
+                return Math.abs(translation.getX())<.02 && Math.abs(translation.getY())<.04 && Vision.getInstance().hasTarget();
             }
 
         };
@@ -607,7 +619,7 @@ public class Swerve extends Subsystem {
         return new Request() {
             @Override
             public void act() {
-                targetNode(node, false);
+                Aim(targetNode(false));
             }
 
             @Override
@@ -648,20 +660,21 @@ public class Swerve extends Subsystem {
 
             public void act() {
                 setState(State.SCORE);
-                targetNode(0, cube);
+                Aim(targetNode(cube));
             }
 
             @Override
             public void initialize() {
-                if (!cube)
-                    Vision.getInstance().setPipeline(Constants.VisionConstants.LOW_RETRO_PIPLINE);
-                else
-                    Vision.getInstance().setPipeline(Constants.VisionConstants.APRIL_PIPLINE);
+                Vision.getInstance().setPipeline(1);
             }
 
             @Override
             public boolean isFinished() {
-                return false;
+                Translation2d translation = targetNode(cube).getTranslation();
+                if( Math.abs(translation.getX())<.05 && Math.abs(translation.getY())<.05 && Vision.getInstance().hasTarget()){
+                    aimingVector = new Translation2d();
+                }
+                return Math.abs(translation.getX())<.05 && Math.abs(translation.getY())<.05 && Vision.getInstance().hasTarget();
             }
         };
 
@@ -689,22 +702,53 @@ public class Swerve extends Subsystem {
 
     }
 
-    public void targetNode(int scoringNode, boolean cube) {
-        
-        double rotation = DriverStation.getAlliance() == Alliance.Blue ? 180 : 0;
+    public Pose2d targetNode(boolean cube) {
+
+        double rotation = DriverStation.getAlliance() == Alliance.Blue ? 180 : 1;
         double currentTime = Timer.getFPGATimestamp();
         double dt = currentTime - lastTimeStamp;
-        xVPID.setOutputRange(-.2, .2);
-        yVPID.setOutputRange(-.2, .2);
-        
-        yVPID.setSetpoint(2);
+        if (Vision.getInstance().hasTarget()) {
+            xVPID.setOutputRange(-.2, .2);
+            yVPID.setOutputRange(-.2, .2);
 
-        xVPID.calculate(vision.getX(), dt);
-        yVPID.calculate(vision.getY()-2, dt);
+            xError = xVPID.calculate(Vision.getInstance().getX(), dt);
+            yError = yVPID.calculate(Vision.getInstance().getDistance()-.05, dt);
+        }
 
+        else {
+            xError = 0;
+            yError = 0;
+        }
 
-        Aim(new Translation2d(xError, yError), Rotation2d.fromDegrees(rotation));
+        Logger.getInstance().recordOutput("xError", xError);
+        Logger.getInstance().recordOutput("yError", yError);
         lastTimeStamp = currentTime;
+        return new Pose2d(new Translation2d(yError, xError).inverse(), Rotation2d.fromDegrees(180));
+    }
+
+    public Pose2d targetObject() {
+        double currentTime = Timer.getFPGATimestamp();
+        double dt = currentTime - lastTimeStamp;
+        if (Vision.getInstance().hasTarget()) {
+            xVPID.setOutputRange(-.2, .2);
+            aVPID.setOutputRange(-.2, .2);
+            xVPID.setOutputMagnitude(.03);
+            aVPID.setOutputMagnitude(.02
+            );
+
+            xError = xVPID.calculate(Vision.getInstance().getX(), dt);
+            yError = aVPID.calculate(Vision.getInstance().getArea() - 20, dt);
+        }
+
+        else {
+            xError = 0;
+            yError = 0;
+        }
+
+        Logger.getInstance().recordOutput("xError", xError);
+        Logger.getInstance().recordOutput("yError", yError);
+        lastTimeStamp = currentTime;
+        return new Pose2d(new Translation2d(yError, -xError).inverse(), getRobotHeading());
     }
 
     public void updateOffset(boolean snapUp, boolean snapDown) {
@@ -718,28 +762,6 @@ public class Swerve extends Subsystem {
             // if wants to move down and isnt at zero than move down
             offset--;// sets desired scoring station to snap to the next one down
         }
-    }
-
-    public void aimAtScore() {
-        double Roboty = getPose().getTranslation().getY();
-        bestDistance = 11111;
-        if (!ran) {
-            for (int i = 0; i < Constants.scoresY.size(); i++) {// finds closest scoring node
-                distance = Math.abs(Constants.scoresY.get(i) - Roboty);
-                if (bestDistance > distance) {// if closer than previous closest
-                    bestDistance = distance;
-                    bestScore = i;// sets target to closest plus the user inputed offset
-                }
-
-                if (i == Constants.scoresY.size() - 1) {
-                    ran = true;
-                }
-
-            }
-        }
-
-        targetNode(bestScore, false);
-
     }
 
     public boolean isAiming() {
@@ -876,6 +898,7 @@ public class Swerve extends Subsystem {
         Logger.getInstance().recordOutput("Odometry", pose.toWPI());
         Logger.getInstance().recordOutput("heading", getRobotHeading().getDegrees());
         Logger.getInstance().recordOutput("scoreError", errorFromScore);
+        Logger.getInstance().recordOutput("targetHeading", targetHeading.getDegrees());
     }
 
     @Override

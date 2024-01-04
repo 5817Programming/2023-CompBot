@@ -150,11 +150,12 @@ swerve.updatePose(Timer.getFPGATimestamp());
 
     startime = Timer.getFPGATimestamp();
     
-    if(autoChooser.getSelected() != null){
-      autoChooser.getSelected().runAuto();
-    }else{
-      new Place().runAuto();
-    }
+    // if(autoChooser.getSelected() != null){
+    //   autoChooser.getSelected().runAuto();
+    // }else{
+    //   new Place().runAuto();
+    // }
+    new Place().runAuto();
 
       
   }

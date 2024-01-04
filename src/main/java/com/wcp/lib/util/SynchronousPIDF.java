@@ -14,6 +14,7 @@ public class SynchronousPIDF {
     private double m_minimumOutput = -1.0; // |minimum output|
     private double m_maximumInput = 0.0; // maximum input - limit setpoint to
                                          // this
+    private double m_minimumMagnitude = 0.0;
     private double m_minimumInput = 0.0; // minimum input - limit setpoint to
                                          // this
     private boolean m_continuous = false; // do the endpoints wrap around? eg.
@@ -111,6 +112,9 @@ public class SynchronousPIDF {
             m_result = m_maximumOutput;
         } else if (m_result < m_minimumOutput) {
             m_result = m_minimumOutput;
+        }
+        if(Math.abs(m_result)<m_minimumMagnitude){
+            m_result =0;
         }
         return m_result;
     }
@@ -251,6 +255,10 @@ public class SynchronousPIDF {
         }
         m_minimumOutput = minimumOutput;
         m_maximumOutput = maximumOutput;
+    }
+
+    public void setOutputMagnitude(double minimumMagnitude){
+        m_minimumMagnitude = minimumMagnitude;
     }
 
     /**

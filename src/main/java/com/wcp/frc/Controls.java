@@ -180,15 +180,8 @@ public class Controls {
         else if(driverRightTrigger.isReleased()){
             s.scoreReleaseState();
         }
-        if(driverRightTrigger.isPressed()){
-            // s.aimState(driverLeftBumper.isPressed(), driverRightBumper.isPressed());
-        }
-        else if(driverRightTrigger.isActive()){
-            // swerve.updateOffset(driverLeftBumper.isPressed(), driverRightBumper.isPressed());            
-        }
-        else if(driverLeftBumper.isPressed())
-        s.aimState();
-        else if(coDriverRightTrigger.isPressed())
+       
+        if(coDriverRightTrigger.isPressed())
            s.intakeState(SuperStructure.PreState.HOOMAN);
         
         else if(driverStartButton.isPressed())
@@ -196,17 +189,20 @@ public class Controls {
         
         else if(coDriverLeftTrigger.isPressed())
            s.intakeState(SuperStructure.PreState.CHUTE);
-        if(coDriverLeftTrigger.isReleased()||coDriverRightTrigger.isReleased()||coDriverLeftTrigger.isReleased()||coDriverRightTrigger.isReleased()||driverLeftBumper.isReleased()){
+        if(coDriverLeftTrigger.isReleased()||coDriverRightTrigger.isReleased()||coDriverLeftTrigger.isReleased()||coDriverRightTrigger.isReleased()){
             s.clearQueues();
             s.stopIntake();
         }
 
      
-        Logger.getInstance().recordOutput("driverleftbumper", driverLeftBumper.isReleased());
+        Logger.getInstance().recordOutput("driverleftbumper", driverLeftBumper.isActive());
 
        Arm.getInstance().changeOffset(CoDriver.getRightY());
        s.requestSwerveInput(new Translation2d(driverLeftYInput, driverLeftXInput), driverRightXInput);
-
+       if(driverLeftBumper.isPressed())
+       s.nodeState();
+       if(driverBButton.isPressed())
+       s.objectTargetState();
        if(driverRightBumper.isActive()){
         if(Math.abs(driverRightYInputSnap)> Math.abs(driverRightXInputSnap)){
             if(Math.abs (driverRightYInputSnap) > .2){    
