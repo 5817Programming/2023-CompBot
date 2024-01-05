@@ -93,11 +93,11 @@ public class Swerve extends Subsystem {
     private Translation2d targetFollowTranslation = new Translation2d();
     private Rotation2d targetHeading = new Rotation2d();
 
-    SynchronousPIDF xOPID = new SynchronousPIDF(.8, 0.0, 0);
-    SynchronousPIDF yOPID = new SynchronousPIDF(.8, 0.0, 0);
-    SynchronousPIDF xVPID = new SynchronousPIDF(.008, 0.0, 0);
-    SynchronousPIDF yVPID = new SynchronousPIDF(.35, 0.0, 0);
-    SynchronousPIDF aVPID = new SynchronousPIDF(.015, 0.0, 0);
+    SynchronousPIDF xOPID = new SynchronousPIDF(1, 0.0, 0);
+    SynchronousPIDF yOPID = new SynchronousPIDF(1, 0.0, 0);
+    SynchronousPIDF xVPID = new SynchronousPIDF(.01, 0.005, 0.01);
+    SynchronousPIDF yVPID = new SynchronousPIDF(.5, 0.01, 0);
+    SynchronousPIDF aVPID = new SynchronousPIDF(.025, 0.01, 0);
 
     private double lastTimestamp = Timer.getFPGATimestamp();
     SwerveInverseKinematics inverseKinematics = new SwerveInverseKinematics();
