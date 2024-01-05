@@ -17,7 +17,7 @@ public class Place extends AutoBase{
     public void auto() {
         s.scoreState(SuperStructure.PreState.HIGH, true);
         s.trajectoryState(path, false);
-        s.objectTargetState();
+        s.objectTargetState(true);
         s.intakeState(SuperStructure.PreState.GROUND, true,true);
         s.trajectoryState(path2, false);
         s.nodeState();

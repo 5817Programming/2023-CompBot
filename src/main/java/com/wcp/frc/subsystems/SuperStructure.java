@@ -358,10 +358,10 @@ public class SuperStructure extends Subsystem {
         return lockElevator;
     }
 
-    public void objectTargetState() {
+    public void objectTargetState(boolean fixedRotation) {
         RequestList request = new RequestList(Arrays.asList(
                 logCurrentRequest("objectTarget"),
-                swerve.objectTargetRequest()
+                swerve.objectTargetRequest(fixedRotation)
                 ), false);
         queue(request);
     }

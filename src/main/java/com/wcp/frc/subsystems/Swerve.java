@@ -589,13 +589,13 @@ public class Swerve extends Subsystem {
         };
     }
 
-    public Request objectTargetRequest() {
+    public Request objectTargetRequest(boolean fixedRotation) {
         return new Request() {
 
             @Override
             public void act() {
                 setState(State.SCORE);
-                Aim(targetObject());
+                Aim(targetObject(fixedRotation));
             }
 
             @Override
@@ -605,7 +605,7 @@ public class Swerve extends Subsystem {
 
             @Override
             public boolean isFinished() {
-                Translation2d translation = targetObject().getTranslation();
+                Translation2d translation = targetObject(fixedRotation).getTranslation();
                 if( Math.abs(translation.getX())<.02 && Math.abs(translation.getY())<.04 && Vision.getInstance().hasTarget()){
                     aimingVector = new Translation2d();
                 }
@@ -726,7 +726,7 @@ public class Swerve extends Subsystem {
         return new Pose2d(new Translation2d(yError, xError).inverse(), Rotation2d.fromDegrees(180));
     }
 
-    public Pose2d targetObject() {
+    public Pose2d targetObject(boolean fixedRotation) {
         double currentTime = Timer.getFPGATimestamp();
         double dt = currentTime - lastTimeStamp;
         if (Vision.getInstance().hasTarget()) {
@@ -748,7 +748,7 @@ public class Swerve extends Subsystem {
         Logger.getInstance().recordOutput("xError", xError);
         Logger.getInstance().recordOutput("yError", yError);
         lastTimeStamp = currentTime;
-        return new Pose2d(new Translation2d(yError, -xError).inverse(), getRobotHeading());
+        return new Pose2d(new Translation2d(yError, -xError).inverse(), (fixedRotation ? new Rotation2d() : getRobotHeading()));
     }
 
     public void updateOffset(boolean snapUp, boolean snapDown) {

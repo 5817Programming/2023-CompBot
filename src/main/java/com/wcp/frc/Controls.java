@@ -202,7 +202,7 @@ public class Controls {
        if(driverLeftBumper.isPressed())
        s.nodeState();
        if(driverBButton.isPressed())
-       s.objectTargetState();
+        s.objectTargetState(false);
        if(driverRightBumper.isActive()){
         if(Math.abs(driverRightYInputSnap)> Math.abs(driverRightXInputSnap)){
             if(Math.abs (driverRightYInputSnap) > .2){    
