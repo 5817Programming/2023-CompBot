@@ -38,8 +38,7 @@ public class KalmanFilter {
     Pkz =Pkp.clone();
     Xkz =Xk.clone();
     return Xk;
-    // Pkz =Pkp.clone();
-    // Xkz =Xk.clone();
+
 
     }
 
