@@ -35,8 +35,8 @@ public class KalmanFilter {
         K[i] = Pkp[i]/(Pkp[i]+getR()[i]);
         Xk[i] = Xkp[i] + K[i]*(Yk[i] - Xkp[i]);
     }
-    Pkz =Pkp.clone();
-    Xkz =Xk.clone();
+    // Pkz =Pkp.clone();
+    // Xkz =Xk.clone();
 
     }
     public double[] getR(){
