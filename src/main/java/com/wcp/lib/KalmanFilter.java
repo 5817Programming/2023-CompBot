@@ -15,7 +15,7 @@ public class KalmanFilter {
     double[] Xkz = new double[2];
     double[] Pkz = new double[2];
 
-    double[] Qk = {0.0000000000000001,0};//error per meter of odo
+    double[] Qk = {0.0000000000000001,0.0000000000000001};//error per meter of odo
     List<double[]> Ykh = new ArrayList<double[]>();
     //z is a placeholder for last updates version of that var
     // make init procces covarriance matrix : just zeros, should be init variance but shouldnt matter idk we will see
@@ -27,7 +27,7 @@ public class KalmanFilter {
     public KalmanFilter(){
 }
  
-    public void update(double[] deltaPose, double[] Yk){
+    public double[] update(double[] deltaPose, double[] Yk){
     Ykh.add(Yk);
     for(int i = 0; i<2; i++){
         Xkp[i] = (Xkz[i]) + (deltaPose[i]);
@@ -35,10 +35,14 @@ public class KalmanFilter {
         K[i] = Pkp[i]/(Pkp[i]+getR()[i]);
         Xk[i] = Xkp[i] + K[i]*(Yk[i] - Xkp[i]);
     }
+    Pkz =Pkp.clone();
+    Xkz =Xk.clone();
+    return Xk;
     // Pkz =Pkp.clone();
     // Xkz =Xk.clone();
 
     }
+
     public double[] getR(){
         
         double[] var = new double[2];
