@@ -18,6 +18,7 @@ import com.ctre.phoenix.sensors.SensorVelocityMeasPeriod;
 import com.wcp.frc.Constants;
 import com.wcp.frc.Options;
 import com.wcp.frc.Ports;
+import com.wcp.frc.subsystems.encoders.CANEncoder;
 import com.wcp.frc.subsystems.encoders.Encoder;
 import com.wcp.frc.subsystems.encoders.MagEncoder;
 import com.wcp.lib.Conversions;
@@ -93,13 +94,11 @@ public class SwerveDriveModule extends Subsystem {
 
         if (Options.encoderType == "Mag Encoder") {
             rotationMagEncoder = new MagEncoder(Ports.SWERVE_ENCODERS[moduleID]);
-        } /*
-           * else if(Options.encoderType == "Inductive Encoder") {
-           * rotationMagEncoder = new InductiveEncoder(Ports.SWERVE_ENCODERS[moduleID]);
-           * } else if(Options.encoderType == "CANCoder") {
-           * rotationMagEncoder = new CANEncoder(Ports.SWERVE_ENCODERS[moduleID]);
-           * }
-           */
+        } 
+        else if(Options.encoderType == "CANCoder") {
+         rotationMagEncoder = new CANEncoder(Ports.SWERVE_ENCODERS[moduleID]);
+        }
+        
 
         configMotors();
     }

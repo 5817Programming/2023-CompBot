@@ -59,7 +59,7 @@ public class Constants {
     public static final double driveKA = (0.27 / 12);
 
     public static final double kSwerveMaxspeedMPS = 10;
-    public static final double SwerveMaxspeedMPS = 4.5;
+    public static final double SwerveMaxspeedMPS = 80;
     public static final double kSwerveDriveMaxSpeed = 22000.0; //The theoretical max speed(For the Falcon 500s)
     public static final double kSwerveRotation10VoltMaxSpeed = 1350.0;
 
